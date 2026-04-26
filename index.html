@@ -88,8 +88,8 @@
         .row-brk { border-left: 3px solid var(--up); background: linear-gradient(90deg, rgba(2, 192, 118, 0.06) 0%, transparent 100%); }
         .no-scrollbar::-webkit-scrollbar { display: none; }
 
-        .toggle-checkbox:checked { right: 0; border-color: var(--up); }
-        .toggle-checkbox:checked + .toggle-label { background-color: var(--up); }
+        /* Drag and Drop Styling */
+        .dragging { opacity: 0.5; border: 1px dashed var(--accent); }
     </style>
 </head>
 <body class="sz-lg pb-12">
@@ -160,23 +160,29 @@
     <div id="settings-modal" class="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 hidden transition-opacity duration-300 opacity-0">
         <div class="glass-panel w-full max-w-md p-6 m-4 flex flex-col gap-6" id="settings-content">
             <div class="flex justify-between items-center border-b border-white/10 pb-4">
-                <h2 class="text-lg font-bold text-white tracking-wide">DASHBOARD SETTINGS</h2>
+                <h2 class="text-lg font-bold text-white tracking-wide uppercase">Dashboard Control</h2>
                 <button onclick="closeSettings()" class="text-gray-400 hover:text-white text-2xl leading-none">&times;</button>
             </div>
             
-            <div class="flex flex-col gap-2">
-                <label class="text-xs font-bold text-gray-400 uppercase tracking-wider">Number of Assets per list</label>
-                <input type="number" id="setting-limit" min="1" max="50" class="bg-[#1c2431] border border-white/10 rounded-lg px-4 py-3 text-white font-bold focus:outline-none focus:border-[var(--accent)]">
+            <div class="grid grid-cols-2 gap-4">
+                <div class="flex flex-col gap-2">
+                    <label class="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Rows Count</label>
+                    <input type="number" id="setting-limit" min="1" max="50" class="bg-[#1c2431] border border-white/10 rounded-lg px-4 py-2.5 text-white font-bold focus:outline-none focus:border-[var(--accent)]">
+                </div>
+                <div class="flex flex-col gap-2">
+                    <label class="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Breakout Vol Multiplier</label>
+                    <input type="number" id="setting-vol-mult" min="1" max="10" step="0.5" class="bg-[#1c2431] border border-white/10 rounded-lg px-4 py-2.5 text-white font-bold focus:outline-none focus:border-[var(--accent)]">
+                </div>
             </div>
 
             <div class="flex flex-col gap-2">
-                <label class="text-xs font-bold text-gray-400 uppercase tracking-wider">Columns & Order</label>
+                <label class="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Columns (Drag to reorder)</label>
                 <ul id="settings-col-list" class="flex flex-col gap-2 max-h-[40vh] overflow-y-auto no-scrollbar pr-1">
                     </ul>
             </div>
 
             <button onclick="saveAndApplySettings()" class="bg-[var(--accent)] hover:bg-[#e0a827] text-black font-extrabold uppercase tracking-widest py-3 rounded-lg transition-colors mt-2">
-                Save & Apply
+                Save Changes
             </button>
         </div>
     </div>
@@ -227,18 +233,13 @@
             vol24h: { labelBase: '24h Volume', align: 'right', render: (c) => `<td class="text-right font-bold text-[var(--accent)]">${formatUSD(c.v24)}</td>` }
         };
 
-        // NEW FASTER DEFAULTS: Only the core 4 columns are active to speed up rendering
         const defaultCols = [
-            { id: 'num', visible: true }, 
-            { id: 'symbol', visible: true }, 
-            { id: 'price', visible: true },
-            { id: 'changeTF', visible: true }, 
-            { id: 'change24h', visible: false }, 
-            { id: 'volTF', visible: false }, 
-            { id: 'vol24h', visible: false }
+            { id: 'num', visible: true }, { id: 'symbol', visible: true }, { id: 'price', visible: true },
+            { id: 'changeTF', visible: true }, { id: 'change24h', visible: false }, 
+            { id: 'volTF', visible: false }, { id: 'vol24h', visible: false }
         ];
 
-        let config = JSON.parse(localStorage.getItem('qp_config_v2')) || { limit: 15, columns: defaultCols };
+        let config = JSON.parse(localStorage.getItem('qp_config_v3')) || { limit: 15, volMultiplier: 3.0, columns: defaultCols };
         let tempConfig = JSON.parse(JSON.stringify(config)); 
 
         function renderTableHeaders() {
@@ -253,15 +254,25 @@
             document.getElementById('head-losers').innerHTML = html;
         }
 
-        // OPTIMIZATION: We pass 'tickerData' instead of fetching it a second time.
         async function fetchPair(s, tickerData) {
             try {
-                const kR = await fetch(`${API}/klines?symbol=${s}&interval=${activeTF}&limit=11`);
+                // Fetch 21 candles: 20 for average, 1 for current
+                const kR = await fetch(`${API}/klines?symbol=${s}&interval=${activeTF}&limit=21`);
                 const k = await kR.json();
+                if (k.length < 21) return null;
+
+                const cur = k[20];
+                const past20 = k.slice(0, 20);
                 
-                const cur = k[10], p10 = k.slice(0,10);
-                const high = Math.max(...p10.map(c => parseFloat(c[2])));
-                const price = parseFloat(cur[4]), open = parseFloat(cur[1]);
+                // Volume Logic (Using Quote Asset Volume for consistency)
+                const avgVol = past20.reduce((acc, val) => acc + parseFloat(val[7]), 0) / 20;
+                const curVol = parseFloat(cur[7]);
+                const volSurge = curVol >= (avgVol * config.volMultiplier);
+
+                // Price Logic
+                const high20 = Math.max(...past20.map(c => parseFloat(c[2])));
+                const price = parseFloat(cur[4]);
+                const open = parseFloat(cur[1]);
                 
                 return { 
                     s: s.replace('USDT',''), 
@@ -269,8 +280,8 @@
                     pct: ((price-open)/open)*100, 
                     pct24: parseFloat(tickerData.priceChangePercent), 
                     v24: parseFloat(tickerData.quoteVolume), 
-                    vTF: parseFloat(cur[7]), 
-                    isB: price > high 
+                    vTF: curVol, 
+                    isB: price > high20 && volSurge 
                 };
             } catch(e) { return null; }
         }
@@ -279,8 +290,6 @@
             try {
                 const res = await fetch(`${API}/ticker/24hr`);
                 const all = await res.json();
-                
-                // Map the ticker data so we don't have to fetch it again inside fetchPair
                 const tickerMap = {};
                 all.forEach(t => tickerMap[t.symbol] = t);
 
@@ -288,7 +297,6 @@
                                  .sort((a,b) => Math.abs(parseFloat(b.priceChangePercent)) - Math.abs(parseFloat(a.priceChangePercent)))
                                  .slice(0, 45).map(t => t.symbol);
 
-                // Pass the pre-fetched mapped data
                 let data = (await Promise.all(targets.map(s => fetchPair(s, tickerMap[s])))).filter(d => d);
                 
                 let g = [...data].sort((a,b) => b.pct - a.pct);
@@ -309,11 +317,51 @@
             } catch(e) {}
         }
 
+        // --- Drag & Drop Core Logic ---
+        let draggedItemIndex = null;
+
+        function renderSettingsList() {
+            const ul = document.getElementById('settings-col-list');
+            ul.innerHTML = '';
+            
+            tempConfig.columns.forEach((col, idx) => {
+                const li = document.createElement('li');
+                li.className = "flex items-center justify-between bg-[#1c2431] p-3 rounded-lg border border-white/5 cursor-move transition-all";
+                li.draggable = true;
+                li.dataset.index = idx;
+                
+                li.innerHTML = `
+                    <div class="flex items-center gap-3">
+                        <span class="text-gray-600">⠿</span>
+                        <span class="text-sm font-bold text-white uppercase tracking-tight">${colDefs[col.id].labelBase}</span>
+                    </div>
+                    <label class="relative inline-flex items-center cursor-pointer">
+                        <input type="checkbox" ${col.visible ? 'checked' : ''} onchange="toggleTempCol(${idx})" class="sr-only peer">
+                        <div class="w-10 h-5 bg-gray-700 rounded-full peer peer-checked:after:translate-x-[20px] after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-[var(--up)]"></div>
+                    </label>
+                `;
+
+                li.addEventListener('dragstart', () => { draggedItemIndex = idx; li.classList.add('dragging'); });
+                li.addEventListener('dragend', () => { li.classList.remove('dragging'); });
+                li.addEventListener('dragover', (e) => { e.preventDefault(); });
+                li.addEventListener('drop', () => {
+                    const droppedItemIndex = idx;
+                    if (draggedItemIndex !== droppedItemIndex) {
+                        const item = tempConfig.columns.splice(draggedItemIndex, 1)[0];
+                        tempConfig.columns.splice(droppedItemIndex, 0, item);
+                        renderSettingsList();
+                    }
+                });
+                
+                ul.appendChild(li);
+            });
+        }
+
         function openSettings() {
             tempConfig = JSON.parse(JSON.stringify(config)); 
             document.getElementById('setting-limit').value = tempConfig.limit;
+            document.getElementById('setting-vol-mult').value = tempConfig.volMultiplier;
             renderSettingsList();
-            
             const modal = document.getElementById('settings-modal');
             modal.classList.remove('hidden');
             setTimeout(() => modal.classList.remove('opacity-0'), 10);
@@ -325,45 +373,15 @@
             setTimeout(() => modal.classList.add('hidden'), 300);
         }
 
-        function renderSettingsList() {
-            const ul = document.getElementById('settings-col-list');
-            ul.innerHTML = tempConfig.columns.map((col, idx) => `
-                <li class="flex items-center justify-between bg-[#1c2431] p-3 rounded-lg border border-white/5">
-                    <div class="flex items-center gap-4">
-                        <div class="flex flex-col gap-1">
-                            <button onclick="moveColUp(${idx})" class="text-gray-500 hover:text-white leading-none ${idx === 0 ? 'opacity-30 cursor-default hover:text-gray-500' : ''}">▲</button>
-                            <button onclick="moveColDown(${idx})" class="text-gray-500 hover:text-white leading-none ${idx === tempConfig.columns.length - 1 ? 'opacity-30 cursor-default hover:text-gray-500' : ''}">▼</button>
-                        </div>
-                        <span class="text-sm font-bold text-white">${colDefs[col.id].labelBase}</span>
-                    </div>
-                    <label class="relative inline-flex items-center cursor-pointer">
-                        <input type="checkbox" ${col.visible ? 'checked' : ''} onchange="toggleTempCol(${idx})" class="sr-only peer">
-                        <div class="w-10 h-5 bg-gray-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-[20px] peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-[var(--up)]"></div>
-                    </label>
-                </li>
-            `).join('');
-        }
-
-        function moveColUp(idx) {
-            if (idx === 0) return;
-            [tempConfig.columns[idx - 1], tempConfig.columns[idx]] = [tempConfig.columns[idx], tempConfig.columns[idx - 1]];
-            renderSettingsList();
-        }
-
-        function moveColDown(idx) {
-            if (idx === tempConfig.columns.length - 1) return;
-            [tempConfig.columns[idx + 1], tempConfig.columns[idx]] = [tempConfig.columns[idx], tempConfig.columns[idx + 1]];
-            renderSettingsList();
-        }
-
         function toggleTempCol(idx) {
             tempConfig.columns[idx].visible = !tempConfig.columns[idx].visible;
         }
 
         function saveAndApplySettings() {
             tempConfig.limit = parseInt(document.getElementById('setting-limit').value) || 15;
+            tempConfig.volMultiplier = parseFloat(document.getElementById('setting-vol-mult').value) || 3.0;
             config = JSON.parse(JSON.stringify(tempConfig));
-            localStorage.setItem('qp_config_v2', JSON.stringify(config));
+            localStorage.setItem('qp_config_v3', JSON.stringify(config));
             closeSettings();
             renderTableHeaders();
             runScreener();
