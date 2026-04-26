@@ -22,6 +22,7 @@
             background-color: var(--bg-deep); 
             color: #eaecef;
             margin: 0;
+            -webkit-font-smoothing: antialiased;
         }
 
         .tf-nav {
@@ -43,51 +44,46 @@
             transition: all 0.2s;
         }
 
-        .tf-btn.active {
-            background-color: #2b3139;
-            color: white;
-        }
+        .tf-btn.active { background-color: #2b3139; color: white; }
 
-        .market-table {
-            width: 100%;
-            border-collapse: collapse;
-            min-width: 700px;
-        }
-
+        .market-table { width: 100%; border-collapse: collapse; }
         .market-table th {
             text-align: right;
             color: var(--text-muted);
-            font-size: 11px;
+            font-size: 10px;
             font-weight: 600;
-            padding: 12px 16px;
+            padding: 10px 12px;
             border-bottom: 1px solid var(--border);
             text-transform: uppercase;
+            white-space: nowrap;
         }
-
         .market-table th:nth-child(1), .market-table th:nth-child(2) { text-align: left; }
-
         .market-table td {
-            padding: 14px 16px;
+            padding: 12px;
             border-bottom: 1px solid var(--border);
             font-size: 13px;
             font-variant-numeric: tabular-nums;
         }
 
-        .row-breakout {
-            background: linear-gradient(90deg, rgba(2, 192, 118, 0.04) 0%, transparent 100%);
-        }
-
+        .row-breakout { background: linear-gradient(90deg, rgba(2, 192, 118, 0.04) 0%, transparent 100%); }
         .no-scrollbar::-webkit-scrollbar { display: none; }
+        
+        @media (max-width: 1024px) {
+            .dual-panel { flex-direction: column; }
+        }
     </style>
 </head>
 <body class="pb-10">
 
-    <div class="max-w-5xl mx-auto px-4 py-6">
-        <header class="mb-6 flex flex-col md:flex-row md:items-center justify-between gap-4">
-            <h1 class="text-xl font-bold text-white tracking-tight">Market Gainers & Losers</h1>
+    <div class="max-w-[1440px] mx-auto px-4 py-6">
+        <header class="mb-6 flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+            <div>
+                <h1 class="text-xl font-bold text-white tracking-tight">Market Pulse</h1>
+                <p class="text-[10px] text-gray-500 font-bold uppercase tracking-widest mt-1">Binance Futures • Unlimited Scan</p>
+            </div>
             
             <div class="flex items-center gap-4 bg-[#161a1e] px-4 py-2 rounded-lg border border-[#2b3139]">
-                <span class="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Show Breakouts</span>
+                <span class="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Only Breakouts</span>
                 <label class="relative inline-flex items-center cursor-pointer">
                     <input type="checkbox" id="breakout-toggle" class="sr-only peer" onchange="runScreener()">
                     <div class="w-8 h-4 bg-gray-700 rounded-full peer peer-checked:bg-emerald-500 after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-3 after:w-3 after:transition-all peer-checked:after:translate-x-4"></div>
@@ -95,7 +91,7 @@
             </div>
         </header>
 
-        <div class="tf-nav no-scrollbar mb-6">
+        <div class="tf-nav no-scrollbar mb-6 max-w-2xl">
             <button onclick="updateTF('5m')" id="btn-5m" class="tf-btn">5 minute</button>
             <button onclick="updateTF('15m')" id="btn-15m" class="tf-btn active">15 minute</button>
             <button onclick="updateTF('1h')" id="btn-1h" class="tf-btn">1 hour</button>
@@ -103,31 +99,57 @@
             <button onclick="updateTF('1d')" id="btn-1d" class="tf-btn">24 hour</button>
         </div>
 
-        <div class="bg-[#161a1e] rounded-xl border border-[#2b3139] overflow-hidden shadow-2xl">
-            <div class="overflow-x-auto no-scrollbar">
-                <table class="market-table">
-                    <thead>
-                        <tr>
-                            <th class="w-10">#</th>
-                            <th>Symbol</th>
-                            <th class="text-right">Price</th>
-                            <th id="pct-header" class="text-right">Change (15m)</th>
-                            <th class="text-right">TF Vol</th>
-                            <th class="text-right">24H Volume</th>
-                        </tr>
-                    </thead>
-                    <tbody id="screener-list">
-                        </tbody>
-                </table>
+        <div class="dual-panel flex gap-6">
+            <div class="flex-1 bg-[#161a1e] rounded-xl border border-[#2b3139] overflow-hidden shadow-2xl">
+                <div class="p-4 border-bottom border-[#2b3139] bg-emerald-500/5">
+                    <h2 class="text-sm font-bold text-emerald-400 uppercase tracking-widest flex items-center gap-2">
+                        <span class="w-2 h-2 bg-emerald-500 rounded-full"></span> Top Gainers
+                    </h2>
+                </div>
+                <div class="overflow-x-auto no-scrollbar">
+                    <table class="market-table">
+                        <thead>
+                            <tr>
+                                <th class="w-8">#</th>
+                                <th>Symbol</th>
+                                <th>Price</th>
+                                <th class="pct-header">Change</th>
+                                <th>24H Vol</th>
+                            </tr>
+                        </thead>
+                        <tbody id="gainers-list"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="flex-1 bg-[#161a1e] rounded-xl border border-[#2b3139] overflow-hidden shadow-2xl">
+                <div class="p-4 border-bottom border-[#2b3139] bg-red-500/5">
+                    <h2 class="text-sm font-bold text-red-400 uppercase tracking-widest flex items-center gap-2">
+                        <span class="w-2 h-2 bg-red-500 rounded-full"></span> Top Losers
+                    </h2>
+                </div>
+                <div class="overflow-x-auto no-scrollbar">
+                    <table class="market-table">
+                        <thead>
+                            <tr>
+                                <th class="w-8">#</th>
+                                <th>Symbol</th>
+                                <th>Price</th>
+                                <th class="pct-header">Change</th>
+                                <th>24H Vol</th>
+                            </tr>
+                        </thead>
+                        <tbody id="losers-list"></tbody>
+                    </table>
+                </div>
             </div>
         </div>
 
-        <div class="mt-4 flex flex-col sm:flex-row justify-between items-center gap-2 px-2">
-            <div class="flex items-center gap-2">
-                <div class="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></div>
-                <span id="sync-time" class="text-[10px] text-gray-500 font-bold uppercase tracking-widest italic">Syncing Live Feed...</span>
+        <div class="mt-6 flex justify-between items-center px-2">
+            <div class="flex items-center gap-2 text-[10px] text-gray-500 font-bold uppercase tracking-widest">
+                <span id="sync-time">Syncing...</span>
             </div>
-            <span class="text-[10px] text-gray-600 font-bold uppercase">Zero-Limit Full Market Scan</span>
+            <span class="text-[10px] text-gray-600 font-bold uppercase tracking-tighter">Full Market Depth • Zero Filter</span>
         </div>
     </div>
 
@@ -139,79 +161,82 @@
             activeTF = tf;
             document.querySelectorAll('.tf-btn').forEach(b => b.classList.remove('active'));
             document.getElementById(`btn-${tf}`).classList.add('active');
-            document.getElementById('pct-header').innerText = `Change (${tf})`;
+            document.querySelectorAll('.pct-header').forEach(h => h.innerText = `Change (${tf})`);
             runScreener();
         }
 
         function formatVol(v) {
             if (v >= 1e9) return '$' + (v/1e9).toFixed(2) + 'B';
-            if (v >= 1e6) return '$' + (v/1e6).toFixed(2) + 'M';
-            if (v >= 1e3) return '$' + (v/1e3).toFixed(1) + 'K';
-            return '$' + v.toFixed(2);
+            if (v >= 1e6) return '$' + (v/1e6).toFixed(1) + 'M';
+            return '$' + (v/1e3).toFixed(0) + 'K';
         }
 
         async function fetchSymbolData(symbol, tf) {
             try {
-                // Get 11 candles for Donchian + TF Change/Vol
-                const kReq = await fetch(`${API_BASE}/klines?symbol=${symbol}&interval=${tf}&limit=11`);
-                // Get 24hr ticker for total daily volume
-                const tReq = await fetch(`${API_BASE}/ticker/24hr?symbol=${symbol}`);
-                
+                const [kReq, tReq] = await Promise.all([
+                    fetch(`${API_BASE}/klines?symbol=${symbol}&interval=${tf}&limit=11`),
+                    fetch(`${API_BASE}/ticker/24hr?symbol=${symbol}`)
+                ]);
                 const k = await kReq.json();
                 const t = await tReq.json();
-                
                 const prev = k.slice(0, 10);
                 const current = k[10];
                 const high = Math.max(...prev.map(c => parseFloat(c[2])));
                 const price = parseFloat(current[4]);
                 const open = parseFloat(current[1]);
                 
-                return { 
-                    s: symbol.replace('USDT',''), 
-                    p: price, 
-                    h: high, 
-                    pct: ((price - open) / open) * 100, 
-                    tfVol: parseFloat(current[7]), 
-                    v24: parseFloat(t.quoteVolume),
-                    isBrk: price > high 
-                };
+                return { s: symbol.replace('USDT',''), p: price, pct: ((price - open) / open) * 100, v24: parseFloat(t.quoteVolume), isBrk: price > high };
             } catch (e) { return null; }
         }
 
         async function runScreener() {
-            const showOnly = document.getElementById('breakout-toggle').checked;
+            const showOnlyBrk = document.getElementById('breakout-toggle').checked;
             try {
                 const res = await fetch(`${API_BASE}/ticker/24hr`);
                 const all = await res.json();
                 
+                // Unlimited logic: Pulling top 60 symbols to find best gainers and losers
                 let targets = all.filter(t => t.symbol.endsWith('USDT'))
                                  .sort((a,b) => Math.abs(parseFloat(b.priceChangePercent)) - Math.abs(parseFloat(a.priceChangePercent)))
-                                 .slice(0, 40).map(t => t.symbol);
+                                 .slice(0, 60).map(t => t.symbol);
 
                 let data = await Promise.all(targets.map(s => fetchSymbolData(s, activeTF)));
                 data = data.filter(d => d !== null);
-                if (showOnly) data = data.filter(d => d.isBrk);
 
-                const list = document.getElementById('screener-list');
-                list.innerHTML = data.sort((a,b) => b.pct - a.pct).map((coin, index) => `
-                    <tr class="${coin.isBrk ? 'row-breakout' : ''}">
-                        <td class="text-[#474d57] font-semibold">${index + 1}</td>
-                        <td class="font-bold text-white">
-                            <div class="flex items-center gap-2">
-                                ${coin.s}
-                                ${coin.isBrk ? '<span class="text-[8px] bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 px-1 rounded uppercase font-black">Brk</span>' : ''}
-                            </div>
-                        </td>
-                        <td class="text-right font-medium">$${coin.p < 1 ? coin.p.toFixed(5) : coin.p.toLocaleString()}</td>
-                        <td class="text-right font-bold ${coin.pct >= 0 ? 'text-[#02c076]' : 'text-[#f84960]'}">
-                            ${coin.pct >= 0 ? '+' : ''}${coin.pct.toFixed(2)}%
-                        </td>
-                        <td class="text-right font-medium text-[#848e9c]">${formatVol(coin.tfVol)}</td>
-                        <td class="text-right font-bold text-[#f3ba2f]">${formatVol(coin.v24)}</td>
-                    </tr>
-                `).join('');
-                document.getElementById('sync-time').innerText = `Last update: ${new Date().toLocaleTimeString()}`;
+                // Sort for Gainers (Highest Positive) and Losers (Highest Negative)
+                let gainers = [...data].sort((a,b) => b.pct - a.pct);
+                let losers = [...data].sort((a,b) => a.pct - b.pct);
+
+                if (showOnlyBrk) {
+                    gainers = gainers.filter(d => d.isBrk);
+                    losers = losers.filter(d => d.isBrk);
+                }
+
+                renderTable('gainers-list', gainers.slice(0, 15));
+                renderTable('losers-list', losers.slice(0, 15));
+                
+                document.getElementById('sync-time').innerText = `Last updated: ${new Date().toLocaleTimeString()}`;
             } catch (e) { console.error(e); }
+        }
+
+        function renderTable(id, data) {
+            const list = document.getElementById(id);
+            list.innerHTML = data.map((coin, index) => `
+                <tr class="${coin.isBrk ? 'row-breakout' : ''}">
+                    <td class="text-[#474d57] font-semibold text-[11px]">${index + 1}</td>
+                    <td class="font-bold text-white">
+                        <div class="flex items-center gap-2 uppercase tracking-tighter">
+                            ${coin.s}
+                            ${coin.isBrk ? '<span class="text-[8px] bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 px-1 rounded font-black">Brk</span>' : ''}
+                        </div>
+                    </td>
+                    <td class="text-right font-medium">$${coin.p < 1 ? coin.p.toFixed(5) : coin.p.toLocaleString()}</td>
+                    <td class="text-right font-bold ${coin.pct >= 0 ? 'text-[#02c076]' : 'text-[#f84960]'}">
+                        ${coin.pct >= 0 ? '+' : ''}${coin.pct.toFixed(2)}%
+                    </td>
+                    <td class="text-right font-medium text-[#848e9c]">${formatVol(coin.v24)}</td>
+                </tr>
+            `).join('');
         }
 
         updateTF('15m');
@@ -219,3 +244,4 @@
     </script>
 </body>
 </html>
+
