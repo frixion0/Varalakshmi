@@ -1,10 +1,9 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>QuantPulse Pro | v7.0</title>
+    <title>QuantPulse Pro | v7.1</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap');
@@ -24,11 +23,10 @@
         body { 
             font-family: 'Plus Jakarta Sans', sans-serif; 
             background: var(--bg); 
-            background-image: radial-gradient(circle at 50% -20%, #1c2431 0%, transparent 50%);
+            background-image: radial-gradient(circle at 20% -10%, #1c2431 0%, transparent 40%);
             color: var(--text-main);
             margin: 0;
             font-size: var(--base-fs);
-            line-height: 1.5;
         }
 
         /* Scaling Utility */
@@ -40,7 +38,7 @@
             background: rgba(15, 18, 23, 0.8);
             backdrop-filter: blur(20px);
             border: 1px solid var(--border);
-            border-radius: 16px;
+            border-radius: 12px;
         }
 
         .btn-pill {
@@ -48,16 +46,14 @@
             font-size: 11px;
             font-weight: 700;
             color: var(--text-dim);
-            border-radius: 8px;
-            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            border-radius: 6px;
+            transition: all 0.2s;
             text-transform: uppercase;
-            letter-spacing: 0.05em;
         }
 
         .btn-pill.active {
             background: white;
             color: black;
-            box-shadow: 0 4px 12px rgba(255,255,255,0.15);
         }
 
         .market-table { width: 100%; border-collapse: collapse; }
@@ -69,17 +65,12 @@
             padding: 12px 16px;
             border-bottom: 1px solid var(--border);
             text-transform: uppercase;
-            letter-spacing: 0.1em;
         }
         .market-table th:first-child, .market-table th:nth-child(2) { text-align: left; }
-        
-        .market-table tr { transition: background 0.15s ease; }
-        .market-table tr:hover { background: rgba(255,255,255,0.02); }
         .market-table td {
             padding: 14px 16px;
             border-bottom: 1px solid rgba(255,255,255,0.03);
             font-size: var(--base-fs);
-            font-weight: 500;
         }
 
         .mono { font-family: 'JetBrains Mono', monospace; }
@@ -91,46 +82,45 @@
 
     <div class="max-w-[1500px] mx-auto px-4 md:px-8 py-8">
         
-        <header class="flex flex-col xl:flex-row justify-between items-start xl:items-center gap-6 mb-10">
-            <div>
-                <h1 class="text-3xl font-extrabold italic tracking-tighter text-white">QUANT<span class="text-[var(--accent)] not-italic">PULSE</span></h1>
-                <div class="flex items-center gap-2 mt-1">
-                    <span class="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></span>
-                    <span class="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Global Futures Live-Pulse</span>
-                </div>
-            </div>
-
-            <div class="flex flex-wrap items-center gap-4">
-                <div class="glass-panel p-1 flex gap-1">
-                    <button onclick="updateTF('5m')" id="btn-5m" class="btn-pill">5m</button>
-                    <button onclick="updateTF('15m')" id="btn-15m" class="btn-pill active">15m</button>
-                    <button onclick="updateTF('1h')" id="btn-1h" class="btn-pill">1h</button>
-                    <button onclick="updateTF('4h')" id="btn-4h" class="btn-pill">4h</button>
-                    <button onclick="updateTF('1d')" id="btn-1d" class="btn-pill">24h</button>
-                </div>
-
-                <div class="glass-panel p-1 flex gap-1">
-                    <button onclick="setScale('sm')" id="sc-sm" class="btn-pill">Small</button>
-                    <button onclick="setScale('md')" id="sc-md" class="btn-pill active">Medium</button>
-                    <button onclick="setScale('lg')" id="sc-lg" class="btn-pill">Large</button>
-                </div>
-
-                <button onclick="toggleBrk()" id="brk-btn" class="glass-panel px-4 py-2 text-[10px] font-bold uppercase tracking-widest border border-white/5 hover:border-emerald-500/50 transition-all">
-                    Show Breakouts: <span id="brk-status" class="text-gray-500">OFF</span>
-                </button>
+        <header class="mb-8">
+            <h1 class="text-2xl font-black italic tracking-tighter text-white">QUANT<span class="text-[var(--accent)] not-italic">PULSE</span></h1>
+            <div class="flex items-center gap-2 mt-1">
+                <span class="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse"></span>
+                <span class="text-[9px] font-bold text-gray-600 uppercase tracking-widest italic">Live Zero-Limit Feed</span>
             </div>
         </header>
+
+        <div class="flex flex-wrap items-center gap-4 mb-8">
+            <div class="glass-panel p-1 flex gap-1">
+                <button onclick="updateTF('5m')" id="btn-5m" class="btn-pill">5m</button>
+                <button onclick="updateTF('15m')" id="btn-15m" class="btn-pill active">15m</button>
+                <button onclick="updateTF('1h')" id="btn-1h" class="btn-pill">1h</button>
+                <button onclick="updateTF('4h')" id="btn-4h" class="btn-pill">4h</button>
+                <button onclick="updateTF('1d')" id="btn-1d" class="btn-pill">24h</button>
+            </div>
+
+            <div class="glass-panel p-1 flex gap-1">
+                <button onclick="setScale('sm')" id="sc-sm" class="btn-pill">Small</button>
+                <button onclick="setScale('md')" id="sc-md" class="btn-pill active">Medium</button>
+                <button onclick="setScale('lg')" id="sc-lg" class="btn-pill">Large</button>
+            </div>
+
+            <button onclick="toggleBrk()" id="brk-btn" class="glass-panel px-4 py-2 text-[10px] font-bold uppercase tracking-widest border border-white/5 hover:border-emerald-500/50 transition-all">
+                Breakouts: <span id="brk-status" class="text-gray-500">OFF</span>
+            </button>
+        </div>
 
         <div class="grid grid-cols-1 xl:grid-cols-2 gap-8">
             
             <div class="glass-panel overflow-hidden">
-                <div class="px-6 py-4 bg-emerald-500/5 border-b border-white/5 flex justify-between items-center">
-                    <span class="text-xs font-black uppercase text-emerald-400 tracking-tighter italic">Top Performance Gainers</span>
+                <div class="px-6 py-4 bg-emerald-500/5 border-b border-white/5 flex items-center gap-2">
+                    <div class="w-1.5 h-1.5 bg-emerald-500 rounded-full"></div>
+                    <span class="text-xs font-black uppercase text-emerald-400 tracking-tighter">Gainers</span>
                 </div>
                 <div class="overflow-x-auto no-scrollbar">
                     <table class="market-table">
                         <thead>
-                            <tr><th class="w-12">#</th><th>Symbol</th><th>Last Price</th><th id="h-gain">Change</th><th>24H Volume</th></tr>
+                            <tr><th class="w-12">#</th><th>Symbol</th><th>Price</th><th id="h-gain">Change</th><th>24H Vol</th></tr>
                         </thead>
                         <tbody id="list-gainers"></tbody>
                     </table>
@@ -138,13 +128,14 @@
             </div>
 
             <div class="glass-panel overflow-hidden">
-                <div class="px-6 py-4 bg-red-500/5 border-b border-white/5 flex justify-between items-center">
-                    <span class="text-xs font-black uppercase text-red-400 tracking-tighter italic">Top Market Liquidations</span>
+                <div class="px-6 py-4 bg-red-500/5 border-b border-white/5 flex items-center gap-2">
+                    <div class="w-1.5 h-1.5 bg-red-500 rounded-full"></div>
+                    <span class="text-xs font-black uppercase text-red-400 tracking-tighter">Losers</span>
                 </div>
                 <div class="overflow-x-auto no-scrollbar">
                     <table class="market-table">
                         <thead>
-                            <tr><th class="w-12">#</th><th>Symbol</th><th>Last Price</th><th id="h-lose">Change</th><th>24H Volume</th></tr>
+                            <tr><th class="w-12">#</th><th>Symbol</th><th>Price</th><th id="h-lose">Change</th><th>24H Vol</th></tr>
                         </thead>
                         <tbody id="list-losers"></tbody>
                     </table>
@@ -153,9 +144,8 @@
 
         </div>
 
-        <footer class="mt-8 flex justify-between items-center px-2">
-            <div class="mono text-[10px] text-gray-600 font-bold uppercase tracking-widest" id="last-sync">Status: Initializing Feed...</div>
-            <div class="text-[9px] text-gray-700 font-black uppercase italic">Ultra-High Sensitivity Mode Enabled</div>
+        <footer class="mt-8 px-2 flex justify-between">
+            <div class="mono text-[9px] text-gray-700 uppercase font-bold" id="last-sync">Syncing...</div>
         </footer>
     </div>
 
@@ -200,10 +190,10 @@
                     fetch(`${API}/ticker/24hr?symbol=${s}`)
                 ]);
                 const k = await kR.json(), t = await tR.json();
-                const p10 = k.slice(0,10), cur = k[10];
+                const cur = k[10], p10 = k.slice(0,10);
                 const high = Math.max(...p10.map(c => parseFloat(c[2])));
                 const price = parseFloat(cur[4]), open = parseFloat(cur[1]);
-                return { s: s.replace('USDT',''), p: price, h: high, pct: ((price-open)/open)*100, v24: parseFloat(t.quoteVolume), isB: price > high };
+                return { s: s.replace('USDT',''), p: price, pct: ((price-open)/open)*100, v24: parseFloat(t.quoteVolume), isB: price > high };
             } catch(e) { return null; }
         }
 
@@ -216,39 +206,30 @@
                                  .slice(0, 50).map(t => t.symbol);
 
                 let data = (await Promise.all(targets.map(fetchPair))).filter(d => d);
-
                 let g = [...data].sort((a,b) => b.pct - a.pct);
                 let l = [...data].sort((a,b) => a.pct - b.pct);
 
                 if (filterBrk) { g = g.filter(d => d.isB); l = l.filter(d => d.isB); }
 
-                renderTable('list-gainers', g.slice(0, 15), true);
-                renderTable('list-losers', l.slice(0, 15), false);
-                document.getElementById('last-sync').innerText = `Feed Sync: ${new Date().toLocaleTimeString()}`;
+                const row = (c, i) => `
+                    <tr class="${c.isB ? 'row-brk' : ''}">
+                        <td class="mono opacity-20">${i+1}</td>
+                        <td class="font-extrabold text-white tracking-tighter">${c.s}</td>
+                        <td class="text-right mono text-white font-bold">$${c.p < 1 ? c.p.toFixed(5) : c.p.toLocaleString()}</td>
+                        <td class="text-right font-black mono ${c.pct >= 0 ? 'text-[var(--up)]' : 'text-[var(--down)]'}">
+                            ${c.pct >= 0 ? '+' : ''}${c.pct.toFixed(2)}%
+                        </td>
+                        <td class="text-right mono text-[var(--accent)] font-bold text-[10px]">${formatUSD(c.v24)}</td>
+                    </tr>`;
+
+                document.getElementById('list-gainers').innerHTML = g.slice(0, 15).map(row).join('');
+                document.getElementById('list-losers').innerHTML = l.slice(0, 15).map(row).join('');
+                document.getElementById('last-sync').innerText = `Sync: ${new Date().toLocaleTimeString()}`;
             } catch(e) {}
         }
 
-        function renderTable(id, data, isG) {
-            document.getElementById(id).innerHTML = data.map((c, i) => `
-                <tr class="${c.isB ? 'row-brk' : ''}">
-                    <td class="mono opacity-30">${i+1}</td>
-                    <td>
-                        <div class="flex items-center gap-2">
-                            <span class="font-extrabold tracking-tighter text-white">${c.s}</span>
-                            ${c.isB ? '<span class="w-1.5 h-1.5 bg-emerald-400 rounded-full"></span>' : ''}
-                        </div>
-                    </td>
-                    <td class="text-right mono text-white tracking-tighter font-bold">$${c.p < 1 ? c.p.toFixed(5) : c.p.toLocaleString()}</td>
-                    <td class="text-right font-black mono ${c.pct >= 0 ? 'text-[var(--up)]' : 'text-[var(--down)]'}">
-                        ${c.pct >= 0 ? '+' : ''}${c.pct.toFixed(2)}%
-                    </td>
-                    <td class="text-right mono text-[var(--accent)] font-bold text-[10px]">${formatUSD(c.v24)}</td>
-                </tr>
-            `).join('');
-        }
-
         updateTF('15m');
-        setInterval(runScreener, 25000);
+        setInterval(runScreener, 20000);
     </script>
 </body>
 </html>
