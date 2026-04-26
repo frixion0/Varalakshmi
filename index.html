@@ -3,150 +3,141 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>QuantPulse Pro | v7.1</title>
+    <title>QuantPulse | Coinglass Edition</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
         
         :root {
-            --bg: #05070a;
-            --surface: #0f1217;
-            --border: #1d2129;
-            --accent: #f3ba2f;
+            --bg: #0c0e12;
+            --surface: #161a1e;
+            --border: #2b3139;
+            --text-dim: #848e9c;
             --up: #02c076;
             --down: #f84960;
-            --text-main: #f0f2f5;
-            --text-dim: #848e9c;
-            --base-fs: 13px;
         }
 
         body { 
-            font-family: 'Plus Jakarta Sans', sans-serif; 
+            font-family: 'Inter', sans-serif; 
             background: var(--bg); 
-            background-image: radial-gradient(circle at 20% -10%, #1c2431 0%, transparent 40%);
-            color: var(--text-main);
+            color: #eaecef;
             margin: 0;
-            font-size: var(--base-fs);
+            -webkit-font-smoothing: antialiased;
         }
 
-        /* Scaling Utility */
-        body.sz-sm { --base-fs: 11px; }
-        body.sz-md { --base-fs: 14px; }
-        body.sz-lg { --base-fs: 17px; }
+        /* Scaling Logic */
+        body.sz-sm { --base-fs: 12px; --coin-fs: 13px; }
+        body.sz-md { --base-fs: 14px; --coin-fs: 15px; }
+        body.sz-lg { --base-fs: 17px; --coin-fs: 18px; }
 
         .glass-panel {
-            background: rgba(15, 18, 23, 0.8);
-            backdrop-filter: blur(20px);
+            background: var(--surface);
             border: 1px solid var(--border);
-            border-radius: 12px;
+            border-radius: 4px;
         }
 
         .btn-pill {
             padding: 6px 12px;
-            font-size: 11px;
-            font-weight: 700;
+            font-size: 12px;
+            font-weight: 500;
             color: var(--text-dim);
-            border-radius: 6px;
+            border-radius: 4px;
             transition: all 0.2s;
-            text-transform: uppercase;
         }
 
         .btn-pill.active {
-            background: white;
-            color: black;
+            background: #2b3139;
+            color: white;
         }
 
         .market-table { width: 100%; border-collapse: collapse; }
         .market-table th {
             text-align: right;
             color: var(--text-dim);
-            font-size: 10px;
-            font-weight: 800;
+            font-size: 11px;
+            font-weight: 500;
             padding: 12px 16px;
             border-bottom: 1px solid var(--border);
-            text-transform: uppercase;
         }
         .market-table th:first-child, .market-table th:nth-child(2) { text-align: left; }
+        
         .market-table td {
-            padding: 14px 16px;
-            border-bottom: 1px solid rgba(255,255,255,0.03);
+            padding: 12px 16px;
+            border-bottom: 1px solid rgba(255,255,255,0.02);
             font-size: var(--base-fs);
+            font-variant-numeric: tabular-nums;
         }
 
-        .mono { font-family: 'JetBrains Mono', monospace; }
-        .row-brk { background: linear-gradient(90deg, rgba(2, 192, 118, 0.05) 0%, transparent 100%); border-left: 2px solid var(--up); }
+        .coin-name { font-size: var(--coin-fs); font-weight: 600; color: #fff; }
+        .row-brk { background: linear-gradient(90deg, rgba(2, 192, 118, 0.03) 0%, transparent 100%); }
+        
+        .coin-icon {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: #2b3139;
+        }
+
         .no-scrollbar::-webkit-scrollbar { display: none; }
     </style>
 </head>
-<body class="sz-md pb-12">
+<body class="sz-md pb-20">
 
-    <div class="max-w-[1500px] mx-auto px-4 md:px-8 py-8">
+    <div class="max-w-[1600px] mx-auto px-4 py-6">
         
-        <header class="mb-8">
-            <h1 class="text-2xl font-black italic tracking-tighter text-white">QUANT<span class="text-[var(--accent)] not-italic">PULSE</span></h1>
-            <div class="flex items-center gap-2 mt-1">
-                <span class="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse"></span>
-                <span class="text-[9px] font-bold text-gray-600 uppercase tracking-widest italic">Live Zero-Limit Feed</span>
-            </div>
-        </header>
-
-        <div class="flex flex-wrap items-center gap-4 mb-8">
-            <div class="glass-panel p-1 flex gap-1">
-                <button onclick="updateTF('5m')" id="btn-5m" class="btn-pill">5m</button>
-                <button onclick="updateTF('15m')" id="btn-15m" class="btn-pill active">15m</button>
-                <button onclick="updateTF('1h')" id="btn-1h" class="btn-pill">1h</button>
-                <button onclick="updateTF('4h')" id="btn-4h" class="btn-pill">4h</button>
-                <button onclick="updateTF('1d')" id="btn-1d" class="btn-pill">24h</button>
+        <div class="flex flex-wrap items-center gap-3 mb-8">
+            <div class="flex bg-[#161a1e] p-1 rounded">
+                <button onclick="updateTF('5m')" id="btn-5m" class="btn-pill">5 minute</button>
+                <button onclick="updateTF('15m')" id="btn-15m" class="btn-pill active">15 minute</button>
+                <button onclick="updateTF('1h')" id="btn-1h" class="btn-pill">1 hour</button>
+                <button onclick="updateTF('4h')" id="btn-4h" class="btn-pill">4 hour</button>
+                <button onclick="updateTF('1d')" id="btn-1d" class="btn-pill">24 hour</button>
             </div>
 
-            <div class="glass-panel p-1 flex gap-1">
-                <button onclick="setScale('sm')" id="sc-sm" class="btn-pill">Small</button>
-                <button onclick="setScale('md')" id="sc-md" class="btn-pill active">Medium</button>
-                <button onclick="setScale('lg')" id="sc-lg" class="btn-pill">Large</button>
+            <div class="flex bg-[#161a1e] p-1 rounded">
+                <button onclick="setScale('sm')" id="sc-sm" class="btn-pill">A</button>
+                <button onclick="setScale('md')" id="sc-md" class="btn-pill active">A+</button>
+                <button onclick="setScale('lg')" id="sc-lg" class="btn-pill">A++</button>
             </div>
 
-            <button onclick="toggleBrk()" id="brk-btn" class="glass-panel px-4 py-2 text-[10px] font-bold uppercase tracking-widest border border-white/5 hover:border-emerald-500/50 transition-all">
+            <button onclick="toggleBrk()" id="brk-btn" class="bg-[#161a1e] px-4 py-2 text-[11px] font-bold uppercase rounded border border-white/5">
                 Breakouts: <span id="brk-status" class="text-gray-500">OFF</span>
             </button>
         </div>
 
-        <div class="grid grid-cols-1 xl:grid-cols-2 gap-8">
+        <div class="grid grid-cols-1 xl:grid-cols-2 gap-4">
             
             <div class="glass-panel overflow-hidden">
-                <div class="px-6 py-4 bg-emerald-500/5 border-b border-white/5 flex items-center gap-2">
-                    <div class="w-1.5 h-1.5 bg-emerald-500 rounded-full"></div>
-                    <span class="text-xs font-black uppercase text-emerald-400 tracking-tighter">Gainers</span>
-                </div>
-                <div class="overflow-x-auto no-scrollbar">
-                    <table class="market-table">
-                        <thead>
-                            <tr><th class="w-12">#</th><th>Symbol</th><th>Price</th><th id="h-gain">Change</th><th>24H Vol</th></tr>
-                        </thead>
-                        <tbody id="list-gainers"></tbody>
-                    </table>
-                </div>
+                <table class="market-table">
+                    <thead>
+                        <tr>
+                            <th class="w-12">#</th>
+                            <th>Symbol</th>
+                            <th>Price</th>
+                            <th id="h-gain">Price Change (15m)</th>
+                            <th>Volume (24h)</th>
+                        </tr>
+                    </thead>
+                    <tbody id="list-gainers"></tbody>
+                </table>
             </div>
 
             <div class="glass-panel overflow-hidden">
-                <div class="px-6 py-4 bg-red-500/5 border-b border-white/5 flex items-center gap-2">
-                    <div class="w-1.5 h-1.5 bg-red-500 rounded-full"></div>
-                    <span class="text-xs font-black uppercase text-red-400 tracking-tighter">Losers</span>
-                </div>
-                <div class="overflow-x-auto no-scrollbar">
-                    <table class="market-table">
-                        <thead>
-                            <tr><th class="w-12">#</th><th>Symbol</th><th>Price</th><th id="h-lose">Change</th><th>24H Vol</th></tr>
-                        </thead>
-                        <tbody id="list-losers"></tbody>
-                    </table>
-                </div>
+                <table class="market-table">
+                    <thead>
+                        <tr>
+                            <th class="w-12">#</th>
+                            <th>Symbol</th>
+                            <th>Price</th>
+                            <th id="h-lose">Price Change (15m)</th>
+                            <th>Volume (24h)</th>
+                        </tr>
+                    </thead>
+                    <tbody id="list-losers"></tbody>
+                </table>
             </div>
 
         </div>
-
-        <footer class="mt-8 px-2 flex justify-between">
-            <div class="mono text-[9px] text-gray-700 uppercase font-bold" id="last-sync">Syncing...</div>
-        </footer>
     </div>
 
     <script>
@@ -170,17 +161,18 @@
 
         async function updateTF(tf) {
             activeTF = tf;
-            document.querySelectorAll('.btn-pill').forEach(b => b.classList.contains('active') && !b.id.startsWith('sc-') ? b.classList.remove('active') : null);
+            document.querySelectorAll('[id^="btn-"]').forEach(b => b.classList.remove('active'));
             document.getElementById(`btn-${tf}`).classList.add('active');
-            document.getElementById('h-gain').innerText = `Change (${tf})`;
-            document.getElementById('h-lose').innerText = `Change (${tf})`;
+            const label = tf.replace('m',' minute').replace('h',' hour').replace('d',' hour');
+            document.getElementById('h-gain').innerText = `Price Change (${tf})`;
+            document.getElementById('h-lose').innerText = `Price Change (${tf})`;
             runScreener();
         }
 
         function formatUSD(v) {
             if (v >= 1e9) return '$' + (v/1e9).toFixed(2) + 'B';
-            if (v >= 1e6) return '$' + (v/1e6).toFixed(1) + 'M';
-            return '$' + (v/1e3).toFixed(0) + 'K';
+            if (v >= 1e6) return '$' + (v/1e6).toFixed(2) + 'M';
+            return '$' + (v/1e3).toFixed(2) + 'K';
         }
 
         async function fetchPair(s) {
@@ -203,7 +195,7 @@
                 const all = await res.json();
                 let targets = all.filter(t => t.symbol.endsWith('USDT'))
                                  .sort((a,b) => Math.abs(parseFloat(b.priceChangePercent)) - Math.abs(parseFloat(a.priceChangePercent)))
-                                 .slice(0, 50).map(t => t.symbol);
+                                 .slice(0, 40).map(t => t.symbol);
 
                 let data = (await Promise.all(targets.map(fetchPair))).filter(d => d);
                 let g = [...data].sort((a,b) => b.pct - a.pct);
@@ -213,23 +205,29 @@
 
                 const row = (c, i) => `
                     <tr class="${c.isB ? 'row-brk' : ''}">
-                        <td class="mono opacity-20">${i+1}</td>
-                        <td class="font-extrabold text-white tracking-tighter">${c.s}</td>
-                        <td class="text-right mono text-white font-bold">$${c.p < 1 ? c.p.toFixed(5) : c.p.toLocaleString()}</td>
-                        <td class="text-right font-black mono ${c.pct >= 0 ? 'text-[var(--up)]' : 'text-[var(--down)]'}">
+                        <td class="text-[#474d57]">${i+1}</td>
+                        <td>
+                            <div class="flex items-center gap-3">
+                                <img src="https://bin.bnbstatic.com/static/assets/logos/${c.s}.png" 
+                                     onerror="this.src='https://bin.bnbstatic.com/static/images/common/placeholder.png'" 
+                                     class="coin-icon">
+                                <span class="coin-name">${c.s}</span>
+                            </div>
+                        </td>
+                        <td class="text-right font-medium">$${c.p < 0.1 ? c.p.toFixed(6) : c.p.toLocaleString()}</td>
+                        <td class="text-right font-medium ${c.pct >= 0 ? 'text-[#02c076]' : 'text-[#f84960]'}">
                             ${c.pct >= 0 ? '+' : ''}${c.pct.toFixed(2)}%
                         </td>
-                        <td class="text-right mono text-[var(--accent)] font-bold text-[10px]">${formatUSD(c.v24)}</td>
+                        <td class="text-right font-medium text-white">${formatUSD(c.v24)}</td>
                     </tr>`;
 
-                document.getElementById('list-gainers').innerHTML = g.slice(0, 15).map(row).join('');
-                document.getElementById('list-losers').innerHTML = l.slice(0, 15).map(row).join('');
-                document.getElementById('last-sync').innerText = `Sync: ${new Date().toLocaleTimeString()}`;
+                document.getElementById('list-gainers').innerHTML = g.slice(0, 12).map(row).join('');
+                document.getElementById('list-losers').innerHTML = l.slice(0, 12).map(row).join('');
             } catch(e) {}
         }
 
         updateTF('15m');
-        setInterval(runScreener, 20000);
+        setInterval(runScreener, 30000);
     </script>
 </body>
 </html>
