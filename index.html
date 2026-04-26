@@ -3,187 +3,76 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>QuantPulse Pro | Premium Large</title>
+    <title>QuantPulse Pro | Ultra Custom</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&display=swap');
-        
-        :root {
-            --bg: #05070a;
-            --surface: #0f1217;
-            --border: #1d2129;
-            --accent: #f3ba2f;
-            --up: #02c076;
-            --down: #f84960;
-            --text-main: #f0f2f5;
-            --text-dim: #848e9c;
-        }
-
-        body { 
-            font-family: 'Inter', sans-serif; 
-            background: var(--bg); 
-            background-image: radial-gradient(circle at 15% -10%, #1c2431 0%, transparent 40%);
-            color: var(--text-main);
-            margin: 0;
-            -webkit-font-smoothing: antialiased;
-            transition: font-size 0.2s ease;
-        }
-
-        body.sz-sm { --base-fs: 11px; --logo-size: 18px; }
-        body.sz-md { --base-fs: 14px; --logo-size: 22px; }
-        body.sz-lg { --base-fs: 18px; --logo-size: 28px; }
-
-        .glass-panel {
-            background: rgba(15, 18, 23, 0.75);
-            backdrop-filter: blur(25px);
-            border: 1px solid var(--border);
-            border-radius: 14px;
-        }
-
-        .btn-pill {
-            padding: 8px 16px;
-            font-size: 12px;
-            font-weight: 700;
-            color: var(--text-dim);
-            border-radius: 8px;
-            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-            text-transform: uppercase;
-            letter-spacing: 0.04em;
-        }
-
-        .btn-pill.active {
-            background: white;
-            color: black;
-            box-shadow: 0 4px 15px rgba(255,255,255,0.12);
-        }
-
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@700;800&family=Inter:wght@400;600;900&display=swap');
+        :root { --bg: #05070a; --surface: #0f1217; --border: #1d2129; --accent: #f3ba2f; --up: #02c076; --down: #f84960; --text-main: #f0f2f5; --text-dim: #848e9c; }
+        body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text-main); margin: 0; }
+        body.sz-sm { --base-fs: 11px; --label-fs: 8px; }
+        body.sz-md { --base-fs: 14px; --label-fs: 10px; }
+        body.sz-lg { --base-fs: 16px; --label-fs: 11px; }
+        .glass-panel { background: rgba(15, 18, 23, 0.85); backdrop-filter: blur(20px); border: 1px solid var(--border); border-radius: 12px; }
+        .btn-pill { padding: 6px 12px; font-size: 10px; font-weight: 800; color: var(--text-dim); border-radius: 6px; transition: 0.2s; text-transform: uppercase; border: 1px solid transparent; }
+        .btn-pill.active { background: #fff; color: #000; }
+        .tf-badge { font-size: var(--label-fs); padding: 2px 4px; border-radius: 3px; background: #1d2129; color: #444; font-weight: 900; margin-right: 2px; }
+        .tf-badge.active { background: var(--up); color: black; box-shadow: 0 0 8px rgba(2, 192, 118, 0.4); }
         .market-table { width: 100%; border-collapse: collapse; }
-        .market-table th {
-            color: var(--text-dim);
-            font-size: 11px;
-            font-weight: 700;
-            padding: 16px;
-            border-bottom: 1px solid var(--border);
-            text-transform: uppercase;
-        }
-        
-        .market-table tr { border-bottom: 1px solid rgba(255,255,255,0.03); }
-        .market-table tr:hover { background: rgba(255,255,255,0.03); }
-        
-        .market-table td {
-            padding: 18px 16px;
-            font-size: var(--base-fs);
-            font-variant-numeric: tabular-nums;
-            font-weight: 500;
-        }
-
-        .asset-logo {
-            width: var(--logo-size);
-            height: var(--logo-size);
-            border-radius: 50%;
-            background: #1c2431;
-            transition: all 0.2s ease;
-        }
-
-        .row-brk { border-left: 3px solid var(--up); background: linear-gradient(90deg, rgba(2, 192, 118, 0.06) 0%, transparent 100%); }
-        .no-scrollbar::-webkit-scrollbar { display: none; }
-
-        /* Drag and Drop Styling */
-        .dragging { opacity: 0.5; border: 1px dashed var(--accent); }
+        .market-table th { text-align: right; color: var(--text-dim); font-size: 10px; padding: 12px 14px; border-bottom: 1px solid var(--border); text-transform: uppercase; }
+        .market-table td { padding: 12px 14px; font-size: var(--base-fs); border-bottom: 1px solid rgba(255,255,255,0.02); }
+        .row-brk { border-left: 4px solid var(--up); background: linear-gradient(90deg, rgba(2, 192, 118, 0.08) 0%, transparent 100%); }
+        #settings-modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.85); z-index: 100; align-items: center; justify-content: center; }
+        .sortable-item { background: #1d2129; padding: 10px; margin-bottom: 6px; border-radius: 8px; cursor: grab; display: flex; align-items: center; justify-content: space-between; border: 1px solid #2d333f; }
+        .toggle-checkbox { width: 18px; height: 18px; cursor: pointer; accent-color: var(--accent); }
     </style>
 </head>
 <body class="sz-lg pb-12">
 
-    <div class="max-w-[1600px] mx-auto px-4 md:px-8 py-6">
-        
-        <header class="mb-8 flex justify-between items-center">
-            <h1 style="font-family: 'Plus Jakarta Sans'" class="text-3xl font-extrabold italic tracking-tighter text-white">
-                QUANT<span class="text-[var(--accent)] not-italic">PULSE</span>
-            </h1>
-            <div id="sync-indicator" class="flex items-center gap-2">
-                <span class="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></span>
-                <span class="text-[10px] font-bold text-gray-500 uppercase tracking-widest" id="last-sync">Establishing Feed...</span>
+    <div class="max-w-[1600px] mx-auto px-4 py-6">
+        <header class="flex justify-between items-center mb-6">
+            <h1 class="text-2xl font-black italic tracking-tighter">QUANT<span class="text-[var(--accent)]">PULSE</span></h1>
+            <div class="flex items-center gap-3">
+                <button onclick="openSettings()" class="glass-panel px-4 py-2 text-xs font-bold hover:bg-white/10 transition">⚙️ SETTINGS & COLUMNS</button>
+                <div id="last-sync" class="text-[10px] font-mono text-gray-500 uppercase">SYNCING...</div>
             </div>
         </header>
 
-        <div class="flex flex-wrap items-center gap-4 mb-8">
-            <div class="glass-panel p-1.5 flex gap-1.5">
+        <div class="flex flex-wrap gap-4 mb-6">
+            <div class="glass-panel p-1.5 flex gap-1">
                 <button onclick="updateTF('5m')" id="btn-5m" class="btn-pill">5m</button>
                 <button onclick="updateTF('15m')" id="btn-15m" class="btn-pill active">15m</button>
                 <button onclick="updateTF('1h')" id="btn-1h" class="btn-pill">1h</button>
-                <button onclick="updateTF('4h')" id="btn-4h" class="btn-pill">4h</button>
-                <button onclick="updateTF('1d')" id="btn-1d" class="btn-pill">24h</button>
+                <button onclick="updateTF('1d')" id="btn-1d" class="btn-pill">1d</button>
             </div>
-
-            <div class="glass-panel p-1.5 flex gap-1.5">
+            <div class="glass-panel p-1.5 flex gap-1">
                 <button onclick="setScale('sm')" id="sc-sm" class="btn-pill">S</button>
                 <button onclick="setScale('md')" id="sc-md" class="btn-pill">M</button>
                 <button onclick="setScale('lg')" id="sc-lg" class="btn-pill active">L</button>
             </div>
-
-            <button onclick="toggleBrk()" id="brk-btn" class="glass-panel px-5 py-2.5 text-[11px] font-bold uppercase tracking-widest text-gray-400 hover:text-emerald-400 transition-all">
-                Breakouts: <span id="brk-status">OFF</span>
-            </button>
-
-            <button onclick="openSettings()" class="glass-panel ml-auto px-5 py-2.5 text-[11px] font-bold uppercase tracking-widest text-gray-400 hover:text-white transition-all flex items-center gap-2">
-                ⚙️ Settings
+            <button onclick="toggleBrk()" id="brk-btn" class="glass-panel px-4 py-2 text-[11px] font-bold uppercase">
+                Breakouts: <span id="brk-status" class="text-gray-500">OFF</span>
             </button>
         </div>
 
         <div class="grid grid-cols-1 xl:grid-cols-2 gap-6">
-            <div class="glass-panel overflow-hidden shadow-2xl">
-                <div class="px-6 py-4 border-b border-white/5 bg-emerald-500/5">
-                    <span class="text-xs font-black uppercase text-emerald-400 tracking-wider">Market Gainers</span>
-                </div>
-                <div class="overflow-x-auto no-scrollbar">
-                    <table class="market-table" id="table-gainers">
-                        <thead><tr id="head-gainers"></tr></thead>
-                        <tbody id="list-gainers"></tbody>
-                    </table>
-                </div>
+            <div class="glass-panel overflow-hidden">
+                <div class="px-4 py-2 border-b border-white/5 bg-emerald-500/5 text-[10px] font-bold text-emerald-400">GAINERS</div>
+                <table class="market-table"><thead id="head-gainers"></thead><tbody id="list-gainers"></tbody></table>
             </div>
-
-            <div class="glass-panel overflow-hidden shadow-2xl">
-                <div class="px-6 py-4 border-b border-white/5 bg-red-500/5">
-                    <span class="text-xs font-black uppercase text-red-400 tracking-wider">Market Losers</span>
-                </div>
-                <div class="overflow-x-auto no-scrollbar">
-                    <table class="market-table" id="table-losers">
-                        <thead><tr id="head-losers"></tr></thead>
-                        <tbody id="list-losers"></tbody>
-                    </table>
-                </div>
+            <div class="glass-panel overflow-hidden">
+                <div class="px-4 py-2 border-b border-white/5 bg-red-500/5 text-[10px] font-bold text-red-400">LOSERS</div>
+                <table class="market-table"><thead id="head-losers"></thead><tbody id="list-losers"></tbody></table>
             </div>
         </div>
     </div>
 
-    <div id="settings-modal" class="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 hidden transition-opacity duration-300 opacity-0">
-        <div class="glass-panel w-full max-w-md p-6 m-4 flex flex-col gap-6" id="settings-content">
-            <div class="flex justify-between items-center border-b border-white/10 pb-4">
-                <h2 class="text-lg font-bold text-white tracking-wide uppercase">Dashboard Control</h2>
-                <button onclick="closeSettings()" class="text-gray-400 hover:text-white text-2xl leading-none">&times;</button>
-            </div>
-            
-            <div class="grid grid-cols-2 gap-4">
-                <div class="flex flex-col gap-2">
-                    <label class="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Rows Count</label>
-                    <input type="number" id="setting-limit" min="1" max="50" class="bg-[#1c2431] border border-white/10 rounded-lg px-4 py-2.5 text-white font-bold focus:outline-none focus:border-[var(--accent)]">
-                </div>
-                <div class="flex flex-col gap-2">
-                    <label class="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Breakout Vol Multiplier</label>
-                    <input type="number" id="setting-vol-mult" min="1" max="10" step="0.5" class="bg-[#1c2431] border border-white/10 rounded-lg px-4 py-2.5 text-white font-bold focus:outline-none focus:border-[var(--accent)]">
-                </div>
-            </div>
-
-            <div class="flex flex-col gap-2">
-                <label class="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Columns (Drag to reorder)</label>
-                <ul id="settings-col-list" class="flex flex-col gap-2 max-h-[40vh] overflow-y-auto no-scrollbar pr-1">
-                    </ul>
-            </div>
-
-            <button onclick="saveAndApplySettings()" class="bg-[var(--accent)] hover:bg-[#e0a827] text-black font-extrabold uppercase tracking-widest py-3 rounded-lg transition-colors mt-2">
-                Save Changes
-            </button>
+    <div id="settings-modal" onclick="if(event.target==this)closeSettings()">
+        <div class="glass-panel p-6 w-full max-w-sm border-white/20">
+            <h2 class="text-lg font-black mb-1">Display Settings</h2>
+            <p class="text-[10px] text-gray-500 mb-6 uppercase">Drag to Reorder • Check to Show</p>
+            <div id="column-list"></div>
+            <button onclick="closeSettings()" class="w-full mt-6 bg-white text-black font-black py-3 rounded-lg uppercase text-xs tracking-widest">Apply & Save</button>
         </div>
     </div>
 
@@ -191,6 +80,44 @@
         const API = "https://fapi.binance.com/fapi/v1";
         let activeTF = '15m';
         let filterBrk = false;
+        
+        // Column Registry with Visibility
+        let colConfig = [
+            { id: 'rank', label: '#', visible: true },
+            { id: 'symbol', label: 'Asset', visible: true },
+            { id: 'price', label: 'Price', visible: true },
+            { id: 'changeTF', label: 'Chg (TF)', visible: true },
+            { id: 'change24', label: 'Chg (24h)', visible: true },
+            { id: 'volTF', label: 'Vol (TF)', visible: true },
+            { id: 'vol24', label: 'Vol (24h)', visible: true }
+        ];
+
+        function openSettings() {
+            const list = document.getElementById('column-list');
+            list.innerHTML = colConfig.map(col => `
+                <div class="sortable-item" data-id="${col.id}">
+                    <div class="flex items-center gap-3">
+                        <span class="text-gray-600 font-bold">⠿</span>
+                        <span class="text-sm font-bold uppercase">${col.label}</span>
+                    </div>
+                    <input type="checkbox" class="toggle-checkbox" ${col.visible ? 'checked' : ''} onchange="updateVisibility('${col.id}', this.checked)">
+                </div>
+            `).join('');
+            document.getElementById('settings-modal').style.display = 'flex';
+            new Sortable(list, { animation: 150, handle: '.sortable-item' });
+        }
+
+        function updateVisibility(id, val) {
+            const col = colConfig.find(c => c.id === id);
+            if (col) col.visible = val;
+        }
+
+        function closeSettings() {
+            const newOrder = Array.from(document.getElementById('column-list').children).map(el => el.dataset.id);
+            colConfig.sort((a, b) => newOrder.indexOf(a.id) - newOrder.indexOf(b.id));
+            document.getElementById('settings-modal').style.display = 'none';
+            runScreener();
+        }
 
         function setScale(s) {
             document.body.className = `sz-${s} pb-12`;
@@ -198,198 +125,81 @@
             document.getElementById(`sc-${s}`).classList.add('active');
         }
 
-        function toggleBrk() {
-            filterBrk = !filterBrk;
-            document.getElementById('brk-status').innerText = filterBrk ? 'ON' : 'OFF';
-            document.getElementById('brk-status').className = filterBrk ? 'text-emerald-400' : 'text-gray-400';
-            runScreener();
+        function toggleBrk() { filterBrk = !filterBrk; document.getElementById('brk-status').innerText = filterBrk ? 'ON' : 'OFF'; runScreener(); }
+
+        async function getMTF(s) {
+            const tfs = ['5m', '15m', '1h', '1d'];
+            const res = {};
+            await Promise.all(tfs.map(async tf => {
+                const r = await fetch(`${API}/klines?symbol=${s}&interval=${tf}&limit=11`);
+                const k = await r.json();
+                const price = parseFloat(k[k.length-1][4]);
+                const high = Math.max(...k.slice(0,10).map(x => parseFloat(x[2])));
+                res[tf] = price > high;
+            }));
+            return res;
         }
 
-        async function updateTF(tf) {
-            activeTF = tf;
-            document.querySelectorAll('[id^="btn-"]').forEach(b => b.classList.remove('active'));
-            document.getElementById(`btn-${tf}`).classList.add('active');
-            renderTableHeaders();
-            runScreener();
-        }
-
-        function formatUSD(v) {
-            if (v >= 1e9) return '$' + (v/1e9).toFixed(2) + 'B';
-            if (v >= 1e6) return '$' + (v/1e6).toFixed(2) + 'M';
-            return '$' + (v/1e3).toFixed(1) + 'K';
-        }
-
-        function getLogo(s) {
-            return `https://raw.githubusercontent.com/spothq/cryptocurrency-icons/master/128/color/${s.toLowerCase()}.png`;
-        }
-
-        const colDefs = {
-            num: { labelBase: '#', align: 'left', render: (c, i) => `<td class="text-gray-700 font-bold opacity-30">${i+1}</td>` },
-            symbol: { labelBase: 'Symbol', align: 'left', render: (c) => `<td><div class="flex items-center gap-3"><img src="${getLogo(c.s)}" class="asset-logo" onerror="this.src='https://bin.bnbstatic.com/static/images/common/favicon.ico'"><span class="font-extrabold text-white tracking-tighter uppercase">${c.s}</span></div></td>` },
-            price: { labelBase: 'Price', align: 'right', render: (c) => `<td class="text-right font-bold text-white">$${c.p < 1 ? c.p.toFixed(6) : c.p.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>` },
-            changeTF: { labelBase: 'Change (TF)', align: 'right', render: (c) => `<td class="text-right font-black ${c.pct >= 0 ? 'text-[var(--up)]' : 'text-[var(--down)]'}">${c.pct >= 0 ? '+' : ''}${c.pct.toFixed(2)}%</td>` },
-            change24h: { labelBase: '24h Change', align: 'right', render: (c) => `<td class="text-right font-black ${c.pct24 >= 0 ? 'text-[var(--up)]' : 'text-[var(--down)]'}">${c.pct24 >= 0 ? '+' : ''}${c.pct24.toFixed(2)}%</td>` },
-            volTF: { labelBase: 'Volume (TF)', align: 'right', render: (c) => `<td class="text-right font-bold text-[var(--accent)]">${formatUSD(c.vTF)}</td>` },
-            vol24h: { labelBase: '24h Volume', align: 'right', render: (c) => `<td class="text-right font-bold text-[var(--accent)]">${formatUSD(c.v24)}</td>` }
-        };
-
-        const defaultCols = [
-            { id: 'num', visible: true }, { id: 'symbol', visible: true }, { id: 'price', visible: true },
-            { id: 'changeTF', visible: true }, { id: 'change24h', visible: false }, 
-            { id: 'volTF', visible: false }, { id: 'vol24h', visible: false }
-        ];
-
-        let config = JSON.parse(localStorage.getItem('qp_config_v3')) || { limit: 15, volMultiplier: 3.0, columns: defaultCols };
-        let tempConfig = JSON.parse(JSON.stringify(config)); 
-
-        function renderTableHeaders() {
-            const visibleCols = config.columns.filter(c => c.visible);
-            let html = '';
-            visibleCols.forEach(col => {
-                let label = colDefs[col.id].labelBase;
-                if(label.includes('(TF)')) label = label.replace('(TF)', `(${activeTF})`);
-                html += `<th style="text-align: ${colDefs[col.id].align}">${label}</th>`;
-            });
-            document.getElementById('head-gainers').innerHTML = html;
-            document.getElementById('head-losers').innerHTML = html;
-        }
-
-        async function fetchPair(s, tickerData) {
+        async function fetchPair(s) {
             try {
-                // Fetch 21 candles: 20 for average, 1 for current
-                const kR = await fetch(`${API}/klines?symbol=${s}&interval=${activeTF}&limit=21`);
-                const k = await kR.json();
-                if (k.length < 21) return null;
-
-                const cur = k[20];
-                const past20 = k.slice(0, 20);
-                
-                // Volume Logic (Using Quote Asset Volume for consistency)
-                const avgVol = past20.reduce((acc, val) => acc + parseFloat(val[7]), 0) / 20;
-                const curVol = parseFloat(cur[7]);
-                const volSurge = curVol >= (avgVol * config.volMultiplier);
-
-                // Price Logic
-                const high20 = Math.max(...past20.map(c => parseFloat(c[2])));
-                const price = parseFloat(cur[4]);
-                const open = parseFloat(cur[1]);
-                
+                const [kR, tR] = await Promise.all([fetch(`${API}/klines?symbol=${s}&interval=${activeTF}&limit=2`), fetch(`${API}/ticker/24hr?symbol=${s}`)]);
+                const k = await kR.json(), t = await tR.json();
+                const cur = k[k.length-1];
+                const price = parseFloat(cur[4]), open = parseFloat(cur[1]);
+                const mtfs = await getMTF(s);
                 return { 
-                    s: s.replace('USDT',''), 
-                    p: price, 
-                    pct: ((price-open)/open)*100, 
-                    pct24: parseFloat(tickerData.priceChangePercent), 
-                    v24: parseFloat(tickerData.quoteVolume), 
-                    vTF: curVol, 
-                    isB: price > high20 && volSurge 
+                    s: s.replace('USDT',''), p: price, pct: ((price-open)/open)*100, 
+                    pct24: parseFloat(t.priceChangePercent),
+                    v24: parseFloat(t.quoteVolume), 
+                    vTF: parseFloat(cur[7]), // Quote asset volume for this TF
+                    mtfs, isB: mtfs[activeTF] 
                 };
             } catch(e) { return null; }
+        }
+
+        function formatVal(v) {
+            if (v >= 1e9) return (v/1e9).toFixed(2) + 'B';
+            if (v >= 1e6) return (v/1e6).toFixed(1) + 'M';
+            return (v/1e3).toFixed(0) + 'K';
         }
 
         async function runScreener() {
             try {
                 const res = await fetch(`${API}/ticker/24hr`);
                 const all = await res.json();
-                const tickerMap = {};
-                all.forEach(t => tickerMap[t.symbol] = t);
+                let targets = all.filter(t => t.symbol.endsWith('USDT')).sort((a,b) => Math.abs(parseFloat(b.priceChangePercent)) - Math.abs(parseFloat(a.priceChangePercent))).slice(0, 12).map(t => t.symbol);
+                let data = (await Promise.all(targets.map(fetchPair))).filter(d => d);
+                if (filterBrk) data = data.filter(d => d.isB);
 
-                let targets = all.filter(t => t.symbol.endsWith('USDT'))
-                                 .sort((a,b) => Math.abs(parseFloat(b.priceChangePercent)) - Math.abs(parseFloat(a.priceChangePercent)))
-                                 .slice(0, 45).map(t => t.symbol);
-
-                let data = (await Promise.all(targets.map(s => fetchPair(s, tickerMap[s])))).filter(d => d);
+                const activeCols = colConfig.filter(c => c.visible);
+                const headers = `<tr>${activeCols.map(c => `<th class="${c.id==='rank'||c.id==='symbol'?'text-left':'text-right'}">${c.id==='changeTF' ? `Chg (${activeTF})` : c.label}</th>`).join('')}</tr>`;
                 
-                let g = [...data].sort((a,b) => b.pct - a.pct);
-                let l = [...data].sort((a,b) => a.pct - b.pct);
+                const row = (c, i) => {
+                    const cells = {
+                        rank: `<td class="opacity-20 font-bold">${i+1}</td>`,
+                        symbol: `<td><div class="font-black text-white leading-none">${c.s}</div><div class="flex mt-1">
+                                    ${['1d','1h','15m','5m'].map(tf => `<span class="tf-badge ${c.mtfs[tf]?'active':''}">${tf.toUpperCase()}</span>`).join('')}
+                                 </div></td>`,
+                        price: `<td class="text-right font-bold">$${c.p < 1 ? c.p.toFixed(5) : c.p.toLocaleString()}</td>`,
+                        changeTF: `<td class="text-right font-black ${c.pct >= 0 ? 'text-[#02c076]' : 'text-[#f84960]'}">${c.pct.toFixed(2)}%</td>`,
+                        change24: `<td class="text-right font-black ${c.pct24 >= 0 ? 'text-[#02c076]' : 'text-[#f84960]'}">${c.pct24.toFixed(2)}%</td>`,
+                        volTF: `<td class="text-right font-bold text-gray-400">${formatVal(c.vTF)}</td>`,
+                        vol24: `<td class="text-right font-bold text-amber-500">${formatVal(c.v24)}</td>`
+                    };
+                    return `<tr class="${c.isB ? 'row-brk' : ''}">${activeCols.map(col => cells[col.id]).join('')}</tr>`;
+                };
 
-                if (filterBrk) { g = g.filter(d => d.isB); l = l.filter(d => d.isB); }
-
-                const visibleCols = config.columns.filter(c => c.visible);
-                const generateRows = (arr) => arr.slice(0, config.limit).map((c, i) => {
-                    let html = `<tr class="${c.isB ? 'row-brk' : ''}">`;
-                    visibleCols.forEach(col => { html += colDefs[col.id].render(c, i); });
-                    return html + `</tr>`;
-                }).join('');
-
-                document.getElementById('list-gainers').innerHTML = generateRows(g);
-                document.getElementById('list-losers').innerHTML = generateRows(l);
+                document.getElementById('head-gainers').innerHTML = headers;
+                document.getElementById('head-losers').innerHTML = headers;
+                document.getElementById('list-gainers').innerHTML = data.sort((a,b)=>b.pct-a.pct).map(row).join('');
+                document.getElementById('list-losers').innerHTML = data.sort((a,b)=>a.pct-b.pct).map(row).join('');
                 document.getElementById('last-sync').innerText = `SYNCED • ${new Date().toLocaleTimeString()}`;
             } catch(e) {}
         }
 
-        // --- Drag & Drop Core Logic ---
-        let draggedItemIndex = null;
-
-        function renderSettingsList() {
-            const ul = document.getElementById('settings-col-list');
-            ul.innerHTML = '';
-            
-            tempConfig.columns.forEach((col, idx) => {
-                const li = document.createElement('li');
-                li.className = "flex items-center justify-between bg-[#1c2431] p-3 rounded-lg border border-white/5 cursor-move transition-all";
-                li.draggable = true;
-                li.dataset.index = idx;
-                
-                li.innerHTML = `
-                    <div class="flex items-center gap-3">
-                        <span class="text-gray-600">⠿</span>
-                        <span class="text-sm font-bold text-white uppercase tracking-tight">${colDefs[col.id].labelBase}</span>
-                    </div>
-                    <label class="relative inline-flex items-center cursor-pointer">
-                        <input type="checkbox" ${col.visible ? 'checked' : ''} onchange="toggleTempCol(${idx})" class="sr-only peer">
-                        <div class="w-10 h-5 bg-gray-700 rounded-full peer peer-checked:after:translate-x-[20px] after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-[var(--up)]"></div>
-                    </label>
-                `;
-
-                li.addEventListener('dragstart', () => { draggedItemIndex = idx; li.classList.add('dragging'); });
-                li.addEventListener('dragend', () => { li.classList.remove('dragging'); });
-                li.addEventListener('dragover', (e) => { e.preventDefault(); });
-                li.addEventListener('drop', () => {
-                    const droppedItemIndex = idx;
-                    if (draggedItemIndex !== droppedItemIndex) {
-                        const item = tempConfig.columns.splice(draggedItemIndex, 1)[0];
-                        tempConfig.columns.splice(droppedItemIndex, 0, item);
-                        renderSettingsList();
-                    }
-                });
-                
-                ul.appendChild(li);
-            });
-        }
-
-        function openSettings() {
-            tempConfig = JSON.parse(JSON.stringify(config)); 
-            document.getElementById('setting-limit').value = tempConfig.limit;
-            document.getElementById('setting-vol-mult').value = tempConfig.volMultiplier;
-            renderSettingsList();
-            const modal = document.getElementById('settings-modal');
-            modal.classList.remove('hidden');
-            setTimeout(() => modal.classList.remove('opacity-0'), 10);
-        }
-
-        function closeSettings() {
-            const modal = document.getElementById('settings-modal');
-            modal.classList.add('opacity-0');
-            setTimeout(() => modal.classList.add('hidden'), 300);
-        }
-
-        function toggleTempCol(idx) {
-            tempConfig.columns[idx].visible = !tempConfig.columns[idx].visible;
-        }
-
-        function saveAndApplySettings() {
-            tempConfig.limit = parseInt(document.getElementById('setting-limit').value) || 15;
-            tempConfig.volMultiplier = parseFloat(document.getElementById('setting-vol-mult').value) || 3.0;
-            config = JSON.parse(JSON.stringify(tempConfig));
-            localStorage.setItem('qp_config_v3', JSON.stringify(config));
-            closeSettings();
-            renderTableHeaders();
-            runScreener();
-        }
-
-        renderTableHeaders();
-        updateTF('15m');
-        setInterval(runScreener, 20000);
+        setInterval(runScreener, 20000); runScreener();
+        async function updateTF(tf) { activeTF = tf; document.querySelectorAll('.btn-pill').forEach(b => !b.id.startsWith('sc-') && b.classList.remove('active')); document.getElementById(`btn-${tf}`).classList.add('active'); runScreener(); }
     </script>
 </body>
-</html>
+    </html>
+    
