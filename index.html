@@ -1,9 +1,10 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>QuantPulse Pro | Alpha Terminal</title>
+    <title>QuantPulse Pro | Terminal</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@700;800&family=JetBrains+Mono:wght@500;700;800&family=Inter:wght@400;500;600;700&display=swap');
@@ -19,7 +20,7 @@
             --down-dim: rgba(255, 59, 92, 0.12);
             --text-main: #ffffff;
             --text-dim: #6b7280;
-            --base-fs: 13px;
+            --base-fs: 14px;
         }
 
         body { 
@@ -32,13 +33,12 @@
             background-image: radial-gradient(circle at 50% 0%, #161b22 0%, transparent 60%);
         }
 
-        /* Scalable UI */
         body.sz-sm { --base-fs: 11px; }
         body.sz-md { --base-fs: 13px; }
         body.sz-lg { --base-fs: 15px; }
 
         .glass-panel {
-            background: rgba(10, 13, 20, 0.8);
+            background: rgba(10, 13, 20, 0.85);
             backdrop-filter: blur(20px);
             border: 1px solid var(--border);
             border-radius: 12px;
@@ -55,11 +55,7 @@
             border: 1px solid transparent;
         }
 
-        .btn-pill.active {
-            background: white;
-            color: black;
-            box-shadow: 0 0 20px rgba(255,255,255,0.1);
-        }
+        .btn-pill.active { background: white; color: black; box-shadow: 0 0 20px rgba(255,255,255,0.1); }
 
         .search-bar {
             background: #11151f;
@@ -71,31 +67,25 @@
             outline: none;
             transition: 0.2s;
         }
-        .search-bar:focus { border-color: var(--accent); background: #161b28; }
+        .search-bar:focus { border-color: var(--accent); }
 
-        /* MTF Styles */
         .mtf-tag {
             font-size: 8px;
             padding: 2px 5px;
             border-radius: 3px;
             background: #161a23;
-            color: #3d4659;
+            color: #4b5563;
             font-weight: 900;
             border: 1px solid transparent;
         }
-        .mtf-tag.active {
-            background: var(--up-dim);
-            color: var(--up);
-            border-color: rgba(0, 255, 149, 0.2);
-            animation: pulse-green 2s infinite;
-        }
-        @keyframes pulse-green { 0% { box-shadow: 0 0 0 0 rgba(0, 255, 149, 0.2); } 70% { box-shadow: 0 0 0 6px rgba(0, 255, 149, 0); } 100% { box-shadow: 0 0 0 0 rgba(0, 255, 149, 0); } }
+        .mtf-tag.active { background: var(--up-dim); color: var(--up); border-color: rgba(0, 255, 149, 0.2); }
+        .mtf-tag.brk-1d { background: rgba(243, 186, 47, 0.15); color: var(--accent); border-color: rgba(243, 186, 47, 0.3); }
 
         .market-table { width: 100%; border-collapse: collapse; }
         .market-table th {
             text-align: right;
             color: var(--text-dim);
-            font-size: 10px;
+            font-size: 9px;
             font-weight: 800;
             padding: 16px 12px;
             border-bottom: 1px solid var(--border);
@@ -109,23 +99,32 @@
             white-space: nowrap;
         }
 
+        .row-brk { 
+            background: linear-gradient(90deg, rgba(0, 255, 149, 0.04) 0%, transparent 100%); 
+            border-left: 3px solid var(--up); 
+        }
+        
+        .row-brk-1d {
+            background: linear-gradient(90deg, rgba(243, 186, 47, 0.08) 0%, transparent 100%);
+            border-left: 3px solid var(--accent);
+        }
+
         .mono { font-family: 'JetBrains Mono', monospace; font-weight: 700; }
-        .pin-btn { cursor: pointer; color: var(--text-dim); transition: 0.2s; }
+        .pin-btn { cursor: pointer; color: #374151; transition: 0.2s; font-size: 1.1em; }
         .pin-btn.pinned { color: var(--accent); }
 
-        .vol-bar-bg { background: rgba(255,255,255,0.03); border-radius: 3px; height: 4px; width: 60px; margin-left: auto; margin-top: 4px; overflow: hidden; }
-        .vol-bar-fill { background: var(--accent); height: 100%; border-radius: 3px; opacity: 0.6; }
+        .vol-bar-bg { background: rgba(255,255,255,0.03); border-radius: 2px; height: 3px; width: 100%; margin-top: 4px; overflow: hidden; }
+        .vol-bar-fill { background: var(--accent); height: 100%; opacity: 0.5; }
 
         #toast {
             position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%);
             background: var(--accent); color: black; font-weight: 800; padding: 10px 20px; border-radius: 8px;
             opacity: 0; transition: 0.3s; z-index: 100; pointer-events: none;
         }
-
         .no-scrollbar::-webkit-scrollbar { display: none; }
     </style>
 </head>
-<body class="sz-md pb-10">
+<body class="sz-lg pb-10">
 
     <div id="toast">Symbol Copied</div>
 
@@ -134,19 +133,19 @@
         <header class="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6 mb-8">
             <div class="flex items-center gap-4">
                 <h1 style="font-family: 'Plus Jakarta Sans'" class="text-2xl font-extrabold tracking-tighter">
-                    QUANT<span class="text-[var(--accent)]">PULSE</span>
+                    QUANT<span class="text-[var(--accent)]">PULSE</span> <span class="text-[10px] bg-white/10 px-2 py-0.5 rounded ml-2 font-mono text-gray-400">TERMINAL</span>
                 </h1>
                 <div id="last-sync" class="text-[9px] font-mono text-gray-500 uppercase tracking-widest bg-white/5 px-3 py-1 rounded-full border border-white/10">Connecting...</div>
             </div>
 
             <div class="flex flex-wrap items-center gap-4 w-full lg:w-auto">
                 <div class="flex-grow max-w-sm">
-                    <input type="text" id="assetSearch" oninput="renderTables()" placeholder="FILTER SYMBOLS..." class="search-bar">
+                    <input type="text" id="assetSearch" oninput="renderTables()" placeholder="SEARCH SYMBOLS..." class="search-bar">
                 </div>
                 <div class="flex gap-1 glass-panel p-1">
                     <button onclick="setScale('sm')" id="sc-sm" class="btn-pill">S</button>
                     <button onclick="setScale('md')" id="sc-md" class="btn-pill">M</button>
-                    <button onclick="setScale('lg')" id="sc-lg" class="btn-pill">L</button>
+                    <button onclick="setScale('lg')" id="sc-lg" class="btn-pill active">L</button>
                 </div>
             </div>
         </header>
@@ -154,32 +153,35 @@
         <div class="flex flex-wrap items-center gap-4 mb-8">
             <div class="flex gap-1 glass-panel p-1">
                 <button onclick="updateTF('5m')" id="btn-5m" class="btn-pill">5m</button>
-                <button onclick="updateTF('15m')" id="btn-15m" class="btn-pill">15m</button>
+                <button onclick="updateTF('15m')" id="btn-15m" class="btn-pill active">15m</button>
                 <button onclick="updateTF('1h')" id="btn-1h" class="btn-pill">1h</button>
                 <button onclick="updateTF('1d')" id="btn-1d" class="btn-pill">1d</button>
             </div>
 
-            <button onclick="toggleBrk()" id="brk-btn" class="glass-panel px-5 py-2 text-[10px] font-black uppercase tracking-widest transition-all border-accent">
-                Mode: <span id="brk-status" class="text-[var(--accent)]">STRICT BREAKOUT</span>
+            <button onclick="toggleBrk()" id="brk-btn" class="glass-panel px-5 py-2 text-[10px] font-black uppercase tracking-widest transition-all">
+                Filter: <span id="brk-status" class="text-gray-500">ALL MARKET</span>
             </button>
+            <div class="flex items-center gap-4 text-[10px] font-bold uppercase tracking-tighter ml-auto opacity-60">
+                <span class="flex items-center gap-1"><span class="w-2 h-2 bg-[var(--accent)] rounded-full"></span> 1D Breakout</span>
+                <span class="flex items-center gap-1"><span class="w-2 h-2 bg-[var(--up)] rounded-full"></span> MTF Active</span>
+            </div>
         </div>
 
         <div class="grid grid-cols-1 xl:grid-cols-2 gap-8">
-            
             <div class="glass-panel overflow-hidden border-t-2 border-t-[var(--up)]">
-                <div class="px-5 py-4 border-b border-white/5 bg-[var(--up-dim)] flex items-center justify-between">
-                    <span class="text-[11px] font-black uppercase text-[var(--up)] tracking-widest">Bullish Momentum</span>
+                <div class="px-5 py-4 border-b border-white/5 flex items-center justify-between">
+                    <span class="text-[11px] font-black uppercase text-[var(--up)] tracking-widest">Bullish Gainers</span>
                 </div>
                 <div class="overflow-x-auto no-scrollbar">
                     <table class="market-table">
                         <thead>
                             <tr>
                                 <th class="w-10"></th>
-                                <th>Asset & MTF</th>
+                                <th>Symbol</th>
                                 <th class="text-right">Price</th>
-                                <th class="text-right" id="h-gain">15m %</th>
+                                <th class="text-right" id="h-gain-tf">15m %</th>
                                 <th class="text-right">24h %</th>
-                                <th class="text-right">24h Vol</th>
+                                <th class="text-right">Volume</th>
                             </tr>
                         </thead>
                         <tbody id="list-gainers"></tbody>
@@ -188,41 +190,46 @@
             </div>
 
             <div class="glass-panel overflow-hidden border-t-2 border-t-[var(--down)]">
-                <div class="px-5 py-4 border-b border-white/5 bg-[var(--down-dim)] flex items-center justify-between">
-                    <span class="text-[11px] font-black uppercase text-[var(--down)] tracking-widest">Bearish Momentum</span>
+                <div class="px-5 py-4 border-b border-white/5 flex items-center justify-between">
+                    <span class="text-[11px] font-black uppercase text-[var(--down)] tracking-widest">Bearish Losers</span>
                 </div>
                 <div class="overflow-x-auto no-scrollbar">
                     <table class="market-table">
                         <thead>
                             <tr>
                                 <th class="w-10"></th>
-                                <th>Asset & MTF</th>
+                                <th>Symbol</th>
                                 <th class="text-right">Price</th>
-                                <th class="text-right" id="h-lose">15m %</th>
+                                <th class="text-right" id="h-lose-tf">15m %</th>
                                 <th class="text-right">24h %</th>
-                                <th class="text-right">24h Vol</th>
+                                <th class="text-right">Volume</th>
                             </tr>
                         </thead>
                         <tbody id="list-losers"></tbody>
                     </table>
                 </div>
             </div>
-
         </div>
     </div>
 
     <script>
         const API = "https://fapi.binance.com/fapi/v1";
-        let config = JSON.parse(localStorage.getItem('quantConfig_v5')) || {
+        let config = JSON.parse(localStorage.getItem('quantConfig_vFinal')) || {
             tf: '15m',
-            brk: true,
-            scale: 'md',
+            brk: false,
+            scale: 'lg',
             pins: []
         };
 
         let masterData = [];
 
-        function save() { localStorage.setItem('quantConfig_v5', JSON.stringify(config)); }
+        function save() { localStorage.setItem('quantConfig_vFinal', JSON.stringify(config)); }
+
+        function formatVol(v) {
+            if (v >= 1e9) return (v / 1e9).toFixed(2) + 'B';
+            if (v >= 1e6) return (v / 1e6).toFixed(1) + 'M';
+            return (v / 1e3).toFixed(1) + 'K';
+        }
 
         function setScale(s) {
             config.scale = s; save();
@@ -234,7 +241,7 @@
         function toggleBrk() {
             config.brk = !config.brk; save();
             const status = document.getElementById('brk-status');
-            status.innerText = config.brk ? 'STRICT BREAKOUT' : 'SHOW ALL';
+            status.innerText = config.brk ? 'BREAKOUT PRIORITY' : 'ALL MARKET';
             status.style.color = config.brk ? 'var(--accent)' : 'var(--text-dim)';
             renderTables();
         }
@@ -259,8 +266,8 @@
                 if(['5m','15m','1h','1d'].includes(b.innerText.toLowerCase())) b.classList.remove('active');
             });
             document.getElementById(`btn-${tf}`).classList.add('active');
-            document.getElementById('h-gain').innerText = `${tf} %`;
-            document.getElementById('h-lose').innerText = `${tf} %`;
+            document.getElementById('h-gain-tf').innerText = `${tf} %`;
+            document.getElementById('h-lose-tf').innerText = `${tf} %`;
             runScreener();
         }
 
@@ -271,32 +278,32 @@
             return price > high;
         }
 
-        function formatVol(v) {
-            if (v >= 1e9) return (v/1e9).toFixed(1) + 'B';
-            if (v >= 1e6) return (v/1e6).toFixed(1) + 'M';
-            return (v/1e3).toFixed(0) + 'K';
-        }
-
         async function fetchPair(s) {
             try {
                 const tfs = ['5m', '15m', '1h', '1d'];
                 const reqs = tfs.map(tf => fetch(`${API}/klines?symbol=${s}&interval=${tf}&limit=12`).then(r => r.json()));
                 reqs.push(fetch(`${API}/ticker/24hr?symbol=${s}`).then(r => r.json()));
-                
-                const results = await Promise.all(reqs);
-                const ticker = results[4];
-                const activeK = results[tfs.indexOf(config.tf)];
+                const res = await Promise.all(reqs);
+                const ticker = res[4];
+                const activeK = res[tfs.indexOf(config.tf)];
                 const price = parseFloat(activeK[activeK.length-1][4]);
                 const open = parseFloat(activeK[activeK.length-1][1]);
+                
+                const mtf = { 
+                    '5m': isBreakout(res[0]), '15m': isBreakout(res[1]), 
+                    '1h': isBreakout(res[2]), '1d': isBreakout(res[3]) 
+                };
+
+                let score = 0;
+                if (mtf['1d']) score += 10;
+                if (mtf['1h']) score += 5;
+                if (mtf['15m']) score += 2;
+                if (mtf['5m']) score += 1;
 
                 return {
-                    s: s.replace('USDT',''),
-                    p: price,
-                    pct: ((price-open)/open)*100,
-                    pct24: parseFloat(ticker.priceChangePercent),
-                    v24: parseFloat(ticker.quoteVolume),
-                    mtf: { '5m': isBreakout(results[0]), '15m': isBreakout(results[1]), '1h': isBreakout(results[2]), '1d': isBreakout(results[3]) },
-                    isB: isBreakout(activeK)
+                    s: s.replace('USDT',''), p: price, pct: ((price-open)/open)*100,
+                    pct24: parseFloat(ticker.priceChangePercent), v24: parseFloat(ticker.quoteVolume),
+                    mtf, brkScore: score
                 };
             } catch(e) { return null; }
         }
@@ -307,68 +314,65 @@
                 const all = await res.json();
                 let targets = all.filter(t => t.symbol.endsWith('USDT'))
                                  .sort((a,b) => parseFloat(b.quoteVolume) - parseFloat(a.quoteVolume))
-                                 .slice(0, 40).map(t => t.symbol);
-
+                                 .slice(0, 50).map(t => t.symbol);
                 masterData = (await Promise.all(targets.map(fetchPair))).filter(d => d);
                 renderTables();
-                document.getElementById('last-sync').innerText = `SYNCED • ${new Date().toLocaleTimeString()}`;
+                document.getElementById('last-sync').innerText = `LIVE • ${new Date().toLocaleTimeString()}`;
             } catch(e) {}
         }
 
         function renderTables() {
             const query = document.getElementById('assetSearch').value.toUpperCase();
             let filtered = masterData.filter(d => d.s.includes(query));
-
-            // If Strict Mode is ON, filter for breakouts BUT keep Pinned items visible
+            
             if (config.brk) {
-                filtered = filtered.filter(d => d.isB || config.pins.includes(d.s));
+                filtered = filtered.filter(d => d.brkScore > 0);
+                filtered.sort((a,b) => b.brkScore - a.brkScore || Math.abs(b.pct) - Math.abs(a.pct));
             }
 
             const maxVol = Math.max(...masterData.map(d => d.v24));
 
-            const row = (c) => {
-                const isPinned = config.pins.includes(c.s);
+            const generateRow = (c) => {
+                let rowStyle = "";
+                if (c.mtf['1d']) rowStyle = "row-brk-1d";
+                else if (c.brkScore > 0) rowStyle = "row-brk";
+
                 return `
-                <tr>
-                    <td class="text-center">
-                        <span onclick="togglePin('${c.s}')" class="pin-btn ${isPinned ? 'pinned' : ''}">★</span>
-                    </td>
+                <tr class="${rowStyle}">
+                    <td><span onclick="togglePin('${c.s}')" class="pin-btn ${config.pins.includes(c.s) ? 'pinned' : ''}">★</span></td>
                     <td>
-                        <div class="flex items-center gap-3">
-                            <img src="https://bin.bnbstatic.com/static/images/common/favicon.ico" class="w-4 h-4 opacity-30">
-                            <div>
-                                <div onclick="copy('${c.s}')" class="font-bold tracking-tighter cursor-pointer hover:text-[var(--accent)] text-white">${c.s}</div>
+                        <div class="flex items-center gap-2">
+                            <div class="flex flex-col">
+                                <span onclick="copy('${c.s}')" class="font-bold cursor-pointer hover:text-[var(--accent)] text-white">${c.s}</span>
                                 <div class="flex gap-1 mt-1">
                                     <span class="mtf-tag ${c.mtf['5m'] ? 'active' : ''}">5m</span>
                                     <span class="mtf-tag ${c.mtf['15m'] ? 'active' : ''}">15m</span>
                                     <span class="mtf-tag ${c.mtf['1h'] ? 'active' : ''}">1h</span>
-                                    <span class="mtf-tag ${c.mtf['1d'] ? 'active' : ''}">1d</span>
+                                    <span class="mtf-tag ${c.mtf['1d'] ? 'active brk-1d' : ''}">1d</span>
                                 </div>
                             </div>
                         </div>
                     </td>
-                    <td class="text-right font-bold text-white mono">$${c.p < 1 ? c.p.toFixed(5) : c.p.toLocaleString()}</td>
+                    <td class="text-right font-bold text-white mono">$${c.p < 1 ? c.p.toFixed(5) : c.p.toLocaleString(undefined, {minimumFractionDigits: 2})}</td>
                     <td class="text-right font-bold mono ${c.pct >= 0 ? 'text-[var(--up)]' : 'text-[var(--down)]'}">${c.pct >= 0 ? '+' : ''}${c.pct.toFixed(2)}%</td>
                     <td class="text-right font-bold mono ${c.pct24 >= 0 ? 'text-[var(--up)]' : 'text-[var(--down)]'}">${c.pct24 >= 0 ? '+' : ''}${c.pct24.toFixed(2)}%</td>
                     <td class="text-right">
-                        <div class="text-[var(--accent)] font-bold mono text-[11px]">${formatVol(c.v24)}</div>
+                        <div class="text-white font-bold mono text-[11px]">${formatVol(c.v24)}</div>
                         <div class="vol-bar-bg"><div class="vol-bar-fill" style="width: ${(c.v24/maxVol)*100}%"></div></div>
                     </td>
                 </tr>`;
             };
 
-            let g = [...filtered].sort((a,b) => b.pct - a.pct);
-            let l = [...filtered].sort((a,b) => a.pct - b.pct);
+            const gainers = filtered.filter(d => d.pct >= 0).sort((a,b) => b.pct - a.pct);
+            const losers = filtered.filter(d => d.pct < 0).sort((a,b) => a.pct - b.pct);
 
-            document.getElementById('list-gainers').innerHTML = g.map(row).join('');
-            document.getElementById('list-losers').innerHTML = l.map(row).join('');
+            document.getElementById('list-gainers').innerHTML = gainers.map(generateRow).join('');
+            document.getElementById('list-losers').innerHTML = losers.map(generateRow).join('');
         }
 
-        // Init
         setScale(config.scale);
         updateTF(config.tf);
         setInterval(runScreener, 20000);
     </script>
 </body>
-    </html>
-    
+</html>
