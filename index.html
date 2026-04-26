@@ -3,79 +3,178 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>QuantPulse v4.5 | No Limit</title>
+    <title>QuantPulse | Gainers & Losers</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&family=JetBrains+Mono:wght@500;700&display=swap');
-        :root { --bg: #030508; --accent: #f3ba2f; }
-        body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: var(--bg); color: #f0f2f5; min-height: 100vh; }
-        .glass { background: rgba(20, 24, 30, 0.8); backdrop-filter: blur(16px); border: 1px solid rgba(255, 255, 255, 0.05); border-radius: 16px; }
-        .mono { font-family: 'JetBrains Mono', monospace; }
-        .tf-btn.active { background: var(--accent); color: #000; box-shadow: 0 0 25px rgba(243, 186, 47, 0.25); }
-        .adaptive-grid { display: grid; gap: 0.75rem; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); }
-        .breakout-card { border: 1px solid #10b981; background: linear-gradient(135deg, rgba(16, 185, 129, 0.15) 0%, transparent 100%); }
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+        
+        :root {
+            --bg-deep: #0c0e12;
+            --bg-card: #161a1e;
+            --border: #2b3139;
+            --text-muted: #848e9c;
+            --up: #02c076;
+            --down: #f84960;
+        }
+
+        body { 
+            font-family: 'Inter', sans-serif; 
+            background-color: var(--bg-deep); 
+            color: #eaecef;
+            margin: 0;
+        }
+
+        .tf-nav {
+            display: flex;
+            background-color: var(--bg-card);
+            padding: 4px;
+            border-radius: 8px;
+            gap: 4px;
+            overflow-x: auto;
+        }
+
+        .tf-btn {
+            padding: 8px 14px;
+            font-size: 12px;
+            font-weight: 500;
+            color: var(--text-muted);
+            border-radius: 6px;
+            white-space: nowrap;
+            transition: all 0.2s;
+        }
+
+        .tf-btn.active {
+            background-color: #2b3139;
+            color: white;
+        }
+
+        .market-table {
+            width: 100%;
+            border-collapse: collapse;
+            min-width: 700px;
+        }
+
+        .market-table th {
+            text-align: right;
+            color: var(--text-muted);
+            font-size: 11px;
+            font-weight: 600;
+            padding: 12px 16px;
+            border-bottom: 1px solid var(--border);
+            text-transform: uppercase;
+        }
+
+        .market-table th:nth-child(1), .market-table th:nth-child(2) { text-align: left; }
+
+        .market-table td {
+            padding: 14px 16px;
+            border-bottom: 1px solid var(--border);
+            font-size: 13px;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .row-breakout {
+            background: linear-gradient(90deg, rgba(2, 192, 118, 0.04) 0%, transparent 100%);
+        }
+
         .no-scrollbar::-webkit-scrollbar { display: none; }
     </style>
 </head>
-<body class="p-4 md:p-6">
+<body class="pb-10">
 
-    <div class="max-w-[1600px] mx-auto">
-        <header class="flex flex-col xl:flex-row justify-between items-start xl:items-center mb-6 gap-6">
-            <div>
-                <h1 class="text-3xl font-extrabold tracking-tighter italic text-white uppercase">UNLIMITED<span class="text-[var(--accent)] not-italic">SCAN</span></h1>
-                <div class="flex flex-wrap gap-2 mt-2">
-                    <span id="market-load" class="text-[9px] mono text-blue-400 font-bold bg-blue-500/10 px-2 py-1 rounded border border-blue-500/20 uppercase tracking-widest italic">Full Market Coverage</span>
-                    <span id="sync-status" class="text-[9px] mono text-gray-500 font-bold bg-white/5 px-2 py-1 rounded border border-white/10 uppercase tracking-widest italic">Syncing...</span>
-                </div>
-            </div>
-
-            <div class="flex flex-col md:flex-row items-center gap-3 w-full xl:w-auto">
-                <div class="glass p-1 flex gap-1 overflow-x-auto no-scrollbar w-full md:w-auto">
-                    <button onclick="updateTF('5m')" id="btn-5m" class="tf-btn px-4 py-2 rounded-xl text-[10px] font-black bg-white/5 uppercase">5M</button>
-                    <button onclick="updateTF('15m')" id="btn-15m" class="tf-btn px-4 py-2 rounded-xl text-[10px] font-black bg-white/5 uppercase">15M</button>
-                    <button onclick="updateTF('1h')" id="btn-1h" class="tf-btn px-4 py-2 rounded-xl text-[10px] font-black bg-white/5 uppercase">1H</button>
-                    <button onclick="updateTF('4h')" id="btn-4h" class="tf-btn px-4 py-2 rounded-xl text-[10px] font-black bg-white/5 uppercase active">4H</button>
-                    <button onclick="updateTF('1d')" id="btn-1d" class="tf-btn px-4 py-2 rounded-xl text-[10px] font-black bg-white/5 uppercase">24H</button>
-                </div>
-                <div class="glass px-4 py-2 flex items-center justify-between gap-4 w-full md:w-auto">
-                    <span class="text-[9px] font-black text-gray-400 uppercase tracking-widest">Show Only Breakouts</span>
+    <div class="max-w-5xl mx-auto px-4 py-6">
+        <header class="mb-6 flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <h1 class="text-xl font-bold text-white tracking-tight">Market Gainers & Losers</h1>
+            
+            <div class="flex items-center gap-4 bg-[#161a1e] px-4 py-2 rounded-lg border border-[#2b3139]">
+                <span class="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Show Breakouts</span>
+                <label class="relative inline-flex items-center cursor-pointer">
                     <input type="checkbox" id="breakout-toggle" class="sr-only peer" onchange="runScreener()">
-                    <label for="breakout-toggle" class="relative w-10 h-5 bg-white/10 rounded-full peer peer-checked:bg-emerald-500 transition-all after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:after:translate-x-5 cursor-pointer"></label>
-                </div>
+                    <div class="w-8 h-4 bg-gray-700 rounded-full peer peer-checked:bg-emerald-500 after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-3 after:w-3 after:transition-all peer-checked:after:translate-x-4"></div>
+                </label>
             </div>
         </header>
 
-        <div id="screener-list" class="adaptive-grid"></div>
+        <div class="tf-nav no-scrollbar mb-6">
+            <button onclick="updateTF('5m')" id="btn-5m" class="tf-btn">5 minute</button>
+            <button onclick="updateTF('15m')" id="btn-15m" class="tf-btn active">15 minute</button>
+            <button onclick="updateTF('1h')" id="btn-1h" class="tf-btn">1 hour</button>
+            <button onclick="updateTF('4h')" id="btn-4h" class="tf-btn">4 hour</button>
+            <button onclick="updateTF('1d')" id="btn-1d" class="tf-btn">24 hour</button>
+        </div>
+
+        <div class="bg-[#161a1e] rounded-xl border border-[#2b3139] overflow-hidden shadow-2xl">
+            <div class="overflow-x-auto no-scrollbar">
+                <table class="market-table">
+                    <thead>
+                        <tr>
+                            <th class="w-10">#</th>
+                            <th>Symbol</th>
+                            <th class="text-right">Price</th>
+                            <th id="pct-header" class="text-right">Change (15m)</th>
+                            <th class="text-right">TF Vol</th>
+                            <th class="text-right">24H Volume</th>
+                        </tr>
+                    </thead>
+                    <tbody id="screener-list">
+                        </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="mt-4 flex flex-col sm:flex-row justify-between items-center gap-2 px-2">
+            <div class="flex items-center gap-2">
+                <div class="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></div>
+                <span id="sync-time" class="text-[10px] text-gray-500 font-bold uppercase tracking-widest italic">Syncing Live Feed...</span>
+            </div>
+            <span class="text-[10px] text-gray-600 font-bold uppercase">Zero-Limit Full Market Scan</span>
+        </div>
     </div>
 
     <script>
         const API_BASE = "https://fapi.binance.com/fapi/v1";
-        let activeTF = '4h';
-        let customSymbols = [];
+        let activeTF = '15m';
 
         async function updateTF(tf) {
             activeTF = tf;
             document.querySelectorAll('.tf-btn').forEach(b => b.classList.remove('active'));
             document.getElementById(`btn-${tf}`).classList.add('active');
+            document.getElementById('pct-header').innerText = `Change (${tf})`;
             runScreener();
         }
 
         function formatVol(v) {
-            if (v >= 1e9) return (v/1e9).toFixed(1) + 'B';
-            if (v >= 1e6) return (v/1e6).toFixed(1) + 'M';
-            return (v/1e3).toFixed(0) + 'K';
+            if (v >= 1e9) return '$' + (v/1e9).toFixed(2) + 'B';
+            if (v >= 1e6) return '$' + (v/1e6).toFixed(2) + 'M';
+            if (v >= 1e3) return '$' + (v/1e3).toFixed(1) + 'K';
+            return '$' + v.toFixed(2);
         }
 
         async function fetchSymbolData(symbol, tf) {
             try {
-                const res = await fetch(`${API_BASE}/klines?symbol=${symbol}&interval=${tf}&limit=11`);
-                const k = await res.json();
+                // Get 11 candles for Donchian + TF Change/Vol
+                const kReq = await fetch(`${API_BASE}/klines?symbol=${symbol}&interval=${tf}&limit=11`);
+                // Get 24hr ticker for total daily volume
+                const tReq = await fetch(`${API_BASE}/ticker/24hr?symbol=${symbol}`);
+                
+                const k = await kReq.json();
+                const t = await tReq.json();
+                
                 const prev = k.slice(0, 10);
                 const current = k[10];
                 const high = Math.max(...prev.map(c => parseFloat(c[2])));
                 const price = parseFloat(current[4]);
                 const open = parseFloat(current[1]);
-                return { s: symbol.replace('USDT',''), p: price, h: high, pct: ((price - open) / open) * 100, vol: parseFloat(current[7]), isBrk: price > high };
+                
+                return { 
+                    s: symbol.replace('USDT',''), 
+                    p: price, 
+                    h: high, 
+                    pct: ((price - open) / open) * 100, 
+                    tfVol: parseFloat(current[7]), 
+                    v24: parseFloat(t.quoteVolume),
+                    isBrk: price > high 
+                };
             } catch (e) { return null; }
         }
 
@@ -85,49 +184,37 @@
                 const res = await fetch(`${API_BASE}/ticker/24hr`);
                 const all = await res.json();
                 
-                // NO VOLUME LIMIT: Filters only for USDT pairs
-                // Shows the top 80 most volatile assets (Gains or Losers)
-                let targets = customSymbols.length > 0 ? customSymbols : 
-                    all.filter(t => t.symbol.endsWith('USDT'))
-                       .sort((a,b) => Math.abs(parseFloat(b.priceChangePercent)) - Math.abs(parseFloat(a.priceChangePercent)))
-                       .slice(0, 80).map(t => t.symbol);
+                let targets = all.filter(t => t.symbol.endsWith('USDT'))
+                                 .sort((a,b) => Math.abs(parseFloat(b.priceChangePercent)) - Math.abs(parseFloat(a.priceChangePercent)))
+                                 .slice(0, 40).map(t => t.symbol);
 
-                document.getElementById('market-load').innerText = `TOTAL PAIRS: ${targets.length}`;
-
-                // Parallel fetching with a slight delay for large batches to prevent rate limiting
                 let data = await Promise.all(targets.map(s => fetchSymbolData(s, activeTF)));
                 data = data.filter(d => d !== null);
-                
                 if (showOnly) data = data.filter(d => d.isBrk);
 
                 const list = document.getElementById('screener-list');
-                list.innerHTML = data.sort((a,b) => b.pct - a.pct).map(coin => `
-                    <div class="glass p-4 flex flex-col justify-between min-h-[130px] border-l-2 transition-all ${coin.isBrk ? 'breakout-card border-l-emerald-500 scale-[1.01]' : 'border-l-transparent opacity-80'}">
-                        <div class="flex justify-between items-start">
-                            <div>
-                                <h3 class="text-lg font-black text-white italic tracking-tighter">${coin.s}</h3>
-                                <div class="text-[9px] mono text-gray-500 mt-1">VOL: <span class="text-[var(--accent)] font-bold">$${formatVol(coin.vol)}</span></div>
+                list.innerHTML = data.sort((a,b) => b.pct - a.pct).map((coin, index) => `
+                    <tr class="${coin.isBrk ? 'row-breakout' : ''}">
+                        <td class="text-[#474d57] font-semibold">${index + 1}</td>
+                        <td class="font-bold text-white">
+                            <div class="flex items-center gap-2">
+                                ${coin.s}
+                                ${coin.isBrk ? '<span class="text-[8px] bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 px-1 rounded uppercase font-black">Brk</span>' : ''}
                             </div>
-                            <div class="text-right">
-                                <div class="text-sm font-black text-white mono">$${coin.p < 1 ? coin.p.toFixed(5) : coin.p.toLocaleString()}</div>
-                                <div class="text-[10px] font-black mono ${coin.pct >= 0 ? 'text-emerald-400' : 'text-red-500'}">
-                                    ${coin.pct >= 0 ? '▲' : '▼'}${Math.abs(coin.pct).toFixed(2)}%
-                                </div>
-                            </div>
-                        </div>
-                        <div class="mt-3 pt-3 border-t border-white/5 flex justify-between items-center">
-                             <div class="text-[8px] mono text-gray-500 font-bold uppercase tracking-widest">
-                                10P High: <span class="text-gray-300 font-black">$${coin.h < 1 ? coin.h.toFixed(5) : coin.h.toLocaleString()}</span>
-                            </div>
-                            ${coin.isBrk ? '<span class="text-[7px] bg-emerald-500 text-black px-1.5 py-0.5 rounded font-black uppercase">BREAKOUT</span>' : ''}
-                        </div>
-                    </div>
+                        </td>
+                        <td class="text-right font-medium">$${coin.p < 1 ? coin.p.toFixed(5) : coin.p.toLocaleString()}</td>
+                        <td class="text-right font-bold ${coin.pct >= 0 ? 'text-[#02c076]' : 'text-[#f84960]'}">
+                            ${coin.pct >= 0 ? '+' : ''}${coin.pct.toFixed(2)}%
+                        </td>
+                        <td class="text-right font-medium text-[#848e9c]">${formatVol(coin.tfVol)}</td>
+                        <td class="text-right font-bold text-[#f3ba2f]">${formatVol(coin.v24)}</td>
+                    </tr>
                 `).join('');
-                document.getElementById('sync-status').innerText = `SYNCED: ${new Date().toLocaleTimeString()}`;
+                document.getElementById('sync-time').innerText = `Last update: ${new Date().toLocaleTimeString()}`;
             } catch (e) { console.error(e); }
         }
 
-        updateTF('4h');
+        updateTF('15m');
         setInterval(runScreener, 20000);
     </script>
 </body>
