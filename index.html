@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>QuantPulse Pro | Premium Live</title>
+    <title>QuantPulse Pro | Premium Large</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&display=swap');
@@ -17,98 +17,99 @@
             --down: #f84960;
             --text-main: #f0f2f5;
             --text-dim: #848e9c;
-            --base-fs: 13px;
         }
 
+        /* Defaulting to Large Scale */
         body { 
             font-family: 'Inter', sans-serif; 
             background: var(--bg); 
-            background-image: radial-gradient(circle at 10% -10%, #1c2431 0%, transparent 40%);
+            background-image: radial-gradient(circle at 15% -10%, #1c2431 0%, transparent 40%);
             color: var(--text-main);
             margin: 0;
-            font-size: var(--base-fs);
             -webkit-font-smoothing: antialiased;
+            transition: font-size 0.2s ease;
         }
 
-        /* Scaling Utility */
-        body.sz-sm { --base-fs: 11px; }
-        body.sz-md { --base-fs: 14px; }
-        body.sz-lg { --base-fs: 17px; }
+        /* Scale Definition */
+        body.sz-sm { --base-fs: 11px; --logo-size: 18px; }
+        body.sz-md { --base-fs: 14px; --logo-size: 22px; }
+        body.sz-lg { --base-fs: 18px; --logo-size: 28px; } /* Enhanced Large Scale */
 
         .glass-panel {
-            background: rgba(15, 18, 23, 0.7);
-            backdrop-filter: blur(20px);
+            background: rgba(15, 18, 23, 0.75);
+            backdrop-filter: blur(25px);
             border: 1px solid var(--border);
-            border-radius: 12px;
+            border-radius: 14px;
         }
 
         .btn-pill {
-            padding: 6px 14px;
-            font-size: 11px;
+            padding: 8px 16px;
+            font-size: 12px;
             font-weight: 700;
             color: var(--text-dim);
-            border-radius: 6px;
+            border-radius: 8px;
             transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
             text-transform: uppercase;
-            letter-spacing: 0.03em;
+            letter-spacing: 0.04em;
         }
 
         .btn-pill.active {
             background: white;
             color: black;
-            box-shadow: 0 4px 12px rgba(255,255,255,0.1);
+            box-shadow: 0 4px 15px rgba(255,255,255,0.12);
         }
 
-        /* Table Design */
+        /* Premium Table Layout */
         .market-table { width: 100%; border-collapse: collapse; }
         .market-table th {
             text-align: right;
             color: var(--text-dim);
-            font-size: 10px;
+            font-size: 11px;
             font-weight: 700;
-            padding: 14px 16px;
+            padding: 16px;
             border-bottom: 1px solid var(--border);
             text-transform: uppercase;
-            letter-spacing: 0.05em;
         }
         .market-table th:first-child, .market-table th:nth-child(2) { text-align: left; }
         
-        .market-table tr { transition: background 0.2s; border-bottom: 1px solid rgba(255,255,255,0.02); }
-        .market-table tr:hover { background: rgba(255,255,255,0.02); }
+        .market-table tr { border-bottom: 1px solid rgba(255,255,255,0.03); }
+        .market-table tr:hover { background: rgba(255,255,255,0.03); }
         
         .market-table td {
-            padding: 14px 16px;
+            padding: 18px 16px;
             font-size: var(--base-fs);
             font-variant-numeric: tabular-nums;
+            font-weight: 500;
         }
 
         .asset-logo {
-            width: 22px;
-            height: 22px;
+            width: var(--logo-size);
+            height: var(--logo-size);
             border-radius: 50%;
             background: #1c2431;
-            padding: 1px;
+            transition: all 0.2s ease;
         }
 
-        .row-brk { background: linear-gradient(90deg, rgba(2, 192, 118, 0.04) 0%, transparent 100%); border-left: 2px solid var(--up); }
+        .row-brk { border-left: 3px solid var(--up); background: linear-gradient(90deg, rgba(2, 192, 118, 0.06) 0%, transparent 100%); }
         .no-scrollbar::-webkit-scrollbar { display: none; }
     </style>
 </head>
-<body class="sz-md pb-12">
+<body class="sz-lg pb-12">
 
-    <div class="max-w-[1550px] mx-auto px-4 md:px-8 py-6">
+    <div class="max-w-[1600px] mx-auto px-4 md:px-8 py-6">
         
-        <header class="mb-6 flex justify-between items-center">
-            <h1 style="font-family: 'Plus Jakarta Sans'" class="text-2xl font-extrabold italic tracking-tighter text-white">
+        <header class="mb-8 flex justify-between items-center">
+            <h1 style="font-family: 'Plus Jakarta Sans'" class="text-3xl font-extrabold italic tracking-tighter text-white">
                 QUANT<span class="text-[var(--accent)] not-italic">PULSE</span>
             </h1>
-            <div id="last-sync" class="text-[9px] font-bold text-gray-600 uppercase tracking-widest bg-white/5 px-3 py-1 rounded-full">
-                Synchronizing...
+            <div id="sync-indicator" class="flex items-center gap-2">
+                <span class="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></span>
+                <span class="text-[10px] font-bold text-gray-500 uppercase tracking-widest" id="last-sync">Establishing Feed...</span>
             </div>
         </header>
 
         <div class="flex flex-wrap items-center gap-4 mb-8">
-            <div class="glass-panel p-1 flex gap-1">
+            <div class="glass-panel p-1.5 flex gap-1.5">
                 <button onclick="updateTF('5m')" id="btn-5m" class="btn-pill">5m</button>
                 <button onclick="updateTF('15m')" id="btn-15m" class="btn-pill active">15m</button>
                 <button onclick="updateTF('1h')" id="btn-1h" class="btn-pill">1h</button>
@@ -116,43 +117,41 @@
                 <button onclick="updateTF('1d')" id="btn-1d" class="btn-pill">24h</button>
             </div>
 
-            <div class="glass-panel p-1 flex gap-1">
-                <button onclick="setScale('sm')" id="sc-sm" class="btn-pill px-3">S</button>
-                <button onclick="setScale('md')" id="sc-md" class="btn-pill active px-3">M</button>
-                <button onclick="setScale('lg')" id="sc-lg" class="btn-pill px-3">L</button>
+            <div class="glass-panel p-1.5 flex gap-1.5">
+                <button onclick="setScale('sm')" id="sc-sm" class="btn-pill">S</button>
+                <button onclick="setScale('md')" id="sc-md" class="btn-pill">M</button>
+                <button onclick="setScale('lg')" id="sc-lg" class="btn-pill active">L</button>
             </div>
 
-            <button onclick="toggleBrk()" id="brk-btn" class="glass-panel px-4 py-2 text-[10px] font-bold uppercase tracking-widest text-gray-500 hover:text-emerald-400 transition-all">
+            <button onclick="toggleBrk()" id="brk-btn" class="glass-panel px-5 py-2.5 text-[11px] font-bold uppercase tracking-widest text-gray-400 hover:text-emerald-400 transition-all">
                 Breakouts: <span id="brk-status">OFF</span>
             </button>
         </div>
 
         <div class="grid grid-cols-1 xl:grid-cols-2 gap-6">
             
-            <div class="glass-panel overflow-hidden">
-                <div class="px-6 py-3 border-b border-white/5 bg-emerald-500/5 flex items-center gap-2">
-                    <div class="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse"></div>
-                    <span class="text-[11px] font-black uppercase text-emerald-400 tracking-wider">Top Gainers</span>
+            <div class="glass-panel overflow-hidden shadow-2xl">
+                <div class="px-6 py-4 border-b border-white/5 bg-emerald-500/5">
+                    <span class="text-xs font-black uppercase text-emerald-400 tracking-wider">Market Gainers</span>
                 </div>
                 <div class="overflow-x-auto no-scrollbar">
                     <table class="market-table">
                         <thead>
-                            <tr><th class="w-10">#</th><th>Symbol</th><th>Price</th><th id="h-gain">Price Change (15m)</th><th>Volume (24h)</th></tr>
+                            <tr><th class="w-12">#</th><th>Symbol</th><th>Price</th><th id="h-gain">Change (15m)</th><th>24h Volume</th></tr>
                         </thead>
                         <tbody id="list-gainers"></tbody>
                     </table>
                 </div>
             </div>
 
-            <div class="glass-panel overflow-hidden">
-                <div class="px-6 py-3 border-b border-white/5 bg-red-500/5 flex items-center gap-2">
-                    <div class="w-1.5 h-1.5 bg-red-500 rounded-full animate-pulse"></div>
-                    <span class="text-[11px] font-black uppercase text-red-400 tracking-wider">Top Losers</span>
+            <div class="glass-panel overflow-hidden shadow-2xl">
+                <div class="px-6 py-4 border-b border-white/5 bg-red-500/5">
+                    <span class="text-xs font-black uppercase text-red-400 tracking-wider">Market Losers</span>
                 </div>
                 <div class="overflow-x-auto no-scrollbar">
                     <table class="market-table">
                         <thead>
-                            <tr><th class="w-10">#</th><th>Symbol</th><th>Price</th><th id="h-lose">Price Change (15m)</th><th>Volume (24h)</th></tr>
+                            <tr><th class="w-12">#</th><th>Symbol</th><th>Price</th><th id="h-lose">Change (15m)</th><th>24h Volume</th></tr>
                         </thead>
                         <tbody id="list-losers"></tbody>
                     </table>
@@ -176,7 +175,7 @@
         function toggleBrk() {
             filterBrk = !filterBrk;
             document.getElementById('brk-status').innerText = filterBrk ? 'ON' : 'OFF';
-            document.getElementById('brk-status').className = filterBrk ? 'text-emerald-400' : 'text-gray-500';
+            document.getElementById('brk-status').className = filterBrk ? 'text-emerald-400' : 'text-gray-400';
             runScreener();
         }
 
@@ -184,7 +183,7 @@
             activeTF = tf;
             document.querySelectorAll('.btn-pill').forEach(b => !b.id.startsWith('sc-') && b.classList.remove('active'));
             document.getElementById(`btn-${tf}`).classList.add('active');
-            const label = `Price Change (${tf})`;
+            const label = `Change (${tf})`;
             document.getElementById('h-gain').innerText = label;
             document.getElementById('h-lose').innerText = label;
             runScreener();
@@ -196,9 +195,9 @@
             return '$' + (v/1e3).toFixed(1) + 'K';
         }
 
-        // Updated Logo Source (Static Crypto Assets CDN)
+        // Verified High-Resolution Logo Source
         function getLogo(s) {
-            return `https://assets.coincap.io/assets/icons/${s.toLowerCase()}@2x.png`;
+            return `https://raw.githubusercontent.com/spothq/cryptocurrency-icons/master/128/color/${s.toLowerCase()}.png`;
         }
 
         async function fetchPair(s) {
@@ -229,24 +228,24 @@
 
                 if (filterBrk) { g = g.filter(d => d.isB); l = l.filter(d => d.isB); }
 
-                const render = (c, i) => `
+                const row = (c, i) => `
                     <tr class="${c.isB ? 'row-brk' : ''}">
-                        <td class="text-gray-700 font-bold opacity-40">${i+1}</td>
+                        <td class="text-gray-700 font-bold opacity-30">${i+1}</td>
                         <td>
-                            <div class="flex items-center gap-3">
+                            <div class="flex items-center gap-4">
                                 <img src="${getLogo(c.s)}" class="asset-logo" onerror="this.src='https://bin.bnbstatic.com/static/images/common/favicon.ico'">
-                                <span class="font-extrabold text-white tracking-tighter">${c.s}</span>
+                                <span class="font-extrabold text-white tracking-tighter uppercase">${c.s}</span>
                             </div>
                         </td>
-                        <td class="text-right font-bold text-white tracking-tight">$${c.p < 1 ? c.p.toFixed(6) : c.p.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
+                        <td class="text-right font-bold text-white">$${c.p < 1 ? c.p.toFixed(6) : c.p.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
                         <td class="text-right font-black ${c.pct >= 0 ? 'text-[#02c076]' : 'text-[#f84960]'}">
                             ${c.pct >= 0 ? '+' : ''}${c.pct.toFixed(2)}%
                         </td>
-                        <td class="text-right font-bold text-[#f3ba2f] text-[11px]">${formatUSD(c.v24)}</td>
+                        <td class="text-right font-bold text-[#f3ba2f]">${formatUSD(c.v24)}</td>
                     </tr>`;
 
-                document.getElementById('list-gainers').innerHTML = g.slice(0, 15).map(render).join('');
-                document.getElementById('list-losers').innerHTML = l.slice(0, 15).map(render).join('');
+                document.getElementById('list-gainers').innerHTML = g.slice(0, 15).map(row).join('');
+                document.getElementById('list-losers').innerHTML = l.slice(0, 15).map(row).join('');
                 document.getElementById('last-sync').innerText = `SYNCED • ${new Date().toLocaleTimeString()}`;
             } catch(e) {}
         }
