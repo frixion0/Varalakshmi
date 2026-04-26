@@ -19,7 +19,6 @@
             --text-dim: #848e9c;
         }
 
-        /* Defaulting to Large Scale */
         body { 
             font-family: 'Inter', sans-serif; 
             background: var(--bg); 
@@ -30,10 +29,9 @@
             transition: font-size 0.2s ease;
         }
 
-        /* Scale Definition */
         body.sz-sm { --base-fs: 11px; --logo-size: 18px; }
         body.sz-md { --base-fs: 14px; --logo-size: 22px; }
-        body.sz-lg { --base-fs: 18px; --logo-size: 28px; } /* Enhanced Large Scale */
+        body.sz-lg { --base-fs: 18px; --logo-size: 28px; }
 
         .glass-panel {
             background: rgba(15, 18, 23, 0.75);
@@ -59,10 +57,8 @@
             box-shadow: 0 4px 15px rgba(255,255,255,0.12);
         }
 
-        /* Premium Table Layout */
         .market-table { width: 100%; border-collapse: collapse; }
         .market-table th {
-            text-align: right;
             color: var(--text-dim);
             font-size: 11px;
             font-weight: 700;
@@ -70,7 +66,6 @@
             border-bottom: 1px solid var(--border);
             text-transform: uppercase;
         }
-        .market-table th:first-child, .market-table th:nth-child(2) { text-align: left; }
         
         .market-table tr { border-bottom: 1px solid rgba(255,255,255,0.03); }
         .market-table tr:hover { background: rgba(255,255,255,0.03); }
@@ -92,6 +87,9 @@
 
         .row-brk { border-left: 3px solid var(--up); background: linear-gradient(90deg, rgba(2, 192, 118, 0.06) 0%, transparent 100%); }
         .no-scrollbar::-webkit-scrollbar { display: none; }
+
+        .toggle-checkbox:checked { right: 0; border-color: var(--up); }
+        .toggle-checkbox:checked + .toggle-label { background-color: var(--up); }
     </style>
 </head>
 <body class="sz-lg pb-12">
@@ -126,19 +124,20 @@
             <button onclick="toggleBrk()" id="brk-btn" class="glass-panel px-5 py-2.5 text-[11px] font-bold uppercase tracking-widest text-gray-400 hover:text-emerald-400 transition-all">
                 Breakouts: <span id="brk-status">OFF</span>
             </button>
+
+            <button onclick="openSettings()" class="glass-panel ml-auto px-5 py-2.5 text-[11px] font-bold uppercase tracking-widest text-gray-400 hover:text-white transition-all flex items-center gap-2">
+                ⚙️ Settings
+            </button>
         </div>
 
         <div class="grid grid-cols-1 xl:grid-cols-2 gap-6">
-            
             <div class="glass-panel overflow-hidden shadow-2xl">
                 <div class="px-6 py-4 border-b border-white/5 bg-emerald-500/5">
                     <span class="text-xs font-black uppercase text-emerald-400 tracking-wider">Market Gainers</span>
                 </div>
                 <div class="overflow-x-auto no-scrollbar">
-                    <table class="market-table">
-                        <thead>
-                            <tr><th class="w-12">#</th><th>Symbol</th><th>Price</th><th id="h-gain">Change (15m)</th><th>24h Volume</th></tr>
-                        </thead>
+                    <table class="market-table" id="table-gainers">
+                        <thead><tr id="head-gainers"></tr></thead>
                         <tbody id="list-gainers"></tbody>
                     </table>
                 </div>
@@ -149,16 +148,37 @@
                     <span class="text-xs font-black uppercase text-red-400 tracking-wider">Market Losers</span>
                 </div>
                 <div class="overflow-x-auto no-scrollbar">
-                    <table class="market-table">
-                        <thead>
-                            <tr><th class="w-12">#</th><th>Symbol</th><th>Price</th><th id="h-lose">Change (15m)</th><th>24h Volume</th></tr>
-                        </thead>
+                    <table class="market-table" id="table-losers">
+                        <thead><tr id="head-losers"></tr></thead>
                         <tbody id="list-losers"></tbody>
                     </table>
                 </div>
             </div>
         </div>
+    </div>
 
+    <div id="settings-modal" class="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 hidden transition-opacity duration-300 opacity-0">
+        <div class="glass-panel w-full max-w-md p-6 m-4 flex flex-col gap-6" id="settings-content">
+            <div class="flex justify-between items-center border-b border-white/10 pb-4">
+                <h2 class="text-lg font-bold text-white tracking-wide">DASHBOARD SETTINGS</h2>
+                <button onclick="closeSettings()" class="text-gray-400 hover:text-white text-2xl leading-none">&times;</button>
+            </div>
+            
+            <div class="flex flex-col gap-2">
+                <label class="text-xs font-bold text-gray-400 uppercase tracking-wider">Number of Assets per list</label>
+                <input type="number" id="setting-limit" min="1" max="50" class="bg-[#1c2431] border border-white/10 rounded-lg px-4 py-3 text-white font-bold focus:outline-none focus:border-[var(--accent)]">
+            </div>
+
+            <div class="flex flex-col gap-2">
+                <label class="text-xs font-bold text-gray-400 uppercase tracking-wider">Columns & Order</label>
+                <ul id="settings-col-list" class="flex flex-col gap-2 max-h-[40vh] overflow-y-auto no-scrollbar pr-1">
+                    </ul>
+            </div>
+
+            <button onclick="saveAndApplySettings()" class="bg-[var(--accent)] hover:bg-[#e0a827] text-black font-extrabold uppercase tracking-widest py-3 rounded-lg transition-colors mt-2">
+                Save & Apply
+            </button>
+        </div>
     </div>
 
     <script>
@@ -181,11 +201,9 @@
 
         async function updateTF(tf) {
             activeTF = tf;
-            document.querySelectorAll('.btn-pill').forEach(b => !b.id.startsWith('sc-') && b.classList.remove('active'));
+            document.querySelectorAll('[id^="btn-"]').forEach(b => b.classList.remove('active'));
             document.getElementById(`btn-${tf}`).classList.add('active');
-            const label = `Change (${tf})`;
-            document.getElementById('h-gain').innerText = label;
-            document.getElementById('h-lose').innerText = label;
+            renderTableHeaders();
             runScreener();
         }
 
@@ -195,22 +213,65 @@
             return '$' + (v/1e3).toFixed(1) + 'K';
         }
 
-        // Verified High-Resolution Logo Source
         function getLogo(s) {
             return `https://raw.githubusercontent.com/spothq/cryptocurrency-icons/master/128/color/${s.toLowerCase()}.png`;
         }
 
-        async function fetchPair(s) {
+        const colDefs = {
+            num: { labelBase: '#', align: 'left', render: (c, i) => `<td class="text-gray-700 font-bold opacity-30">${i+1}</td>` },
+            symbol: { labelBase: 'Symbol', align: 'left', render: (c) => `<td><div class="flex items-center gap-3"><img src="${getLogo(c.s)}" class="asset-logo" onerror="this.src='https://bin.bnbstatic.com/static/images/common/favicon.ico'"><span class="font-extrabold text-white tracking-tighter uppercase">${c.s}</span></div></td>` },
+            price: { labelBase: 'Price', align: 'right', render: (c) => `<td class="text-right font-bold text-white">$${c.p < 1 ? c.p.toFixed(6) : c.p.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>` },
+            changeTF: { labelBase: 'Change (TF)', align: 'right', render: (c) => `<td class="text-right font-black ${c.pct >= 0 ? 'text-[var(--up)]' : 'text-[var(--down)]'}">${c.pct >= 0 ? '+' : ''}${c.pct.toFixed(2)}%</td>` },
+            change24h: { labelBase: '24h Change', align: 'right', render: (c) => `<td class="text-right font-black ${c.pct24 >= 0 ? 'text-[var(--up)]' : 'text-[var(--down)]'}">${c.pct24 >= 0 ? '+' : ''}${c.pct24.toFixed(2)}%</td>` },
+            volTF: { labelBase: 'Volume (TF)', align: 'right', render: (c) => `<td class="text-right font-bold text-[var(--accent)]">${formatUSD(c.vTF)}</td>` },
+            vol24h: { labelBase: '24h Volume', align: 'right', render: (c) => `<td class="text-right font-bold text-[var(--accent)]">${formatUSD(c.v24)}</td>` }
+        };
+
+        // NEW FASTER DEFAULTS: Only the core 4 columns are active to speed up rendering
+        const defaultCols = [
+            { id: 'num', visible: true }, 
+            { id: 'symbol', visible: true }, 
+            { id: 'price', visible: true },
+            { id: 'changeTF', visible: true }, 
+            { id: 'change24h', visible: false }, 
+            { id: 'volTF', visible: false }, 
+            { id: 'vol24h', visible: false }
+        ];
+
+        let config = JSON.parse(localStorage.getItem('qp_config_v2')) || { limit: 15, columns: defaultCols };
+        let tempConfig = JSON.parse(JSON.stringify(config)); 
+
+        function renderTableHeaders() {
+            const visibleCols = config.columns.filter(c => c.visible);
+            let html = '';
+            visibleCols.forEach(col => {
+                let label = colDefs[col.id].labelBase;
+                if(label.includes('(TF)')) label = label.replace('(TF)', `(${activeTF})`);
+                html += `<th style="text-align: ${colDefs[col.id].align}">${label}</th>`;
+            });
+            document.getElementById('head-gainers').innerHTML = html;
+            document.getElementById('head-losers').innerHTML = html;
+        }
+
+        // OPTIMIZATION: We pass 'tickerData' instead of fetching it a second time.
+        async function fetchPair(s, tickerData) {
             try {
-                const [kR, tR] = await Promise.all([
-                    fetch(`${API}/klines?symbol=${s}&interval=${activeTF}&limit=11`),
-                    fetch(`${API}/ticker/24hr?symbol=${s}`)
-                ]);
-                const k = await kR.json(), t = await tR.json();
+                const kR = await fetch(`${API}/klines?symbol=${s}&interval=${activeTF}&limit=11`);
+                const k = await kR.json();
+                
                 const cur = k[10], p10 = k.slice(0,10);
                 const high = Math.max(...p10.map(c => parseFloat(c[2])));
                 const price = parseFloat(cur[4]), open = parseFloat(cur[1]);
-                return { s: s.replace('USDT',''), p: price, pct: ((price-open)/open)*100, v24: parseFloat(t.quoteVolume), isB: price > high };
+                
+                return { 
+                    s: s.replace('USDT',''), 
+                    p: price, 
+                    pct: ((price-open)/open)*100, 
+                    pct24: parseFloat(tickerData.priceChangePercent), 
+                    v24: parseFloat(tickerData.quoteVolume), 
+                    vTF: parseFloat(cur[7]), 
+                    isB: price > high 
+                };
             } catch(e) { return null; }
         }
 
@@ -218,38 +279,97 @@
             try {
                 const res = await fetch(`${API}/ticker/24hr`);
                 const all = await res.json();
+                
+                // Map the ticker data so we don't have to fetch it again inside fetchPair
+                const tickerMap = {};
+                all.forEach(t => tickerMap[t.symbol] = t);
+
                 let targets = all.filter(t => t.symbol.endsWith('USDT'))
                                  .sort((a,b) => Math.abs(parseFloat(b.priceChangePercent)) - Math.abs(parseFloat(a.priceChangePercent)))
-                                 .slice(0, 40).map(t => t.symbol);
+                                 .slice(0, 45).map(t => t.symbol);
 
-                let data = (await Promise.all(targets.map(fetchPair))).filter(d => d);
+                // Pass the pre-fetched mapped data
+                let data = (await Promise.all(targets.map(s => fetchPair(s, tickerMap[s])))).filter(d => d);
+                
                 let g = [...data].sort((a,b) => b.pct - a.pct);
                 let l = [...data].sort((a,b) => a.pct - b.pct);
 
                 if (filterBrk) { g = g.filter(d => d.isB); l = l.filter(d => d.isB); }
 
-                const row = (c, i) => `
-                    <tr class="${c.isB ? 'row-brk' : ''}">
-                        <td class="text-gray-700 font-bold opacity-30">${i+1}</td>
-                        <td>
-                            <div class="flex items-center gap-4">
-                                <img src="${getLogo(c.s)}" class="asset-logo" onerror="this.src='https://bin.bnbstatic.com/static/images/common/favicon.ico'">
-                                <span class="font-extrabold text-white tracking-tighter uppercase">${c.s}</span>
-                            </div>
-                        </td>
-                        <td class="text-right font-bold text-white">$${c.p < 1 ? c.p.toFixed(6) : c.p.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
-                        <td class="text-right font-black ${c.pct >= 0 ? 'text-[#02c076]' : 'text-[#f84960]'}">
-                            ${c.pct >= 0 ? '+' : ''}${c.pct.toFixed(2)}%
-                        </td>
-                        <td class="text-right font-bold text-[#f3ba2f]">${formatUSD(c.v24)}</td>
-                    </tr>`;
+                const visibleCols = config.columns.filter(c => c.visible);
+                const generateRows = (arr) => arr.slice(0, config.limit).map((c, i) => {
+                    let html = `<tr class="${c.isB ? 'row-brk' : ''}">`;
+                    visibleCols.forEach(col => { html += colDefs[col.id].render(c, i); });
+                    return html + `</tr>`;
+                }).join('');
 
-                document.getElementById('list-gainers').innerHTML = g.slice(0, 15).map(row).join('');
-                document.getElementById('list-losers').innerHTML = l.slice(0, 15).map(row).join('');
+                document.getElementById('list-gainers').innerHTML = generateRows(g);
+                document.getElementById('list-losers').innerHTML = generateRows(l);
                 document.getElementById('last-sync').innerText = `SYNCED • ${new Date().toLocaleTimeString()}`;
             } catch(e) {}
         }
 
+        function openSettings() {
+            tempConfig = JSON.parse(JSON.stringify(config)); 
+            document.getElementById('setting-limit').value = tempConfig.limit;
+            renderSettingsList();
+            
+            const modal = document.getElementById('settings-modal');
+            modal.classList.remove('hidden');
+            setTimeout(() => modal.classList.remove('opacity-0'), 10);
+        }
+
+        function closeSettings() {
+            const modal = document.getElementById('settings-modal');
+            modal.classList.add('opacity-0');
+            setTimeout(() => modal.classList.add('hidden'), 300);
+        }
+
+        function renderSettingsList() {
+            const ul = document.getElementById('settings-col-list');
+            ul.innerHTML = tempConfig.columns.map((col, idx) => `
+                <li class="flex items-center justify-between bg-[#1c2431] p-3 rounded-lg border border-white/5">
+                    <div class="flex items-center gap-4">
+                        <div class="flex flex-col gap-1">
+                            <button onclick="moveColUp(${idx})" class="text-gray-500 hover:text-white leading-none ${idx === 0 ? 'opacity-30 cursor-default hover:text-gray-500' : ''}">▲</button>
+                            <button onclick="moveColDown(${idx})" class="text-gray-500 hover:text-white leading-none ${idx === tempConfig.columns.length - 1 ? 'opacity-30 cursor-default hover:text-gray-500' : ''}">▼</button>
+                        </div>
+                        <span class="text-sm font-bold text-white">${colDefs[col.id].labelBase}</span>
+                    </div>
+                    <label class="relative inline-flex items-center cursor-pointer">
+                        <input type="checkbox" ${col.visible ? 'checked' : ''} onchange="toggleTempCol(${idx})" class="sr-only peer">
+                        <div class="w-10 h-5 bg-gray-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-[20px] peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-[var(--up)]"></div>
+                    </label>
+                </li>
+            `).join('');
+        }
+
+        function moveColUp(idx) {
+            if (idx === 0) return;
+            [tempConfig.columns[idx - 1], tempConfig.columns[idx]] = [tempConfig.columns[idx], tempConfig.columns[idx - 1]];
+            renderSettingsList();
+        }
+
+        function moveColDown(idx) {
+            if (idx === tempConfig.columns.length - 1) return;
+            [tempConfig.columns[idx + 1], tempConfig.columns[idx]] = [tempConfig.columns[idx], tempConfig.columns[idx + 1]];
+            renderSettingsList();
+        }
+
+        function toggleTempCol(idx) {
+            tempConfig.columns[idx].visible = !tempConfig.columns[idx].visible;
+        }
+
+        function saveAndApplySettings() {
+            tempConfig.limit = parseInt(document.getElementById('setting-limit').value) || 15;
+            config = JSON.parse(JSON.stringify(tempConfig));
+            localStorage.setItem('qp_config_v2', JSON.stringify(config));
+            closeSettings();
+            renderTableHeaders();
+            runScreener();
+        }
+
+        renderTableHeaders();
         updateTF('15m');
         setInterval(runScreener, 20000);
     </script>
