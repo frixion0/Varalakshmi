@@ -3,202 +3,371 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>QuantPulse Pro | Ultra Custom</title>
+    <title>QuantPulse Pro | Alpha Terminal</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@700;800&family=Inter:wght@400;600;900&display=swap');
-        :root { --bg: #05070a; --surface: #0f1217; --border: #1d2129; --accent: #f3ba2f; --up: #02c076; --down: #f84960; --text-main: #f0f2f5; --text-dim: #848e9c; }
-        body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text-main); margin: 0; }
-        body.sz-sm { --base-fs: 11px; --label-fs: 8px; }
-        body.sz-md { --base-fs: 14px; --label-fs: 10px; }
-        body.sz-lg { --base-fs: 16px; --label-fs: 11px; }
-        .glass-panel { background: rgba(15, 18, 23, 0.85); backdrop-filter: blur(20px); border: 1px solid var(--border); border-radius: 12px; }
-        .btn-pill { padding: 6px 12px; font-size: 10px; font-weight: 800; color: var(--text-dim); border-radius: 6px; transition: 0.2s; text-transform: uppercase; border: 1px solid transparent; }
-        .btn-pill.active { background: #fff; color: #000; }
-        .tf-badge { font-size: var(--label-fs); padding: 2px 4px; border-radius: 3px; background: #1d2129; color: #444; font-weight: 900; margin-right: 2px; }
-        .tf-badge.active { background: var(--up); color: black; box-shadow: 0 0 8px rgba(2, 192, 118, 0.4); }
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@700;800&family=JetBrains+Mono:wght@500;700;800&family=Inter:wght@400;500;600;700&display=swap');
+        
+        :root {
+            --bg: #020406;
+            --surface: #0a0d14;
+            --border: #1e232d;
+            --accent: #f3ba2f;
+            --up: #00ff95;
+            --up-dim: rgba(0, 255, 149, 0.12);
+            --down: #ff3b5c;
+            --down-dim: rgba(255, 59, 92, 0.12);
+            --text-main: #ffffff;
+            --text-dim: #6b7280;
+            --base-fs: 13px;
+        }
+
+        body { 
+            font-family: 'Inter', sans-serif; 
+            background: var(--bg); 
+            color: var(--text-main);
+            margin: 0;
+            font-size: var(--base-fs);
+            -webkit-font-smoothing: antialiased;
+            background-image: radial-gradient(circle at 50% 0%, #161b22 0%, transparent 60%);
+        }
+
+        /* Scalable UI */
+        body.sz-sm { --base-fs: 11px; }
+        body.sz-md { --base-fs: 13px; }
+        body.sz-lg { --base-fs: 15px; }
+
+        .glass-panel {
+            background: rgba(10, 13, 20, 0.8);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+        }
+
+        .btn-pill {
+            padding: 6px 14px;
+            font-size: 10px;
+            font-weight: 800;
+            color: var(--text-dim);
+            border-radius: 6px;
+            transition: all 0.2s;
+            text-transform: uppercase;
+            border: 1px solid transparent;
+        }
+
+        .btn-pill.active {
+            background: white;
+            color: black;
+            box-shadow: 0 0 20px rgba(255,255,255,0.1);
+        }
+
+        .search-bar {
+            background: #11151f;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 10px 16px;
+            color: white;
+            width: 100%;
+            outline: none;
+            transition: 0.2s;
+        }
+        .search-bar:focus { border-color: var(--accent); background: #161b28; }
+
+        /* MTF Styles */
+        .mtf-tag {
+            font-size: 8px;
+            padding: 2px 5px;
+            border-radius: 3px;
+            background: #161a23;
+            color: #3d4659;
+            font-weight: 900;
+            border: 1px solid transparent;
+        }
+        .mtf-tag.active {
+            background: var(--up-dim);
+            color: var(--up);
+            border-color: rgba(0, 255, 149, 0.2);
+            animation: pulse-green 2s infinite;
+        }
+        @keyframes pulse-green { 0% { box-shadow: 0 0 0 0 rgba(0, 255, 149, 0.2); } 70% { box-shadow: 0 0 0 6px rgba(0, 255, 149, 0); } 100% { box-shadow: 0 0 0 0 rgba(0, 255, 149, 0); } }
+
         .market-table { width: 100%; border-collapse: collapse; }
-        .market-table th { text-align: right; color: var(--text-dim); font-size: 10px; padding: 12px 14px; border-bottom: 1px solid var(--border); text-transform: uppercase; }
-        .market-table td { padding: 12px 14px; font-size: var(--base-fs); border-bottom: 1px solid rgba(255,255,255,0.02); }
-        .row-brk { border-left: 4px solid var(--up); background: linear-gradient(90deg, rgba(2, 192, 118, 0.08) 0%, transparent 100%); }
-        #settings-modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.85); z-index: 100; align-items: center; justify-content: center; }
-        .sortable-item { background: #1d2129; padding: 10px; margin-bottom: 6px; border-radius: 8px; cursor: grab; display: flex; align-items: center; justify-content: space-between; border: 1px solid #2d333f; }
-        .toggle-checkbox { width: 18px; height: 18px; cursor: pointer; accent-color: var(--accent); }
+        .market-table th {
+            text-align: right;
+            color: var(--text-dim);
+            font-size: 10px;
+            font-weight: 800;
+            padding: 16px 12px;
+            border-bottom: 1px solid var(--border);
+            text-transform: uppercase;
+            position: sticky; top: 0; background: var(--surface); z-index: 5;
+        }
+        .market-table th:first-child, .market-table th:nth-child(2) { text-align: left; }
+        .market-table td {
+            padding: 14px 12px;
+            border-bottom: 1px solid rgba(255,255,255,0.03);
+            white-space: nowrap;
+        }
+
+        .mono { font-family: 'JetBrains Mono', monospace; font-weight: 700; }
+        .pin-btn { cursor: pointer; color: var(--text-dim); transition: 0.2s; }
+        .pin-btn.pinned { color: var(--accent); }
+
+        .vol-bar-bg { background: rgba(255,255,255,0.03); border-radius: 3px; height: 4px; width: 60px; margin-left: auto; margin-top: 4px; overflow: hidden; }
+        .vol-bar-fill { background: var(--accent); height: 100%; border-radius: 3px; opacity: 0.6; }
+
+        #toast {
+            position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%);
+            background: var(--accent); color: black; font-weight: 800; padding: 10px 20px; border-radius: 8px;
+            opacity: 0; transition: 0.3s; z-index: 100; pointer-events: none;
+        }
+
+        .no-scrollbar::-webkit-scrollbar { display: none; }
     </style>
 </head>
-<body class="sz-lg pb-12">
+<body class="sz-md pb-10">
+
+    <div id="toast">Symbol Copied</div>
 
     <div class="max-w-[1600px] mx-auto px-4 py-6">
-        <header class="flex justify-between items-center mb-6">
-            <h1 class="text-2xl font-black italic tracking-tighter">QUANT<span class="text-[var(--accent)]">PULSE</span></h1>
-            <div class="flex items-center gap-3">
-                <button onclick="openSettings()" class="glass-panel px-4 py-2 text-xs font-bold hover:bg-white/10 transition">⚙️ SETTINGS & COLUMNS</button>
-                <div id="last-sync" class="text-[10px] font-mono text-gray-500 uppercase">SYNCING...</div>
+        
+        <header class="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6 mb-8">
+            <div class="flex items-center gap-4">
+                <h1 style="font-family: 'Plus Jakarta Sans'" class="text-2xl font-extrabold tracking-tighter">
+                    QUANT<span class="text-[var(--accent)]">PULSE</span>
+                </h1>
+                <div id="last-sync" class="text-[9px] font-mono text-gray-500 uppercase tracking-widest bg-white/5 px-3 py-1 rounded-full border border-white/10">Connecting...</div>
+            </div>
+
+            <div class="flex flex-wrap items-center gap-4 w-full lg:w-auto">
+                <div class="flex-grow max-w-sm">
+                    <input type="text" id="assetSearch" oninput="renderTables()" placeholder="FILTER SYMBOLS..." class="search-bar">
+                </div>
+                <div class="flex gap-1 glass-panel p-1">
+                    <button onclick="setScale('sm')" id="sc-sm" class="btn-pill">S</button>
+                    <button onclick="setScale('md')" id="sc-md" class="btn-pill">M</button>
+                    <button onclick="setScale('lg')" id="sc-lg" class="btn-pill">L</button>
+                </div>
             </div>
         </header>
 
-        <div class="flex flex-wrap gap-4 mb-6">
-            <div class="glass-panel p-1.5 flex gap-1">
+        <div class="flex flex-wrap items-center gap-4 mb-8">
+            <div class="flex gap-1 glass-panel p-1">
                 <button onclick="updateTF('5m')" id="btn-5m" class="btn-pill">5m</button>
-                <button onclick="updateTF('15m')" id="btn-15m" class="btn-pill active">15m</button>
+                <button onclick="updateTF('15m')" id="btn-15m" class="btn-pill">15m</button>
                 <button onclick="updateTF('1h')" id="btn-1h" class="btn-pill">1h</button>
                 <button onclick="updateTF('1d')" id="btn-1d" class="btn-pill">1d</button>
             </div>
-            <div class="glass-panel p-1.5 flex gap-1">
-                <button onclick="setScale('sm')" id="sc-sm" class="btn-pill">S</button>
-                <button onclick="setScale('md')" id="sc-md" class="btn-pill">M</button>
-                <button onclick="setScale('lg')" id="sc-lg" class="btn-pill active">L</button>
-            </div>
-            <button onclick="toggleBrk()" id="brk-btn" class="glass-panel px-4 py-2 text-[11px] font-bold uppercase">
-                Breakouts: <span id="brk-status" class="text-gray-500">OFF</span>
+
+            <button onclick="toggleBrk()" id="brk-btn" class="glass-panel px-5 py-2 text-[10px] font-black uppercase tracking-widest transition-all border-accent">
+                Mode: <span id="brk-status" class="text-[var(--accent)]">STRICT BREAKOUT</span>
             </button>
         </div>
 
-        <div class="grid grid-cols-1 xl:grid-cols-2 gap-6">
-            <div class="glass-panel overflow-hidden">
-                <div class="px-4 py-2 border-b border-white/5 bg-emerald-500/5 text-[10px] font-bold text-emerald-400">GAINERS</div>
-                <table class="market-table"><thead id="head-gainers"></thead><tbody id="list-gainers"></tbody></table>
+        <div class="grid grid-cols-1 xl:grid-cols-2 gap-8">
+            
+            <div class="glass-panel overflow-hidden border-t-2 border-t-[var(--up)]">
+                <div class="px-5 py-4 border-b border-white/5 bg-[var(--up-dim)] flex items-center justify-between">
+                    <span class="text-[11px] font-black uppercase text-[var(--up)] tracking-widest">Bullish Momentum</span>
+                </div>
+                <div class="overflow-x-auto no-scrollbar">
+                    <table class="market-table">
+                        <thead>
+                            <tr>
+                                <th class="w-10"></th>
+                                <th>Asset & MTF</th>
+                                <th class="text-right">Price</th>
+                                <th class="text-right" id="h-gain">15m %</th>
+                                <th class="text-right">24h %</th>
+                                <th class="text-right">24h Vol</th>
+                            </tr>
+                        </thead>
+                        <tbody id="list-gainers"></tbody>
+                    </table>
+                </div>
             </div>
-            <div class="glass-panel overflow-hidden">
-                <div class="px-4 py-2 border-b border-white/5 bg-red-500/5 text-[10px] font-bold text-red-400">LOSERS</div>
-                <table class="market-table"><thead id="head-losers"></thead><tbody id="list-losers"></tbody></table>
-            </div>
-        </div>
-    </div>
 
-    <div id="settings-modal" onclick="if(event.target==this)closeSettings()">
-        <div class="glass-panel p-6 w-full max-w-sm border-white/20">
-            <h2 class="text-lg font-black mb-1">Display Settings</h2>
-            <p class="text-[10px] text-gray-500 mb-6 uppercase">Drag to Reorder • Check to Show</p>
-            <div id="column-list"></div>
-            <button onclick="closeSettings()" class="w-full mt-6 bg-white text-black font-black py-3 rounded-lg uppercase text-xs tracking-widest">Apply & Save</button>
+            <div class="glass-panel overflow-hidden border-t-2 border-t-[var(--down)]">
+                <div class="px-5 py-4 border-b border-white/5 bg-[var(--down-dim)] flex items-center justify-between">
+                    <span class="text-[11px] font-black uppercase text-[var(--down)] tracking-widest">Bearish Momentum</span>
+                </div>
+                <div class="overflow-x-auto no-scrollbar">
+                    <table class="market-table">
+                        <thead>
+                            <tr>
+                                <th class="w-10"></th>
+                                <th>Asset & MTF</th>
+                                <th class="text-right">Price</th>
+                                <th class="text-right" id="h-lose">15m %</th>
+                                <th class="text-right">24h %</th>
+                                <th class="text-right">24h Vol</th>
+                            </tr>
+                        </thead>
+                        <tbody id="list-losers"></tbody>
+                    </table>
+                </div>
+            </div>
+
         </div>
     </div>
 
     <script>
         const API = "https://fapi.binance.com/fapi/v1";
-        let activeTF = '15m';
-        let filterBrk = false;
-        
-        // Column Registry with Visibility
-        let colConfig = [
-            { id: 'rank', label: '#', visible: true },
-            { id: 'symbol', label: 'Asset', visible: true },
-            { id: 'price', label: 'Price', visible: true },
-            { id: 'changeTF', label: 'Chg (TF)', visible: true },
-            { id: 'change24', label: 'Chg (24h)', visible: true },
-            { id: 'volTF', label: 'Vol (TF)', visible: true },
-            { id: 'vol24', label: 'Vol (24h)', visible: true }
-        ];
+        let config = JSON.parse(localStorage.getItem('quantConfig_v5')) || {
+            tf: '15m',
+            brk: true,
+            scale: 'md',
+            pins: []
+        };
 
-        function openSettings() {
-            const list = document.getElementById('column-list');
-            list.innerHTML = colConfig.map(col => `
-                <div class="sortable-item" data-id="${col.id}">
-                    <div class="flex items-center gap-3">
-                        <span class="text-gray-600 font-bold">⠿</span>
-                        <span class="text-sm font-bold uppercase">${col.label}</span>
-                    </div>
-                    <input type="checkbox" class="toggle-checkbox" ${col.visible ? 'checked' : ''} onchange="updateVisibility('${col.id}', this.checked)">
-                </div>
-            `).join('');
-            document.getElementById('settings-modal').style.display = 'flex';
-            new Sortable(list, { animation: 150, handle: '.sortable-item' });
-        }
+        let masterData = [];
 
-        function updateVisibility(id, val) {
-            const col = colConfig.find(c => c.id === id);
-            if (col) col.visible = val;
-        }
-
-        function closeSettings() {
-            const newOrder = Array.from(document.getElementById('column-list').children).map(el => el.dataset.id);
-            colConfig.sort((a, b) => newOrder.indexOf(a.id) - newOrder.indexOf(b.id));
-            document.getElementById('settings-modal').style.display = 'none';
-            runScreener();
-        }
+        function save() { localStorage.setItem('quantConfig_v5', JSON.stringify(config)); }
 
         function setScale(s) {
-            document.body.className = `sz-${s} pb-12`;
+            config.scale = s; save();
+            document.body.className = `sz-${s} pb-10`;
             document.querySelectorAll('[id^="sc-"]').forEach(b => b.classList.remove('active'));
             document.getElementById(`sc-${s}`).classList.add('active');
         }
 
-        function toggleBrk() { filterBrk = !filterBrk; document.getElementById('brk-status').innerText = filterBrk ? 'ON' : 'OFF'; runScreener(); }
+        function toggleBrk() {
+            config.brk = !config.brk; save();
+            const status = document.getElementById('brk-status');
+            status.innerText = config.brk ? 'STRICT BREAKOUT' : 'SHOW ALL';
+            status.style.color = config.brk ? 'var(--accent)' : 'var(--text-dim)';
+            renderTables();
+        }
 
-        async function getMTF(s) {
-            const tfs = ['5m', '15m', '1h', '1d'];
-            const res = {};
-            await Promise.all(tfs.map(async tf => {
-                const r = await fetch(`${API}/klines?symbol=${s}&interval=${tf}&limit=11`);
-                const k = await r.json();
-                const price = parseFloat(k[k.length-1][4]);
-                const high = Math.max(...k.slice(0,10).map(x => parseFloat(x[2])));
-                res[tf] = price > high;
-            }));
-            return res;
+        function togglePin(s) {
+            if(config.pins.includes(s)) config.pins = config.pins.filter(x => x !== s);
+            else config.pins.push(s);
+            save();
+            renderTables();
+        }
+
+        function copy(s) {
+            navigator.clipboard.writeText(s);
+            const t = document.getElementById('toast');
+            t.style.opacity = '1';
+            setTimeout(() => t.style.opacity = '0', 1500);
+        }
+
+        async function updateTF(tf) {
+            config.tf = tf; save();
+            document.querySelectorAll('.btn-pill').forEach(b => {
+                if(['5m','15m','1h','1d'].includes(b.innerText.toLowerCase())) b.classList.remove('active');
+            });
+            document.getElementById(`btn-${tf}`).classList.add('active');
+            document.getElementById('h-gain').innerText = `${tf} %`;
+            document.getElementById('h-lose').innerText = `${tf} %`;
+            runScreener();
+        }
+
+        function isBreakout(k) {
+            if (!k || k.length < 11) return false;
+            const price = parseFloat(k[k.length-1][4]);
+            const high = Math.max(...k.slice(-11, -1).map(x => parseFloat(x[2])));
+            return price > high;
+        }
+
+        function formatVol(v) {
+            if (v >= 1e9) return (v/1e9).toFixed(1) + 'B';
+            if (v >= 1e6) return (v/1e6).toFixed(1) + 'M';
+            return (v/1e3).toFixed(0) + 'K';
         }
 
         async function fetchPair(s) {
             try {
-                const [kR, tR] = await Promise.all([fetch(`${API}/klines?symbol=${s}&interval=${activeTF}&limit=2`), fetch(`${API}/ticker/24hr?symbol=${s}`)]);
-                const k = await kR.json(), t = await tR.json();
-                const cur = k[k.length-1];
-                const price = parseFloat(cur[4]), open = parseFloat(cur[1]);
-                const mtfs = await getMTF(s);
-                return { 
-                    s: s.replace('USDT',''), p: price, pct: ((price-open)/open)*100, 
-                    pct24: parseFloat(t.priceChangePercent),
-                    v24: parseFloat(t.quoteVolume), 
-                    vTF: parseFloat(cur[7]), // Quote asset volume for this TF
-                    mtfs, isB: mtfs[activeTF] 
+                const tfs = ['5m', '15m', '1h', '1d'];
+                const reqs = tfs.map(tf => fetch(`${API}/klines?symbol=${s}&interval=${tf}&limit=12`).then(r => r.json()));
+                reqs.push(fetch(`${API}/ticker/24hr?symbol=${s}`).then(r => r.json()));
+                
+                const results = await Promise.all(reqs);
+                const ticker = results[4];
+                const activeK = results[tfs.indexOf(config.tf)];
+                const price = parseFloat(activeK[activeK.length-1][4]);
+                const open = parseFloat(activeK[activeK.length-1][1]);
+
+                return {
+                    s: s.replace('USDT',''),
+                    p: price,
+                    pct: ((price-open)/open)*100,
+                    pct24: parseFloat(ticker.priceChangePercent),
+                    v24: parseFloat(ticker.quoteVolume),
+                    mtf: { '5m': isBreakout(results[0]), '15m': isBreakout(results[1]), '1h': isBreakout(results[2]), '1d': isBreakout(results[3]) },
+                    isB: isBreakout(activeK)
                 };
             } catch(e) { return null; }
-        }
-
-        function formatVal(v) {
-            if (v >= 1e9) return (v/1e9).toFixed(2) + 'B';
-            if (v >= 1e6) return (v/1e6).toFixed(1) + 'M';
-            return (v/1e3).toFixed(0) + 'K';
         }
 
         async function runScreener() {
             try {
                 const res = await fetch(`${API}/ticker/24hr`);
                 const all = await res.json();
-                let targets = all.filter(t => t.symbol.endsWith('USDT')).sort((a,b) => Math.abs(parseFloat(b.priceChangePercent)) - Math.abs(parseFloat(a.priceChangePercent))).slice(0, 12).map(t => t.symbol);
-                let data = (await Promise.all(targets.map(fetchPair))).filter(d => d);
-                if (filterBrk) data = data.filter(d => d.isB);
+                let targets = all.filter(t => t.symbol.endsWith('USDT'))
+                                 .sort((a,b) => parseFloat(b.quoteVolume) - parseFloat(a.quoteVolume))
+                                 .slice(0, 40).map(t => t.symbol);
 
-                const activeCols = colConfig.filter(c => c.visible);
-                const headers = `<tr>${activeCols.map(c => `<th class="${c.id==='rank'||c.id==='symbol'?'text-left':'text-right'}">${c.id==='changeTF' ? `Chg (${activeTF})` : c.label}</th>`).join('')}</tr>`;
-                
-                const row = (c, i) => {
-                    const cells = {
-                        rank: `<td class="opacity-20 font-bold">${i+1}</td>`,
-                        symbol: `<td><div class="font-black text-white leading-none">${c.s}</div><div class="flex mt-1">
-                                    ${['1d','1h','15m','5m'].map(tf => `<span class="tf-badge ${c.mtfs[tf]?'active':''}">${tf.toUpperCase()}</span>`).join('')}
-                                 </div></td>`,
-                        price: `<td class="text-right font-bold">$${c.p < 1 ? c.p.toFixed(5) : c.p.toLocaleString()}</td>`,
-                        changeTF: `<td class="text-right font-black ${c.pct >= 0 ? 'text-[#02c076]' : 'text-[#f84960]'}">${c.pct.toFixed(2)}%</td>`,
-                        change24: `<td class="text-right font-black ${c.pct24 >= 0 ? 'text-[#02c076]' : 'text-[#f84960]'}">${c.pct24.toFixed(2)}%</td>`,
-                        volTF: `<td class="text-right font-bold text-gray-400">${formatVal(c.vTF)}</td>`,
-                        vol24: `<td class="text-right font-bold text-amber-500">${formatVal(c.v24)}</td>`
-                    };
-                    return `<tr class="${c.isB ? 'row-brk' : ''}">${activeCols.map(col => cells[col.id]).join('')}</tr>`;
-                };
-
-                document.getElementById('head-gainers').innerHTML = headers;
-                document.getElementById('head-losers').innerHTML = headers;
-                document.getElementById('list-gainers').innerHTML = data.sort((a,b)=>b.pct-a.pct).map(row).join('');
-                document.getElementById('list-losers').innerHTML = data.sort((a,b)=>a.pct-b.pct).map(row).join('');
+                masterData = (await Promise.all(targets.map(fetchPair))).filter(d => d);
+                renderTables();
                 document.getElementById('last-sync').innerText = `SYNCED • ${new Date().toLocaleTimeString()}`;
             } catch(e) {}
         }
 
-        setInterval(runScreener, 20000); runScreener();
-        async function updateTF(tf) { activeTF = tf; document.querySelectorAll('.btn-pill').forEach(b => !b.id.startsWith('sc-') && b.classList.remove('active')); document.getElementById(`btn-${tf}`).classList.add('active'); runScreener(); }
+        function renderTables() {
+            const query = document.getElementById('assetSearch').value.toUpperCase();
+            let filtered = masterData.filter(d => d.s.includes(query));
+
+            // If Strict Mode is ON, filter for breakouts BUT keep Pinned items visible
+            if (config.brk) {
+                filtered = filtered.filter(d => d.isB || config.pins.includes(d.s));
+            }
+
+            const maxVol = Math.max(...masterData.map(d => d.v24));
+
+            const row = (c) => {
+                const isPinned = config.pins.includes(c.s);
+                return `
+                <tr>
+                    <td class="text-center">
+                        <span onclick="togglePin('${c.s}')" class="pin-btn ${isPinned ? 'pinned' : ''}">★</span>
+                    </td>
+                    <td>
+                        <div class="flex items-center gap-3">
+                            <img src="https://bin.bnbstatic.com/static/images/common/favicon.ico" class="w-4 h-4 opacity-30">
+                            <div>
+                                <div onclick="copy('${c.s}')" class="font-bold tracking-tighter cursor-pointer hover:text-[var(--accent)] text-white">${c.s}</div>
+                                <div class="flex gap-1 mt-1">
+                                    <span class="mtf-tag ${c.mtf['5m'] ? 'active' : ''}">5m</span>
+                                    <span class="mtf-tag ${c.mtf['15m'] ? 'active' : ''}">15m</span>
+                                    <span class="mtf-tag ${c.mtf['1h'] ? 'active' : ''}">1h</span>
+                                    <span class="mtf-tag ${c.mtf['1d'] ? 'active' : ''}">1d</span>
+                                </div>
+                            </div>
+                        </div>
+                    </td>
+                    <td class="text-right font-bold text-white mono">$${c.p < 1 ? c.p.toFixed(5) : c.p.toLocaleString()}</td>
+                    <td class="text-right font-bold mono ${c.pct >= 0 ? 'text-[var(--up)]' : 'text-[var(--down)]'}">${c.pct >= 0 ? '+' : ''}${c.pct.toFixed(2)}%</td>
+                    <td class="text-right font-bold mono ${c.pct24 >= 0 ? 'text-[var(--up)]' : 'text-[var(--down)]'}">${c.pct24 >= 0 ? '+' : ''}${c.pct24.toFixed(2)}%</td>
+                    <td class="text-right">
+                        <div class="text-[var(--accent)] font-bold mono text-[11px]">${formatVol(c.v24)}</div>
+                        <div class="vol-bar-bg"><div class="vol-bar-fill" style="width: ${(c.v24/maxVol)*100}%"></div></div>
+                    </td>
+                </tr>`;
+            };
+
+            let g = [...filtered].sort((a,b) => b.pct - a.pct);
+            let l = [...filtered].sort((a,b) => a.pct - b.pct);
+
+            document.getElementById('list-gainers').innerHTML = g.map(row).join('');
+            document.getElementById('list-losers').innerHTML = l.map(row).join('');
+        }
+
+        // Init
+        setScale(config.scale);
+        updateTF(config.tf);
+        setInterval(runScreener, 20000);
     </script>
 </body>
     </html>
