@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pro Multi-Timeframe Screener</title>
+    <title>Gainers & Losers - Full Timeframes</title>
     <style>
         :root {
             --bg: #0b0e11; --card: #181a20; --border: #2b3139;
@@ -11,78 +11,97 @@
             --red: #f6465d; --accent: #fcd535;
         }
         body { background: var(--bg); color: var(--text); font-family: 'Inter', sans-serif; margin: 0; padding: 10px; }
-        .dashboard { width: 100%; max-width: 1100px; margin: auto; background: var(--card); border: 1px solid var(--border); border-radius: 8px; overflow: hidden; }
         
-        .scanner-info { padding: 12px 15px; background: #1e2026; border-bottom: 1px solid var(--border); }
+        /* Scanner Progress */
+        .scanner-info { max-width: 100%; margin-bottom: 10px; padding: 12px 15px; background: #1e2026; border: 1px solid var(--border); border-radius: 8px; }
         .progress-box { display: flex; justify-content: space-between; font-size: 11px; margin-bottom: 5px; color: var(--dim); }
         .progress-bar { height: 4px; background: #2b3139; border-radius: 2px; }
         #progress-fill { height: 100%; width: 0%; background: var(--accent); transition: width 0.3s; }
 
-        .tabs-container { background: #181a20; padding: 10px; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 10px; }
-        .tab { padding: 6px 14px; font-size: 12px; cursor: pointer; border-radius: 4px; color: var(--dim); background: #2b3139; white-space: nowrap; transition: 0.2s; }
-        .tab.active { color: #000; background: var(--accent); font-weight: bold; }
+        /* Timeframe Selection Tabs */
+        .tabs-container { margin-bottom: 10px; display: flex; gap: 8px; overflow-x: auto; padding-bottom: 5px; scrollbar-width: none; }
+        .tabs-container::-webkit-scrollbar { display: none; }
+        .tab { padding: 8px 16px; font-size: 12px; cursor: pointer; border-radius: 4px; color: var(--dim); background: var(--card); border: 1px solid var(--border); white-space: nowrap; }
+        .tab.active { color: #000; background: var(--accent); border-color: var(--accent); font-weight: bold; }
 
-        .table-wrapper { width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; }
-        table { width: 100%; border-collapse: collapse; min-width: 700px; }
+        /* Layout Grid */
+        .main-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; width: 100%; }
+
+        .table-section { background: var(--card); border: 1px solid var(--border); border-radius: 8px; overflow: hidden; }
+        .table-header { padding: 12px 15px; background: #1e2026; border-bottom: 1px solid var(--border); font-weight: bold; font-size: 14px; display: flex; justify-content: space-between; }
         
-        th { text-align: right; padding: 12px 15px; color: var(--dim); font-size: 11px; text-transform: uppercase; border-bottom: 1px solid var(--border); position: sticky; top: 0; background: var(--card); }
-        th:nth-child(1), td:nth-child(1) { text-align: left; width: 30px; padding-left: 15px; }
-        th:nth-child(2), td:nth-child(2) { text-align: left; position: sticky; left: 0; background: var(--card); z-index: 10; border-right: 1px solid var(--border); }
+        .table-wrapper { width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+        table { width: 100%; border-collapse: collapse; min-width: 550px; }
+        
+        th { text-align: right; padding: 10px 12px; color: var(--dim); font-size: 10px; text-transform: uppercase; border-bottom: 1px solid var(--border); position: sticky; top: 0; background: #1e2026; }
+        
+        /* Sticky Symbol */
+        th:nth-child(1), td:nth-child(1) { text-align: left; width: 25px; padding-left: 15px; }
+        th:nth-child(2), td:nth-child(2) { text-align: left; position: sticky; left: 0; background: var(--card); z-index: 10; font-weight: bold; border-right: 1px solid var(--border); }
+        th:nth-child(2) { background: #1e2026; }
 
-        td { padding: 12px 15px; text-align: right; border-bottom: 1px solid var(--border); font-family: 'JetBrains Mono', monospace; font-size: 13px; }
-        .symbol-name { font-weight: 700; color: #fff; }
+        td { padding: 10px 12px; text-align: right; border-bottom: 1px solid var(--border); font-family: 'JetBrains Mono', monospace; font-size: 12px; }
+        
+        .symbol-name { color: #fff; }
         .green { color: var(--green); }
         .red { color: var(--red); }
-        .price-badge { background: #2b3139; padding: 2px 5px; border-radius: 4px; color: var(--text); }
-        .active-rank-col { background: rgba(252, 213, 53, 0.05); }
+        .vol-text { color: var(--dim); font-size: 11px; }
+        .active-rank-bg { background: rgba(252, 213, 53, 0.05); }
+
+        @media (max-width: 1000px) { .main-grid { grid-template-columns: 1fr; } }
     </style>
 </head>
 <body>
 
-<div class="dashboard">
-    <div class="scanner-info">
-        <div class="progress-box">
-            <span id="scan-status">Syncing Market Data...</span>
-            <span id="scan-pct">0%</span>
+<div class="scanner-info">
+    <div class="progress-box">
+        <span id="scan-status">Initializing...</span>
+        <span id="scan-pct">0%</span>
+    </div>
+    <div class="progress-bar"><div id="progress-fill"></div></div>
+</div>
+
+<div class="tabs-container">
+    <span style="font-size: 11px; color: var(--dim); align-self: center; margin-right: 5px;">RANK BY:</span>
+    <div class="tab" onclick="setRank('5m', this)">5M</div>
+    <div class="tab" onclick="setRank('15m', this)">15M</div>
+    <div class="tab" onclick="setRank('1h', this)">1H</div>
+    <div class="tab active" onclick="setRank('24h', this)">24H</div>
+</div>
+
+<div class="main-grid">
+    <div class="table-section">
+        <div class="table-header" style="color: var(--green);"><span>Top Gainers</span> <span style="font-size: 11px; color: var(--dim);">Sorted by <span id="g-rank-label">24H</span></span></div>
+        <div class="table-wrapper">
+            <table>
+                <thead>
+                    <tr><th>#</th><th>Symbol</th><th>5M</th><th>15M</th><th>1H</th><th>24H</th><th>Vol</th></tr>
+                </thead>
+                <tbody id="gainers-body"></tbody>
+            </table>
         </div>
-        <div class="progress-bar"><div id="progress-fill"></div></div>
     </div>
 
-    <div class="tabs-container">
-        <span style="font-size: 11px; color: var(--dim)">RANK BY:</span>
-        <div class="tab" onclick="setRank('5m', this)">5M</div>
-        <div class="tab" onclick="setRank('15m', this)">15M</div>
-        <div class="tab" onclick="setRank('1h', this)">1H</div>
-        <div class="tab active" onclick="setRank('24h', this)">24H</div>
-    </div>
-
-    <div class="table-wrapper">
-        <table>
-            <thead>
-                <tr>
-                    <th>#</th>
-                    <th>Symbol</th>
-                    <th>Price</th>
-                    <th>5M</th>
-                    <th>15M</th>
-                    <th>1H</th>
-                    <th>24H</th>
-                </tr>
-            </thead>
-            <tbody id="table-body"></tbody>
-        </table>
+    <div class="table-section">
+        <div class="table-header" style="color: var(--red);"><span>Top Losers</span> <span style="font-size: 11px; color: var(--dim);">Sorted by <span id="l-rank-label">24H</span></span></div>
+        <div class="table-wrapper">
+            <table>
+                <thead>
+                    <tr><th>#</th><th>Symbol</th><th>5M</th><th>15M</th><th>1H</th><th>24H</th><th>Vol</th></tr>
+                </thead>
+                <tbody id="losers-body"></tbody>
+            </table>
+        </div>
     </div>
 </div>
 
 <script>
     const API = "https://fapi.binance.com/fapi/v1";
-    let pairsData = JSON.parse(localStorage.getItem('pro_screener_data')) || [];
-    let rankBy = localStorage.getItem('pro_screener_rank') || '24h';
-    let scanIdx = parseInt(localStorage.getItem('pro_screener_idx')) || 0;
+    let pairsData = JSON.parse(localStorage.getItem('full_dual_data')) || [];
+    let rankBy = localStorage.getItem('full_dual_rank') || '24h';
+    let scanIdx = parseInt(localStorage.getItem('full_dual_idx')) || 0;
 
-    // Initial Load
-    renderTable();
-    updateTabUI();
+    renderTables();
 
     async function getChange(symbol, interval) {
         try {
@@ -94,6 +113,12 @@
         } catch (e) { return "0.00"; }
     }
 
+    function formatVol(val) {
+        if (val >= 1e9) return (val / 1e9).toFixed(1) + 'B';
+        if (val >= 1e6) return (val / 1e6).toFixed(1) + 'M';
+        return Math.round(val).toLocaleString();
+    }
+
     async function startScanner() {
         try {
             const res = await fetch(`${API}/ticker/24hr`);
@@ -101,73 +126,72 @@
             
             while (true) {
                 if (scanIdx >= tickers.length) scanIdx = 0;
-                
                 const t = tickers[scanIdx];
-                document.getElementById('scan-status').innerText = `Scanning: ${t.symbol}`;
+                document.getElementById('scan-status').innerText = `Syncing: ${t.symbol}`;
                 let pct = Math.round(((scanIdx + 1) / tickers.length) * 100);
                 document.getElementById('scan-pct').innerText = pct + "%";
                 document.getElementById('progress-fill').style.width = pct + "%";
 
                 const [m5, m15, h1] = await Promise.all([
-                    getChange(t.symbol, '5m'),
-                    getChange(t.symbol, '15m'),
-                    getChange(t.symbol, '1h')
+                    getChange(t.symbol, '5m'), getChange(t.symbol, '15m'), getChange(t.symbol, '1h')
                 ]);
 
-                const coinUpdate = {
+                const coin = {
                     symbol: t.symbol.replace('USDT', ''),
-                    price: parseFloat(t.lastPrice),
-                    '5m': parseFloat(m5),
-                    '15m': parseFloat(m15),
-                    '1h': parseFloat(h1),
-                    '24h': parseFloat(t.priceChangePercent)
+                    '5m': parseFloat(m5), '15m': parseFloat(m15), '1h': parseFloat(h1),
+                    '24h': parseFloat(t.priceChangePercent),
+                    'vol': parseFloat(t.quoteVolume)
                 };
 
-                const idx = pairsData.findIndex(p => p.symbol === coinUpdate.symbol);
-                if (idx > -1) pairsData[idx] = coinUpdate; else pairsData.push(coinUpdate);
+                const idx = pairsData.findIndex(p => p.symbol === coin.symbol);
+                if (idx > -1) pairsData[idx] = coin; else pairsData.push(coin);
 
                 scanIdx++;
-                localStorage.setItem('pro_screener_data', JSON.stringify(pairsData));
-                localStorage.setItem('pro_screener_idx', scanIdx);
+                localStorage.setItem('full_dual_data', JSON.stringify(pairsData));
+                localStorage.setItem('full_dual_idx', scanIdx);
                 
-                renderTable();
-                await new Promise(r => setTimeout(r, 60)); // Rate limit protection
+                renderTables();
+                await new Promise(r => setTimeout(r, 60));
             }
         } catch (e) { setTimeout(startScanner, 5000); }
     }
 
     function setRank(key, el) {
         rankBy = key;
-        localStorage.setItem('pro_screener_rank', key);
-        updateTabUI();
-        renderTable();
+        localStorage.setItem('full_dual_rank', key);
+        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+        el.classList.add('active');
+        document.getElementById('g-rank-label').innerText = key.toUpperCase();
+        document.getElementById('l-rank-label').innerText = key.toUpperCase();
+        renderTables();
     }
 
-    function updateTabUI() {
-        document.querySelectorAll('.tab').forEach(t => {
-            t.classList.remove('active');
-            if (t.innerText.toLowerCase() === rankBy.toLowerCase()) t.classList.add('active');
-        });
-    }
+    function renderTables() {
+        const gBody = document.getElementById('gainers-body');
+        const lBody = document.getElementById('losers-body');
 
-    function renderTable() {
-        const tbody = document.getElementById('table-body');
-        const sorted = [...pairsData].sort((a, b) => b[rankBy] - a[rankBy]).slice(0, 20);
+        const sorted = [...pairsData].sort((a, b) => b[rankBy] - a[rankBy]);
+        const gainers = sorted.slice(0, 15);
+        const losers = [...sorted].reverse().slice(0, 15);
 
-        tbody.innerHTML = '';
-        sorted.forEach((c, i) => {
-            const row = document.createElement('tr');
-            row.innerHTML = `
-                <td>${i + 1}</td>
-                <td><span class="symbol-name">${c.symbol}</span></td>
-                <td><span class="price-badge">$${c.price < 1 ? c.price.toFixed(5) : c.price.toLocaleString()}</span></td>
-                <td class="${c['5m'] >= 0 ? 'green' : 'red'} ${rankBy==='5m'?'active-rank-col':''}">${c['5m'] > 0 ? '+' : ''}${c['5m']}%</td>
-                <td class="${c['15m'] >= 0 ? 'green' : 'red'} ${rankBy==='15m'?'active-rank-col':''}">${c['15m'] > 0 ? '+' : ''}${c['15m']}%</td>
-                <td class="${c['1h'] >= 0 ? 'green' : 'red'} ${rankBy==='1h'?'active-rank-col':''}">${c['1h'] > 0 ? '+' : ''}${c['1h']}%</td>
-                <td class="${c['24h'] >= 0 ? 'green' : 'red'} ${rankBy==='24h'?'active-rank-col':''}">${c['24h'] > 0 ? '+' : ''}${c['24h'].toFixed(2)}%</td>
-            `;
-            tbody.appendChild(row);
-        });
+        const populate = (data, element) => {
+            element.innerHTML = '';
+            data.forEach((c, i) => {
+                element.innerHTML += `
+                    <tr>
+                        <td>${i + 1}</td>
+                        <td><span class="symbol-name">${c.symbol}</span></td>
+                        <td class="${c['5m']>=0?'green':'red'} ${rankBy==='5m'?'active-rank-bg':''}">${c['5m']}%</td>
+                        <td class="${c['15m']>=0?'green':'red'} ${rankBy==='15m'?'active-rank-bg':''}">${c['15m']}%</td>
+                        <td class="${c['1h']>=0?'green':'red'} ${rankBy==='1h'?'active-rank-bg':''}">${c['1h']}%</td>
+                        <td class="${c['24h']>=0?'green':'red'} ${rankBy==='24h'?'active-rank-bg':''}">${c['24h'].toFixed(1)}%</td>
+                        <td class="vol-text">${formatVol(c['vol'])}</td>
+                    </tr>`;
+            });
+        };
+
+        populate(gainers, gBody);
+        populate(losers, lBody);
     }
 
     startScanner();
