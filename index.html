@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>QuantPulse Pro | Terminal</title>
+    <title>QuantPulse Pro | Rolling Terminal</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@700;800&family=Inter:wght@400;500;600;700;800&display=swap');
@@ -32,7 +32,6 @@
             background-image: radial-gradient(circle at 50% 0%, #161b22 0%, transparent 60%);
         }
 
-        /* Responsive Scaling */
         body.sz-sm { --base-fs: 11px; }
         body.sz-md { --base-fs: 13px; }
         body.sz-lg { --base-fs: 15px; }
@@ -99,7 +98,6 @@
             white-space: nowrap;
         }
 
-        /* Breakout Row Styling */
         .row-brk { 
             background: linear-gradient(90deg, rgba(0, 255, 149, 0.04) 0%, transparent 100%); 
             border-left: 3px solid var(--up); 
@@ -109,9 +107,7 @@
             border-left: 3px solid var(--accent);
         }
 
-        /* Clean number font (No dots in zeros) */
         .mono { font-family: 'Inter', sans-serif; font-weight: 600; letter-spacing: -0.02em; }
-        
         .pin-btn { cursor: pointer; color: #374151; transition: 0.2s; font-size: 1.1em; }
         .pin-btn.pinned { color: var(--accent); }
 
@@ -157,14 +153,14 @@
                 <button onclick="updateTF('5m')" id="btn-5m" class="btn-pill">5m</button>
                 <button onclick="updateTF('15m')" id="btn-15m" class="btn-pill active">15m</button>
                 <button onclick="updateTF('1h')" id="btn-1h" class="btn-pill">1h</button>
-                <button onclick="updateTF('1d')" id="btn-1d" class="btn-pill">1d</button>
+                <button onclick="updateTF('1d')" id="btn-1d" class="btn-pill">24h</button>
             </div>
 
             <button onclick="toggleBrk()" id="brk-btn" class="glass-panel px-5 py-2 text-[10px] font-black uppercase tracking-widest transition-all">
                 Filter: <span id="brk-status" class="text-gray-500">ALL MARKET</span>
             </button>
             <div class="flex items-center gap-4 text-[10px] font-bold uppercase tracking-tighter ml-auto opacity-60">
-                <span class="flex items-center gap-1"><span class="w-2 h-2 bg-[var(--accent)] rounded-full"></span> 1D Breakout</span>
+                <span class="flex items-center gap-1"><span class="w-2 h-2 bg-[var(--accent)] rounded-full"></span> 24H Breakout</span>
                 <span class="flex items-center gap-1"><span class="w-2 h-2 bg-[var(--up)] rounded-full"></span> Multi-TF</span>
             </div>
         </div>
@@ -172,7 +168,7 @@
         <div class="grid grid-cols-1 xl:grid-cols-2 gap-8">
             <div class="glass-panel overflow-hidden border-t-2 border-t-[var(--up)]">
                 <div class="px-5 py-4 border-b border-white/5 flex items-center justify-between">
-                    <span class="text-[11px] font-black uppercase text-[var(--up)] tracking-widest">Bullish Gainers</span>
+                    <span class="text-[11px] font-black uppercase text-[var(--up)] tracking-widest">Rolling Gainers</span>
                 </div>
                 <div class="overflow-x-auto no-scrollbar">
                     <table class="market-table">
@@ -193,7 +189,7 @@
 
             <div class="glass-panel overflow-hidden border-t-2 border-t-[var(--down)]">
                 <div class="px-5 py-4 border-b border-white/5 flex items-center justify-between">
-                    <span class="text-[11px] font-black uppercase text-[var(--down)] tracking-widest">Bearish Losers</span>
+                    <span class="text-[11px] font-black uppercase text-[var(--down)] tracking-widest">Rolling Losers</span>
                 </div>
                 <div class="overflow-x-auto no-scrollbar">
                     <table class="market-table">
@@ -265,35 +261,55 @@
         async function updateTF(tf) {
             config.tf = tf; save();
             document.querySelectorAll('.btn-pill').forEach(b => {
-                if(['5m','15m','1h','1d'].includes(b.innerText.toLowerCase())) b.classList.remove('active');
+                const label = b.innerText.toLowerCase();
+                if(['5m','15m','1h','24h'].includes(label)) b.classList.remove('active');
             });
             document.getElementById(`btn-${tf}`).classList.add('active');
-            document.getElementById('h-gain-tf').innerText = `${tf} %`;
-            document.getElementById('h-lose-tf').innerText = `${tf} %`;
+            document.getElementById('h-gain-tf').innerText = `${tf} (ROLLING)`;
+            document.getElementById('h-lose-tf').innerText = `${tf} (ROLLING)`;
             runScreener();
         }
 
-        function isBreakout(k) {
-            if (!k || k.length < 11) return false;
-            const price = parseFloat(k[k.length-1][4]);
-            const high = Math.max(...k.slice(-11, -1).map(x => parseFloat(x[2])));
-            return price > high;
+        // Helper to get price from exactly N minutes ago
+        function getPriceMinsAgo(klines, mins) {
+            if (!klines || klines.length < mins) return null;
+            return parseFloat(klines[klines.length - mins][1]); // Open price of candle N mins ago
         }
 
         async function fetchPair(s) {
             try {
-                const tfs = ['5m', '15m', '1h', '1d'];
-                const reqs = tfs.map(tf => fetch(`${API}/klines?symbol=${s}&interval=${tf}&limit=12`).then(r => r.json()));
-                reqs.push(fetch(`${API}/ticker/24hr?symbol=${s}`).then(r => r.json()));
-                const res = await Promise.all(reqs);
-                const ticker = res[4];
-                const activeK = res[tfs.indexOf(config.tf)];
-                const price = parseFloat(activeK[activeK.length-1][4]);
-                const open = parseFloat(activeK[activeK.length-1][1]);
+                // Fetch 1m data for rolling calculations (limit 100 covers 5m, 15m, 1h)
+                const k1m = await fetch(`${API}/klines?symbol=${s}&interval=1m&limit=100`).then(r => r.json());
+                const ticker = await fetch(`${API}/ticker/24hr?symbol=${s}`).then(r => r.json());
                 
-                const mtf = { 
-                    '5m': isBreakout(res[0]), '15m': isBreakout(res[1]), 
-                    '1h': isBreakout(res[2]), '1d': isBreakout(res[3]) 
+                const currentPrice = parseFloat(k1m[k1m.length-1][4]);
+
+                // Calculate Rolling Percentages
+                const calcRolling = (mins) => {
+                    const old = getPriceMinsAgo(k1m, mins);
+                    return old ? ((currentPrice - old) / old) * 100 : 0;
+                };
+
+                const rolling = {
+                    '5m': calcRolling(5),
+                    '15m': calcRolling(15),
+                    '1h': calcRolling(60),
+                    '1d': parseFloat(ticker.priceChangePercent)
+                };
+
+                // Rolling Breakout Logic
+                const isBrk = (mins) => {
+                    if (k1m.length < mins + 1) return false;
+                    const lookback = k1m.slice(-mins - 1, -1);
+                    const high = Math.max(...lookback.map(x => parseFloat(x[2])));
+                    return currentPrice > high;
+                };
+
+                const mtf = {
+                    '5m': isBrk(5),
+                    '15m': isBrk(15),
+                    '1h': isBrk(60),
+                    '1d': isBrk(100) // Approx for the limit fetched
                 };
 
                 let score = 0;
@@ -303,8 +319,10 @@
                 if (mtf['5m']) score += 1;
 
                 return {
-                    s: s.replace('USDT',''), p: price, pct: ((price-open)/open)*100,
-                    pct24: parseFloat(ticker.priceChangePercent), v24: parseFloat(ticker.quoteVolume),
+                    s: s.replace('USDT',''), p: currentPrice, 
+                    pct: rolling[config.tf],
+                    pct24: parseFloat(ticker.priceChangePercent), 
+                    v24: parseFloat(ticker.quoteVolume),
                     mtf, brkScore: score
                 };
             } catch(e) { return null; }
@@ -316,10 +334,10 @@
                 const all = await res.json();
                 let targets = all.filter(t => t.symbol.endsWith('USDT'))
                                  .sort((a,b) => parseFloat(b.quoteVolume) - parseFloat(a.quoteVolume))
-                                 .slice(0, 50).map(t => t.symbol);
+                                 .slice(0, 40).map(t => t.symbol); // Reduced slice for performance with 1m data
                 masterData = (await Promise.all(targets.map(fetchPair))).filter(d => d);
                 renderTables();
-                document.getElementById('last-sync').innerText = `SYNC • ${new Date().toLocaleTimeString()}`;
+                document.getElementById('last-sync').innerText = `ROLLING SYNC • ${new Date().toLocaleTimeString()}`;
             } catch(e) {}
         }
 
@@ -352,7 +370,7 @@
                                     <span class="mtf-tag ${c.mtf['5m'] ? 'active' : ''}">5m</span>
                                     <span class="mtf-tag ${c.mtf['15m'] ? 'active' : ''}">15m</span>
                                     <span class="mtf-tag ${c.mtf['1h'] ? 'active' : ''}">1h</span>
-                                    <span class="mtf-tag ${c.mtf['1d'] ? 'active brk-1d' : ''}">1d</span>
+                                    <span class="mtf-tag ${c.mtf['1d'] ? 'active brk-1d' : ''}">24h</span>
                                 </div>
                             </div>
                         </div>
@@ -373,7 +391,7 @@
 
         setScale(config.scale);
         updateTF(config.tf);
-        setInterval(runScreener, 20000);
+        setInterval(runScreener, 15000); // 15s refresh
     </script>
 </body>
 </html>
