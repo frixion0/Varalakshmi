@@ -2,396 +2,175 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>QuantPulse Pro | Rolling Terminal</title>
-    <script src="https://cdn.tailwindcss.com"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pro Multi-Timeframe Screener</title>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@700;800&family=Inter:wght@400;500;600;700;800&display=swap');
-        
         :root {
-            --bg: #020406;
-            --surface: #0a0d14;
-            --border: #1e232d;
-            --accent: #f3ba2f;
-            --up: #00ff95;
-            --up-dim: rgba(0, 255, 149, 0.12);
-            --down: #ff3b5c;
-            --down-dim: rgba(255, 59, 92, 0.12);
-            --text-main: #ffffff;
-            --text-dim: #6b7280;
-            --base-fs: 14px;
+            --bg: #0b0e11; --card: #181a20; --border: #2b3139;
+            --text: #eaecef; --dim: #848e9c; --green: #0ecb81;
+            --red: #f6465d; --accent: #fcd535;
         }
+        body { background: var(--bg); color: var(--text); font-family: 'Inter', sans-serif; margin: 0; padding: 10px; }
+        .dashboard { width: 100%; max-width: 1100px; margin: auto; background: var(--card); border: 1px solid var(--border); border-radius: 8px; overflow: hidden; }
+        
+        .scanner-info { padding: 12px 15px; background: #1e2026; border-bottom: 1px solid var(--border); }
+        .progress-box { display: flex; justify-content: space-between; font-size: 11px; margin-bottom: 5px; color: var(--dim); }
+        .progress-bar { height: 4px; background: #2b3139; border-radius: 2px; }
+        #progress-fill { height: 100%; width: 0%; background: var(--accent); transition: width 0.3s; }
 
-        body { 
-            font-family: 'Inter', sans-serif; 
-            background: var(--bg); 
-            color: var(--text-main);
-            margin: 0;
-            font-size: var(--base-fs);
-            -webkit-font-smoothing: antialiased;
-            background-image: radial-gradient(circle at 50% 0%, #161b22 0%, transparent 60%);
-        }
+        .tabs-container { background: #181a20; padding: 10px; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 10px; }
+        .tab { padding: 6px 14px; font-size: 12px; cursor: pointer; border-radius: 4px; color: var(--dim); background: #2b3139; white-space: nowrap; transition: 0.2s; }
+        .tab.active { color: #000; background: var(--accent); font-weight: bold; }
 
-        body.sz-sm { --base-fs: 11px; }
-        body.sz-md { --base-fs: 13px; }
-        body.sz-lg { --base-fs: 15px; }
+        .table-wrapper { width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+        table { width: 100%; border-collapse: collapse; min-width: 700px; }
+        
+        th { text-align: right; padding: 12px 15px; color: var(--dim); font-size: 11px; text-transform: uppercase; border-bottom: 1px solid var(--border); position: sticky; top: 0; background: var(--card); }
+        th:nth-child(1), td:nth-child(1) { text-align: left; width: 30px; padding-left: 15px; }
+        th:nth-child(2), td:nth-child(2) { text-align: left; position: sticky; left: 0; background: var(--card); z-index: 10; border-right: 1px solid var(--border); }
 
-        .glass-panel {
-            background: rgba(10, 13, 20, 0.85);
-            backdrop-filter: blur(20px);
-            border: 1px solid var(--border);
-            border-radius: 12px;
-        }
-
-        .btn-pill {
-            padding: 6px 14px;
-            font-size: 10px;
-            font-weight: 800;
-            color: var(--text-dim);
-            border-radius: 6px;
-            transition: all 0.2s;
-            text-transform: uppercase;
-            border: 1px solid transparent;
-        }
-
-        .btn-pill.active { background: white; color: black; box-shadow: 0 0 20px rgba(255,255,255,0.1); }
-
-        .search-bar {
-            background: #11151f;
-            border: 1px solid var(--border);
-            border-radius: 8px;
-            padding: 10px 16px;
-            color: white;
-            width: 100%;
-            outline: none;
-            transition: 0.2s;
-        }
-        .search-bar:focus { border-color: var(--accent); }
-
-        .mtf-tag {
-            font-size: 8px;
-            padding: 2px 5px;
-            border-radius: 3px;
-            background: #161a23;
-            color: #4b5563;
-            font-weight: 900;
-            border: 1px solid transparent;
-        }
-        .mtf-tag.active { background: var(--up-dim); color: var(--up); border-color: rgba(0, 255, 149, 0.2); }
-        .mtf-tag.brk-1d { background: rgba(243, 186, 47, 0.15); color: var(--accent); border-color: rgba(243, 186, 47, 0.3); }
-
-        .market-table { width: 100%; border-collapse: collapse; }
-        .market-table th {
-            text-align: right;
-            color: var(--text-dim);
-            font-size: 9px;
-            font-weight: 800;
-            padding: 16px 12px;
-            border-bottom: 1px solid var(--border);
-            text-transform: uppercase;
-            position: sticky; top: 0; background: var(--surface); z-index: 5;
-        }
-        .market-table th:first-child, .market-table th:nth-child(2) { text-align: left; }
-        .market-table td {
-            padding: 14px 12px;
-            border-bottom: 1px solid rgba(255,255,255,0.03);
-            white-space: nowrap;
-        }
-
-        .row-brk { 
-            background: linear-gradient(90deg, rgba(0, 255, 149, 0.04) 0%, transparent 100%); 
-            border-left: 3px solid var(--up); 
-        }
-        .row-brk-1d {
-            background: linear-gradient(90deg, rgba(243, 186, 47, 0.08) 0%, transparent 100%);
-            border-left: 3px solid var(--accent);
-        }
-
-        .mono { font-family: 'Inter', sans-serif; font-weight: 600; letter-spacing: -0.02em; }
-        .pin-btn { cursor: pointer; color: #374151; transition: 0.2s; font-size: 1.1em; }
-        .pin-btn.pinned { color: var(--accent); }
-
-        .vol-bar-bg { background: rgba(255,255,255,0.03); border-radius: 2px; height: 3px; width: 100%; margin-top: 4px; overflow: hidden; }
-        .vol-bar-fill { background: var(--accent); height: 100%; opacity: 0.5; }
-
-        #toast {
-            position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%);
-            background: var(--accent); color: black; font-weight: 800; padding: 10px 20px; border-radius: 8px;
-            opacity: 0; transition: 0.3s; z-index: 100; pointer-events: none;
-        }
-        .no-scrollbar::-webkit-scrollbar { display: none; }
+        td { padding: 12px 15px; text-align: right; border-bottom: 1px solid var(--border); font-family: 'JetBrains Mono', monospace; font-size: 13px; }
+        .symbol-name { font-weight: 700; color: #fff; }
+        .green { color: var(--green); }
+        .red { color: var(--red); }
+        .price-badge { background: #2b3139; padding: 2px 5px; border-radius: 4px; color: var(--text); }
+        .active-rank-col { background: rgba(252, 213, 53, 0.05); }
     </style>
 </head>
-<body class="sz-lg pb-10">
+<body>
 
-    <div id="toast">Symbol Copied</div>
-
-    <div class="max-w-[1600px] mx-auto px-4 py-6">
-        
-        <header class="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6 mb-8">
-            <div class="flex items-center gap-4">
-                <h1 style="font-family: 'Plus Jakarta Sans'" class="text-2xl font-extrabold tracking-tighter">
-                    QUANT<span class="text-[var(--accent)]">PULSE</span>
-                </h1>
-                <div id="last-sync" class="text-[9px] font-mono text-gray-500 uppercase tracking-widest bg-white/5 px-3 py-1 rounded-full border border-white/10">Initializing...</div>
-            </div>
-
-            <div class="flex flex-wrap items-center gap-4 w-full lg:w-auto">
-                <div class="flex-grow max-w-sm">
-                    <input type="text" id="assetSearch" oninput="renderTables()" placeholder="SEARCH SYMBOLS..." class="search-bar">
-                </div>
-                <div class="flex gap-1 glass-panel p-1">
-                    <button onclick="setScale('sm')" id="sc-sm" class="btn-pill">S</button>
-                    <button onclick="setScale('md')" id="sc-md" class="btn-pill">M</button>
-                    <button onclick="setScale('lg')" id="sc-lg" class="btn-pill active">L</button>
-                </div>
-            </div>
-        </header>
-
-        <div class="flex flex-wrap items-center gap-4 mb-8">
-            <div class="flex gap-1 glass-panel p-1">
-                <button onclick="updateTF('5m')" id="btn-5m" class="btn-pill">5m</button>
-                <button onclick="updateTF('15m')" id="btn-15m" class="btn-pill active">15m</button>
-                <button onclick="updateTF('1h')" id="btn-1h" class="btn-pill">1h</button>
-                <button onclick="updateTF('1d')" id="btn-1d" class="btn-pill">24h</button>
-            </div>
-
-            <button onclick="toggleBrk()" id="brk-btn" class="glass-panel px-5 py-2 text-[10px] font-black uppercase tracking-widest transition-all">
-                Filter: <span id="brk-status" class="text-gray-500">ALL MARKET</span>
-            </button>
-            <div class="flex items-center gap-4 text-[10px] font-bold uppercase tracking-tighter ml-auto opacity-60">
-                <span class="flex items-center gap-1"><span class="w-2 h-2 bg-[var(--accent)] rounded-full"></span> 24H Breakout</span>
-                <span class="flex items-center gap-1"><span class="w-2 h-2 bg-[var(--up)] rounded-full"></span> Multi-TF</span>
-            </div>
+<div class="dashboard">
+    <div class="scanner-info">
+        <div class="progress-box">
+            <span id="scan-status">Syncing Market Data...</span>
+            <span id="scan-pct">0%</span>
         </div>
-
-        <div class="grid grid-cols-1 xl:grid-cols-2 gap-8">
-            <div class="glass-panel overflow-hidden border-t-2 border-t-[var(--up)]">
-                <div class="px-5 py-4 border-b border-white/5 flex items-center justify-between">
-                    <span class="text-[11px] font-black uppercase text-[var(--up)] tracking-widest">Rolling Gainers</span>
-                </div>
-                <div class="overflow-x-auto no-scrollbar">
-                    <table class="market-table">
-                        <thead>
-                            <tr>
-                                <th class="w-10"></th>
-                                <th>Symbol</th>
-                                <th class="text-right">Price</th>
-                                <th class="text-right" id="h-gain-tf">15m %</th>
-                                <th class="text-right">24h %</th>
-                                <th class="text-right">Volume</th>
-                            </tr>
-                        </thead>
-                        <tbody id="list-gainers"></tbody>
-                    </table>
-                </div>
-            </div>
-
-            <div class="glass-panel overflow-hidden border-t-2 border-t-[var(--down)]">
-                <div class="px-5 py-4 border-b border-white/5 flex items-center justify-between">
-                    <span class="text-[11px] font-black uppercase text-[var(--down)] tracking-widest">Rolling Losers</span>
-                </div>
-                <div class="overflow-x-auto no-scrollbar">
-                    <table class="market-table">
-                        <thead>
-                            <tr>
-                                <th class="w-10"></th>
-                                <th>Symbol</th>
-                                <th class="text-right">Price</th>
-                                <th class="text-right" id="h-lose-tf">15m %</th>
-                                <th class="text-right">24h %</th>
-                                <th class="text-right">Volume</th>
-                            </tr>
-                        </thead>
-                        <tbody id="list-losers"></tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
+        <div class="progress-bar"><div id="progress-fill"></div></div>
     </div>
 
-    <script>
-        const API = "https://fapi.binance.com/fapi/v1";
-        let config = JSON.parse(localStorage.getItem('quantConfig_vFinal')) || {
-            tf: '15m',
-            brk: false,
-            scale: 'lg',
-            pins: []
-        };
+    <div class="tabs-container">
+        <span style="font-size: 11px; color: var(--dim)">RANK BY:</span>
+        <div class="tab" onclick="setRank('5m', this)">5M</div>
+        <div class="tab" onclick="setRank('15m', this)">15M</div>
+        <div class="tab" onclick="setRank('1h', this)">1H</div>
+        <div class="tab active" onclick="setRank('24h', this)">24H</div>
+    </div>
 
-        let masterData = [];
+    <div class="table-wrapper">
+        <table>
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Symbol</th>
+                    <th>Price</th>
+                    <th>5M</th>
+                    <th>15M</th>
+                    <th>1H</th>
+                    <th>24H</th>
+                </tr>
+            </thead>
+            <tbody id="table-body"></tbody>
+        </table>
+    </div>
+</div>
 
-        function save() { localStorage.setItem('quantConfig_vFinal', JSON.stringify(config)); }
+<script>
+    const API = "https://fapi.binance.com/fapi/v1";
+    let pairsData = JSON.parse(localStorage.getItem('pro_screener_data')) || [];
+    let rankBy = localStorage.getItem('pro_screener_rank') || '24h';
+    let scanIdx = parseInt(localStorage.getItem('pro_screener_idx')) || 0;
 
-        function formatVol(v) {
-            if (v >= 1e9) return (v / 1e9).toFixed(2) + 'B';
-            if (v >= 1e6) return (v / 1e6).toFixed(1) + 'M';
-            return (v / 1e3).toFixed(1) + 'K';
-        }
+    // Initial Load
+    renderTable();
+    updateTabUI();
 
-        function setScale(s) {
-            config.scale = s; save();
-            document.body.className = `sz-${s} pb-10`;
-            document.querySelectorAll('[id^="sc-"]').forEach(b => b.classList.remove('active'));
-            document.getElementById(`sc-${s}`).classList.add('active');
-        }
+    async function getChange(symbol, interval) {
+        try {
+            const res = await fetch(`${API}/klines?symbol=${symbol}&interval=${interval}&limit=2`);
+            const data = await res.json();
+            const open = parseFloat(data[0][1]);
+            const close = parseFloat(data[data.length - 1][4]);
+            return ((close - open) / open * 100).toFixed(2);
+        } catch (e) { return "0.00"; }
+    }
 
-        function toggleBrk() {
-            config.brk = !config.brk; save();
-            const status = document.getElementById('brk-status');
-            status.innerText = config.brk ? 'BREAKOUT PRIORITY' : 'ALL MARKET';
-            status.style.color = config.brk ? 'var(--accent)' : 'var(--text-dim)';
-            renderTables();
-        }
-
-        function togglePin(s) {
-            if(config.pins.includes(s)) config.pins = config.pins.filter(x => x !== s);
-            else config.pins.push(s);
-            save();
-            renderTables();
-        }
-
-        function copy(s) {
-            navigator.clipboard.writeText(s);
-            const t = document.getElementById('toast');
-            t.style.opacity = '1';
-            setTimeout(() => t.style.opacity = '0', 1500);
-        }
-
-        async function updateTF(tf) {
-            config.tf = tf; save();
-            document.querySelectorAll('.btn-pill').forEach(b => {
-                const label = b.innerText.toLowerCase();
-                if(['5m','15m','1h','24h'].includes(label)) b.classList.remove('active');
-            });
-            document.getElementById(`btn-${tf}`).classList.add('active');
-            document.getElementById('h-gain-tf').innerText = `${tf} (ROLLING)`;
-            document.getElementById('h-lose-tf').innerText = `${tf} (ROLLING)`;
-            runScreener();
-        }
-
-        // Helper to get price from exactly N minutes ago
-        function getPriceMinsAgo(klines, mins) {
-            if (!klines || klines.length < mins) return null;
-            return parseFloat(klines[klines.length - mins][1]); // Open price of candle N mins ago
-        }
-
-        async function fetchPair(s) {
-            try {
-                // Fetch 1m data for rolling calculations (limit 100 covers 5m, 15m, 1h)
-                const k1m = await fetch(`${API}/klines?symbol=${s}&interval=1m&limit=100`).then(r => r.json());
-                const ticker = await fetch(`${API}/ticker/24hr?symbol=${s}`).then(r => r.json());
-                
-                const currentPrice = parseFloat(k1m[k1m.length-1][4]);
-
-                // Calculate Rolling Percentages
-                const calcRolling = (mins) => {
-                    const old = getPriceMinsAgo(k1m, mins);
-                    return old ? ((currentPrice - old) / old) * 100 : 0;
-                };
-
-                const rolling = {
-                    '5m': calcRolling(5),
-                    '15m': calcRolling(15),
-                    '1h': calcRolling(60),
-                    '1d': parseFloat(ticker.priceChangePercent)
-                };
-
-                // Rolling Breakout Logic
-                const isBrk = (mins) => {
-                    if (k1m.length < mins + 1) return false;
-                    const lookback = k1m.slice(-mins - 1, -1);
-                    const high = Math.max(...lookback.map(x => parseFloat(x[2])));
-                    return currentPrice > high;
-                };
-
-                const mtf = {
-                    '5m': isBrk(5),
-                    '15m': isBrk(15),
-                    '1h': isBrk(60),
-                    '1d': isBrk(100) // Approx for the limit fetched
-                };
-
-                let score = 0;
-                if (mtf['1d']) score += 10;
-                if (mtf['1h']) score += 5;
-                if (mtf['15m']) score += 2;
-                if (mtf['5m']) score += 1;
-
-                return {
-                    s: s.replace('USDT',''), p: currentPrice, 
-                    pct: rolling[config.tf],
-                    pct24: parseFloat(ticker.priceChangePercent), 
-                    v24: parseFloat(ticker.quoteVolume),
-                    mtf, brkScore: score
-                };
-            } catch(e) { return null; }
-        }
-
-        async function runScreener() {
-            try {
-                const res = await fetch(`${API}/ticker/24hr`);
-                const all = await res.json();
-                let targets = all.filter(t => t.symbol.endsWith('USDT'))
-                                 .sort((a,b) => parseFloat(b.quoteVolume) - parseFloat(a.quoteVolume))
-                                 .slice(0, 40).map(t => t.symbol); // Reduced slice for performance with 1m data
-                masterData = (await Promise.all(targets.map(fetchPair))).filter(d => d);
-                renderTables();
-                document.getElementById('last-sync').innerText = `ROLLING SYNC • ${new Date().toLocaleTimeString()}`;
-            } catch(e) {}
-        }
-
-        function renderTables() {
-            const query = document.getElementById('assetSearch').value.toUpperCase();
-            let filtered = masterData.filter(d => d.s.includes(query));
+    async function startScanner() {
+        try {
+            const res = await fetch(`${API}/ticker/24hr`);
+            const tickers = (await res.json()).filter(t => t.symbol.endsWith('USDT'));
             
-            if (config.brk) {
-                filtered = filtered.filter(d => d.brkScore > 0);
-                filtered.sort((a,b) => b.brkScore - a.brkScore || Math.abs(b.pct) - Math.abs(a.pct));
-            } else {
-                filtered.sort((a,b) => Math.abs(b.pct) - Math.abs(a.pct));
+            while (true) {
+                if (scanIdx >= tickers.length) scanIdx = 0;
+                
+                const t = tickers[scanIdx];
+                document.getElementById('scan-status').innerText = `Scanning: ${t.symbol}`;
+                let pct = Math.round(((scanIdx + 1) / tickers.length) * 100);
+                document.getElementById('scan-pct').innerText = pct + "%";
+                document.getElementById('progress-fill').style.width = pct + "%";
+
+                const [m5, m15, h1] = await Promise.all([
+                    getChange(t.symbol, '5m'),
+                    getChange(t.symbol, '15m'),
+                    getChange(t.symbol, '1h')
+                ]);
+
+                const coinUpdate = {
+                    symbol: t.symbol.replace('USDT', ''),
+                    price: parseFloat(t.lastPrice),
+                    '5m': parseFloat(m5),
+                    '15m': parseFloat(m15),
+                    '1h': parseFloat(h1),
+                    '24h': parseFloat(t.priceChangePercent)
+                };
+
+                const idx = pairsData.findIndex(p => p.symbol === coinUpdate.symbol);
+                if (idx > -1) pairsData[idx] = coinUpdate; else pairsData.push(coinUpdate);
+
+                scanIdx++;
+                localStorage.setItem('pro_screener_data', JSON.stringify(pairsData));
+                localStorage.setItem('pro_screener_idx', scanIdx);
+                
+                renderTable();
+                await new Promise(r => setTimeout(r, 60)); // Rate limit protection
             }
+        } catch (e) { setTimeout(startScanner, 5000); }
+    }
 
-            const maxVol = Math.max(...masterData.map(d => d.v24));
+    function setRank(key, el) {
+        rankBy = key;
+        localStorage.setItem('pro_screener_rank', key);
+        updateTabUI();
+        renderTable();
+    }
 
-            const generateRow = (c) => {
-                let rowStyle = "";
-                if (c.mtf['1d']) rowStyle = "row-brk-1d";
-                else if (c.brkScore > 0) rowStyle = "row-brk";
+    function updateTabUI() {
+        document.querySelectorAll('.tab').forEach(t => {
+            t.classList.remove('active');
+            if (t.innerText.toLowerCase() === rankBy.toLowerCase()) t.classList.add('active');
+        });
+    }
 
-                return `
-                <tr class="${rowStyle}">
-                    <td><span onclick="togglePin('${c.s}')" class="pin-btn ${config.pins.includes(c.s) ? 'pinned' : ''}">★</span></td>
-                    <td>
-                        <div class="flex items-center gap-2">
-                            <div class="flex flex-col">
-                                <span onclick="copy('${c.s}')" class="font-bold cursor-pointer hover:text-[var(--accent)] text-white">${c.s}</span>
-                                <div class="flex gap-1 mt-1">
-                                    <span class="mtf-tag ${c.mtf['5m'] ? 'active' : ''}">5m</span>
-                                    <span class="mtf-tag ${c.mtf['15m'] ? 'active' : ''}">15m</span>
-                                    <span class="mtf-tag ${c.mtf['1h'] ? 'active' : ''}">1h</span>
-                                    <span class="mtf-tag ${c.mtf['1d'] ? 'active brk-1d' : ''}">24h</span>
-                                </div>
-                            </div>
-                        </div>
-                    </td>
-                    <td class="text-right font-bold text-white mono">$${c.p < 1 ? c.p.toFixed(5) : c.p.toLocaleString(undefined, {minimumFractionDigits: 2})}</td>
-                    <td class="text-right font-bold mono ${c.pct >= 0 ? 'text-[var(--up)]' : 'text-[var(--down)]'}">${c.pct >= 0 ? '+' : ''}${c.pct.toFixed(2)}%</td>
-                    <td class="text-right font-bold mono ${c.pct24 >= 0 ? 'text-[var(--up)]' : 'text-[var(--down)]'}">${c.pct24 >= 0 ? '+' : ''}${c.pct24.toFixed(2)}%</td>
-                    <td class="text-right">
-                        <div class="text-white font-bold mono text-[11px]">${formatVol(c.v24)}</div>
-                        <div class="vol-bar-bg"><div class="vol-bar-fill" style="width: ${(c.v24/maxVol)*100}%"></div></div>
-                    </td>
-                </tr>`;
-            };
+    function renderTable() {
+        const tbody = document.getElementById('table-body');
+        const sorted = [...pairsData].sort((a, b) => b[rankBy] - a[rankBy]).slice(0, 20);
 
-            document.getElementById('list-gainers').innerHTML = filtered.filter(d => d.pct >= 0).map(generateRow).join('');
-            document.getElementById('list-losers').innerHTML = filtered.filter(d => d.pct < 0).map(generateRow).join('');
-        }
+        tbody.innerHTML = '';
+        sorted.forEach((c, i) => {
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td>${i + 1}</td>
+                <td><span class="symbol-name">${c.symbol}</span></td>
+                <td><span class="price-badge">$${c.price < 1 ? c.price.toFixed(5) : c.price.toLocaleString()}</span></td>
+                <td class="${c['5m'] >= 0 ? 'green' : 'red'} ${rankBy==='5m'?'active-rank-col':''}">${c['5m'] > 0 ? '+' : ''}${c['5m']}%</td>
+                <td class="${c['15m'] >= 0 ? 'green' : 'red'} ${rankBy==='15m'?'active-rank-col':''}">${c['15m'] > 0 ? '+' : ''}${c['15m']}%</td>
+                <td class="${c['1h'] >= 0 ? 'green' : 'red'} ${rankBy==='1h'?'active-rank-col':''}">${c['1h'] > 0 ? '+' : ''}${c['1h']}%</td>
+                <td class="${c['24h'] >= 0 ? 'green' : 'red'} ${rankBy==='24h'?'active-rank-col':''}">${c['24h'] > 0 ? '+' : ''}${c['24h'].toFixed(2)}%</td>
+            `;
+            tbody.appendChild(row);
+        });
+    }
 
-        setScale(config.scale);
-        updateTF(config.tf);
-        setInterval(runScreener, 15000); // 15s refresh
-    </script>
+    startScanner();
+</script>
 </body>
 </html>
