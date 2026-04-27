@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Crypto Turbo Screener - Corrected Stats</title>
+    <title>Crypto Live Percentage Screener</title>
     <style>
         :root {
             --bg: #0b0e11; --card: #181a20; --border: #2b3139;
@@ -11,46 +11,39 @@
             --red: #f6465d; --accent: #fcd535; --orange: #f0b90b;
         }
         body { background: var(--bg); color: var(--text); font-family: 'Inter', sans-serif; margin: 0; padding: 10px; }
-        
         .controls-row { max-width: 100%; margin-bottom: 10px; display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
         .search-box { flex: 1; min-width: 200px; }
-        .search-box input { width: 100%; background: var(--card); border: 1px solid var(--border); padding: 10px 15px; border-radius: 4px; color: #fff; outline: none; }
-        .search-box input:focus { border-color: var(--accent); }
-
+        .search-box input { width: 100%; background: var(--card); border: 1px solid var(--border); padding: 10px 15px; border-radius: 4px; color: #fff; outline: none; font-size: 14px; }
         .scanner-info { flex: 2; min-width: 300px; padding: 8px 15px; background: #1e2026; border: 1px solid var(--border); border-radius: 8px; }
         .progress-box { display: flex; justify-content: space-between; font-size: 11px; margin-bottom: 5px; color: var(--dim); }
         .progress-bar { height: 4px; background: #2b3139; border-radius: 2px; }
-        #progress-fill { height: 100%; width: 0%; background: var(--accent); }
-
-        .tabs-container { margin-bottom: 15px; display: flex; gap: 8px; overflow-x: auto; align-items: center; }
+        #progress-fill { height: 100%; width: 0%; background: var(--accent); transition: width 0.1s; }
+        .tabs-container { margin-bottom: 15px; display: flex; gap: 8px; overflow-x: auto; padding-bottom: 5px; align-items: center; }
         .tab { padding: 8px 20px; font-size: 12px; cursor: pointer; border-radius: 4px; color: var(--dim); background: var(--card); border: 1px solid var(--border); white-space: nowrap; }
-        .tab.active { color: #000; background: var(--accent); font-weight: bold; }
-
-        .main-grid { display: flex; flex-direction: row; gap: 15px; width: 100%; }
-        .table-section { flex: 1; background: var(--card); border: 1px solid var(--border); border-radius: 8px; overflow: hidden; }
+        .tab.active { color: #000; background: var(--accent); border-color: var(--accent); font-weight: bold; }
+        .main-grid { display: flex; flex-direction: row; gap: 15px; width: 100%; align-items: flex-start; }
+        .table-section { flex: 1; background: var(--card); border: 1px solid var(--border); border-radius: 8px; overflow: hidden; min-width: 0; }
         .table-header { padding: 12px 15px; background: #1e2026; border-bottom: 1px solid var(--border); font-weight: bold; font-size: 14px; }
-        
         .table-wrapper { width: 100%; overflow-x: auto; max-height: 75vh; }
         table { width: 100%; border-collapse: collapse; min-width: 700px; }
         th { text-align: right; padding: 10px 12px; color: var(--dim); font-size: 10px; text-transform: uppercase; border-bottom: 1px solid var(--border); position: sticky; top: 0; background: #1e2026; z-index: 5; }
         th:nth-child(1), td:nth-child(1) { text-align: left; width: 25px; padding-left: 15px; }
-        th:nth-child(2), td:nth-child(2) { text-align: left; position: sticky; left: 0; background: var(--card); z-index: 10; border-right: 1px solid var(--border); }
-
+        th:nth-child(2), td:nth-child(2) { text-align: left; position: sticky; left: 0; background: var(--card); z-index: 10; font-weight: bold; border-right: 1px solid var(--border); }
         td { padding: 10px 12px; text-align: right; border-bottom: 1px solid var(--border); font-family: 'JetBrains Mono', monospace; font-size: 12px; }
+        .symbol-name { color: #fff; }
         .green { color: var(--green); }
         .red { color: var(--red); }
-        .vol-orange { color: var(--orange); }
+        .vol-orange { color: var(--orange); font-weight: 500; }
         .active-rank-bg { background: rgba(252, 213, 53, 0.05); }
-
         @media (max-width: 1100px) { .main-grid { flex-direction: column; } }
     </style>
 </head>
 <body>
 
 <div class="controls-row">
-    <div class="search-box"><input type="text" id="cryptoSearch" placeholder="Search Symbol..." oninput="renderTables()"></div>
+    <div class="search-box"><input type="text" id="cryptoSearch" placeholder="Search..." oninput="renderTables()"></div>
     <div class="scanner-info">
-        <div class="progress-box"><span id="scan-status">Worker Pool Active</span><span id="scan-pct">0%</span></div>
+        <div class="progress-box"><span id="scan-status">Worker Pool: 20 Threads</span><span id="scan-pct">0%</span></div>
         <div class="progress-bar"><div id="progress-fill"></div></div>
     </div>
 </div>
@@ -63,56 +56,41 @@
 </div>
 
 <div class="main-grid">
-    <div class="table-section">
-        <div class="table-header" style="color: var(--green);">Gainers (Top 50)</div>
-        <div class="table-wrapper">
-            <table>
-                <thead><tr><th>#</th><th>Symbol</th><th>Price</th><th>5M</th><th>15M</th><th>1H</th><th>24H</th><th>Volume</th></tr></thead>
-                <tbody id="gainers-body"></tbody>
-            </table>
-        </div>
-    </div>
-    <div class="table-section">
-        <div class="table-header" style="color: var(--red);">Losers (Top 50)</div>
-        <div class="table-wrapper">
-            <table>
-                <thead><tr><th>#</th><th>Symbol</th><th>Price</th><th>5M</th><th>15M</th><th>1H</th><th>24H</th><th>Volume</th></tr></thead>
-                <tbody id="losers-body"></tbody>
-            </table>
-        </div>
-    </div>
+    <div class="table-section"><div class="table-header" style="color: var(--green);">Gainers (Top 50)</div><div class="table-wrapper"><table><thead><tr><th>#</th><th>Symbol</th><th>Price</th><th>5M</th><th>15M</th><th>1H</th><th>24H</th><th>Volume</th></tr></thead><tbody id="gainers-body"></tbody></table></div></div>
+    <div class="table-section"><div class="table-header" style="color: var(--red);">Losers (Top 50)</div><div class="table-wrapper"><table><thead><tr><th>#</th><th>Symbol</th><th>Price</th><th>5M</th><th>15M</th><th>1H</th><th>24H</th><th>Volume</th></tr></thead><tbody id="losers-body"></tbody></table></div></div>
 </div>
 
 <script>
     const API = "https://fapi.binance.com/fapi/v1";
-    let pairsData = JSON.parse(localStorage.getItem('ultra_v5_cache')) || [];
-    let rankBy = localStorage.getItem('ultra_v5_rank') || '24h';
+    let pairsData = JSON.parse(localStorage.getItem('live_calc_cache')) || [];
+    let rankBy = localStorage.getItem('live_calc_rank') || '24h';
     const CONCURRENCY = 20;
 
     async function fetchCoin(ticker) {
         try {
-            // Fetch the most recent candle for each timeframe
+            // Fetching ONLY the latest candle for 5m, 15m, 1h
+            // limit=1 returns the current in-progress candle
             const [m5, m15, h1] = await Promise.all([
                 fetch(`${API}/klines?symbol=${ticker.symbol}&interval=5m&limit=1`).then(r => r.json()),
                 fetch(`${API}/klines?symbol=${ticker.symbol}&interval=15m&limit=1`).then(r => r.json()),
                 fetch(`${API}/klines?symbol=${ticker.symbol}&interval=1h&limit=1`).then(r => r.json())
             ]);
 
-            const curPrice = parseFloat(ticker.lastPrice);
+            const lastPrice = parseFloat(ticker.lastPrice);
             
-            // Percentage Change = ((Current Price - Candle Open) / Candle Open) * 100
+            // Percentage Calculation: ((CurrentPrice - OpenPrice) / OpenPrice) * 100
             const calc = (kline) => {
                 const open = parseFloat(kline[0][1]);
-                return (((curPrice - open) / open) * 100).toFixed(2);
+                return (((lastPrice - open) / open) * 100).toFixed(2);
             };
 
             const coin = {
                 symbol: ticker.symbol.replace('USDT', ''),
-                price: curPrice,
+                price: lastPrice,
                 '5m': parseFloat(calc(m5)),
                 '15m': parseFloat(calc(m15)),
                 '1h': parseFloat(calc(h1)),
-                '24h': parseFloat(ticker.priceChangePercent), // Official Binance rolling 24h
+                '24h': parseFloat(ticker.priceChangePercent), // Binance 24h ticker uses its own rolling open
                 'vol': parseFloat(ticker.quoteVolume)
             };
 
@@ -128,20 +106,23 @@
             let i = 0;
             const worker = async () => {
                 while (i < tickers.length) {
-                    await fetchCoin(tickers[i++]);
-                    document.getElementById('progress-fill').style.width = Math.round((i/tickers.length)*100) + "%";
+                    const currentTicker = tickers[i++];
+                    await fetchCoin(currentTicker);
+                    const pct = Math.round((i / tickers.length) * 100);
+                    document.getElementById('progress-fill').style.width = pct + "%";
+                    document.getElementById('scan-pct').innerText = pct + "%";
                     if (i % 8 === 0) renderTables();
                 }
             };
             await Promise.all(Array(CONCURRENCY).fill(null).map(worker));
-            localStorage.setItem('ultra_v5_cache', JSON.stringify(pairsData));
-            setTimeout(turboScan, 2000); // Faster re-sync
+            localStorage.setItem('live_calc_cache', JSON.stringify(pairsData));
+            setTimeout(turboScan, 3000); // Fast re-scan
         } catch (e) { setTimeout(turboScan, 3000); }
     }
 
     function setRank(key, el) {
         rankBy = key;
-        localStorage.setItem('ultra_v5_rank', key);
+        localStorage.setItem('live_calc_rank', key);
         document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
         el.classList.add('active');
         renderTables();
@@ -155,28 +136,27 @@
 
     function renderTables() {
         const query = document.getElementById('cryptoSearch').value.trim().toUpperCase();
-        const filtered = query ? pairsData.filter(p => p.symbol.includes(query)) : pairsData;
+        const filtered = query ? pairsData.filter(p => p.symbol.toUpperCase().includes(query)) : pairsData;
         const sorted = [...filtered].sort((a, b) => b[rankBy] - a[rankBy]);
-
+        
         const gainers = sorted.slice(0, 50);
         const losers = [...sorted].reverse().slice(0, 50);
 
         const build = (data) => data.map((c, i) => `
             <tr>
                 <td>${i + 1}</td>
-                <td><b style="color:#fff">${c.symbol}</b></td>
+                <td><span class="symbol-name">${c.symbol}</span></td>
                 <td>$${c.price < 1 ? c.price.toFixed(5) : c.price.toLocaleString()}</td>
-                <td class="${c['5m']>=0?'green':'red'}">${c['5m']}%</td>
-                <td class="${c['15m']>=0?'green':'red'}">${c['15m']}%</td>
-                <td class="${c['1h']>=0?'green':'red'}">${c['1h']}%</td>
-                <td class="${c['24h']>=0?'green':'red'}">${c['24h'].toFixed(2)}%</td>
+                <td class="${c['5m']>=0?'green':'red'} ${rankBy==='5m'?'active-rank-bg':''}">${c['5m']}%</td>
+                <td class="${c['15m']>=0?'green':'red'} ${rankBy==='15m'?'active-rank-bg':''}">${c['15m']}%</td>
+                <td class="${c['1h']>=0?'green':'red'} ${rankBy==='1h'?'active-rank-bg':''}">${c['1h']}%</td>
+                <td class="${c['24h']>=0?'green':'red'} ${rankBy==='24h'?'active-rank-bg':''}">${c['24h'].toFixed(2)}%</td>
                 <td class="vol-orange">${formatVol(c['vol'])}</td>
             </tr>`).join('');
 
         document.getElementById('gainers-body').innerHTML = build(gainers);
         document.getElementById('losers-body').innerHTML = build(losers);
     }
-
     turboScan();
 </script>
 </body>
