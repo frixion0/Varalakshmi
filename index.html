@@ -3,13 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Crypto Live Screener - Multi-Breakout Pro</title>
+    <title>Crypto Live Screener - Squeeze & Breakout Pro</title>
     <style>
         :root {
             --bg: #0b0e11; --card: #181a20; --border: #2b3139;
             --text: #eaecef; --dim: #848e9c; --green: #0ecb81;
             --red: #f6465d; --accent: #fcd535; --orange: #f0b90b;
-            --pink: #ff78f8;
+            --pink: #ff78f8; --blue: #3d7eff;
             --table-font: 16px; 
         }
         body { background: var(--bg); color: var(--text); font-family: 'Inter', sans-serif; margin: 0; padding: 10px; overflow-x: hidden; }
@@ -38,23 +38,18 @@
         td.active-col { background: rgba(252, 213, 53, 0.08) !important; font-weight: bold; color: #fff; }
         
         .badge { 
-            font-size: 7.5px; 
-            padding: 1px 3px; 
-            border-radius: 2px; 
-            margin-left: 3px; 
-            font-weight: 900; 
-            vertical-align: middle;
-            text-transform: uppercase;
-            display: inline-block;
+            font-size: 7.5px; padding: 1px 3px; border-radius: 2px; margin-left: 3px; font-weight: 900; 
+            vertical-align: middle; text-transform: uppercase; display: inline-block;
         }
-        .top-badge { background: var(--accent); color: #000; box-shadow: 0 0 5px rgba(252, 213, 53, 0.4); }
-        .bo-badge { background: var(--green); color: #000; box-shadow: 0 0 5px rgba(14, 203, 129, 0.4); }
-        .d1-badge { background: var(--pink); color: #000; box-shadow: 0 0 5px rgba(255, 120, 248, 0.4); }
+        .top-badge { background: var(--accent); color: #000; }
+        .bo-badge { background: var(--green); color: #000; }
+        .d1-badge { background: var(--pink); color: #000; }
+        .sq-badge { background: var(--blue); color: #fff; box-shadow: 0 0 5px rgba(61, 126, 255, 0.5); }
 
         .golden-zone { background: linear-gradient(90deg, rgba(252, 213, 53, 0.12) 0%, transparent 100%) !important; }
 
         .col-rank { width: 25px; text-align: left; padding-left: 5px; }
-        .col-sym { width: 125px; text-align: left; position: sticky; left: 0; background: var(--card); z-index: 5; border-right: 1px solid var(--border); color: #fff; font-weight: bold; }
+        .col-sym { width: 140px; text-align: left; position: sticky; left: 0; background: var(--card); z-index: 5; border-right: 1px solid var(--border); color: #fff; font-weight: bold; }
         .col-price { width: 85px; }
         .col-pct { width: 60px; }
         .col-vol { width: 70px; color: var(--orange); }
@@ -72,7 +67,7 @@
         <span>A-</span><input type="range" min="8" max="18" value="16" id="sizeSlider" oninput="updateSize(this.value)"><span>A+</span>
     </div>
     <div class="status-bar">
-        <div id="scan-status">Connecting...</div>
+        <div id="scan-status">Neural Link...</div>
     </div>
 </div>
 
@@ -128,21 +123,17 @@
     async function fetchAllData() {
         try {
             const tickerRes = await fetch(`${API}/ticker/24hr`);
-            if (!tickerRes.ok) throw new Error("Rate limit");
             const allTickers = (await tickerRes.json()).filter(t => t.symbol.endsWith('USDT'));
-            
             allTickers.forEach(t => {
                 const sym = t.symbol;
                 if (!pairs[sym]) {
                     pairs[sym] = {
-                        symbol: sym.replace('USDT', ''),
-                        price: parseFloat(t.lastPrice),
-                        vol24h: parseFloat(t.quoteVolume),
-                        '24h': parseFloat(t.priceChangePercent),
+                        symbol: sym.replace('USDT', ''), price: parseFloat(t.lastPrice),
+                        vol24h: parseFloat(t.quoteVolume), '24h': parseFloat(t.priceChangePercent),
                         o5m: null, o15m: null, o1h: null,
-                        h10_5m: 0, h10_15m: 0, h10_1h: 0, h10_1d: 0,
-                        v5m: 0, v15m: 0, v1h: 0,
-                        '5m': 0, '15m': 0, '1h': 0
+                        h10_5m: 0, h10_15m: 0, h10_1h: 0, h10_1d: 0, 
+                        isSqueezed: false, // New Blue Label State
+                        v5m: 0, v15m: 0, v1h: 0, '5m': 0, '15m': 0, '1h': 0
                     };
                 } else {
                     pairs[sym].price = parseFloat(t.lastPrice);
@@ -151,19 +142,15 @@
                 }
                 calculatePcts(sym);
             });
-
             if (!isSyncing) syncMissingOpens(Object.keys(pairs));
             render();
-        } catch (e) { 
-            document.getElementById('scan-status').innerText = "API Cooldown..."; 
-        }
+        } catch (e) { document.getElementById('scan-status').innerText = "API Busy..."; }
     }
 
     async function syncMissingOpens(symbols) {
         if (isSyncing) return;
         isSyncing = true;
         const batchSize = 3; 
-        
         for (let i = 0; i < symbols.length; i += batchSize) {
             const batch = symbols.slice(i, i + batchSize);
             await Promise.all(batch.map(async (sym) => {
@@ -172,33 +159,46 @@
                         fetch(`${API}/klines?symbol=${sym}&interval=5m&limit=11`).then(r => r.json()),
                         fetch(`${API}/klines?symbol=${sym}&interval=15m&limit=11`).then(r => r.json()),
                         fetch(`${API}/klines?symbol=${sym}&interval=1h&limit=11`).then(r => r.json()),
-                        fetch(`${API}/klines?symbol=${sym}&interval=1d&limit=11`).then(r => r.json())
+                        fetch(`${API}/klines?symbol=${sym}&interval=1d&limit=60`).then(r => r.json()) // Fetch more for D50 squeeze
                     ]);
                     
-                    const process = (data, pKey, hKey, vKey) => {
+                    const p = (data, pKey, hKey, vKey) => {
                         if (data && data.length > 0) {
-                            const latest = data[data.length - 1];
+                            const latest = data[data.length-1];
                             if(pKey) pairs[sym][pKey] = parseFloat(latest[1]); 
                             if(vKey) pairs[sym][vKey] = parseFloat(latest[7]); 
-                            const prev10 = data.slice(0, 10);
-                            pairs[sym][hKey] = Math.max(...prev10.map(c => parseFloat(c[2])));
+                            pairs[sym][hKey] = Math.max(...data.slice(-11, -1).map(c => parseFloat(c[2])));
                         }
                     };
+                    p(k5, 'o5m', 'h10_5m', 'v5m');
+                    p(k15, 'o15m', 'h10_15m', 'v15m');
+                    p(k1, 'o1h', 'h10_1h', 'v1h');
+                    p(k1d, null, 'h10_1d', null);
 
-                    process(k5, 'o5m', 'h10_5m', 'v5m');
-                    process(k15, 'o15m', 'h10_15m', 'v15m');
-                    process(k1, 'o1h', 'h10_1h', 'v1h');
-                    process(k1d, null, 'h10_1d', null);
-                    
+                    // --- Donchian 50 Period + 10 Candle Flat Squeeze Logic ---
+                    if (k1d && k1d.length >= 60) {
+                        const dailyHighsAtT = [];
+                        for (let j = 0; j < 11; j++) {
+                            const segment = k1d.slice(k1d.length - (50 + j), k1d.length - j);
+                            dailyHighsAtT.push(Math.max(...segment.map(c => parseFloat(c[2]))));
+                        }
+                        
+                        // Check if the Donchian line was straight/flat for the 10 candles prior
+                        const prior10Highs = dailyHighsAtT.slice(1); 
+                        const isFlat = prior10Highs.every(h => h === prior10Highs[0]);
+                        
+                        // Blue Label Trigger: Is flat AND current price is above that flat ceiling
+                        // This stays true if the breakout happened within the last 10 candles
+                        pairs[sym].isSqueezed = isFlat && (pairs[sym].price > prior10Highs[0]);
+                    }
                     calculatePcts(sym);
                 } catch (err) { }
             }));
-            
-            document.getElementById('scan-status').innerText = `SYNC: ${Math.round((i/symbols.length)*100)}% | SCANNING DONCHIAN 10`;
-            await delay(200); 
+            document.getElementById('scan-status').innerText = `DEEP SCAN: ${Math.round((i/symbols.length)*100)}%`;
+            await delay(180); 
             if (i % 15 === 0) render(); 
         }
-        document.getElementById('scan-status').innerText = "LIVE: FULL SPECTRUM SYNCED";
+        document.getElementById('scan-status').innerText = "LIVE: SQUEEZE DETECTOR ACTIVE";
         isSyncing = false;
     }
 
@@ -218,16 +218,14 @@
 
     function formatVol(v) {
         if (!v) return '0';
-        if (v >= 1e9) return (v / 1e9).toFixed(2) + 'B';
+        if (v >= 1e9) return (v / 1e9).toFixed(1) + 'B';
         if (v >= 1e6) return (v / 1e6).toFixed(1) + 'M';
-        if (v >= 1e3) return (v / 1e3).toFixed(1) + 'K';
         return Math.round(v).toLocaleString();
     }
 
     function render() {
         const query = document.getElementById('cryptoSearch').value.toUpperCase();
         let fullList = Object.values(pairs);
-        
         const tfs = ['5m', '15m', '1h', '24h'];
         const leaders = {};
         tfs.forEach(tf => {
@@ -241,30 +239,18 @@
         const gainers = sorted.slice(0, 50);
         const losers = [...sorted].reverse().slice(0, 50);
 
-        document.querySelectorAll('th').forEach(th => th.classList.remove('active-header'));
-        document.querySelectorAll(`.h-${rankBy}`).forEach(th => th.classList.add('active-header'));
-
         const row = (p, i) => {
             const tfVol = rankBy === '5m' ? p.v5m : rankBy === '15m' ? p.v15m : rankBy === '1h' ? p.v1h : p.vol24h;
+            let badges = ''; let isGolden = false;
+
+            tfs.forEach(tf => { if(leaders[tf] === p.symbol) { badges += `<span class="badge top-badge">${tf}</span>`; isGolden = true; } });
+            if (p.price > p.h10_5m) badges += `<span class="badge bo-badge">5M</span>`;
+            if (p.price > p.h10_15m) badges += `<span class="badge bo-badge">15M</span>`;
+            if (p.price > p.h10_1h) badges += `<span class="badge bo-badge">1H</span>`;
+            if (p.price > p.h10_1d) badges += `<span class="badge d1-badge">1D</span>`;
             
-            let badges = '';
-            let isGolden = false;
-
-            // 1. Top Gainer (Gold)
-            tfs.forEach(tf => {
-                if(leaders[tf] === p.symbol) {
-                    badges += `<span class="badge top-badge">${tf.toUpperCase()}</span>`;
-                    isGolden = true;
-                }
-            });
-
-            // 2. Breakouts (Green for 5m/15m/1h)
-            if (p.h10_5m > 0 && p.price > p.h10_5m) badges += `<span class="badge bo-badge">5M</span>`;
-            if (p.h10_15m > 0 && p.price > p.h10_15m) badges += `<span class="badge bo-badge">15M</span>`;
-            if (p.h10_1h > 0 && p.price > p.h10_1h) badges += `<span class="badge bo-badge">1H</span>`;
-
-            // 3. 1 Day Breakout (Pink)
-            if (p.h10_1d > 0 && p.price > p.h10_1d) badges += `<span class="badge d1-badge">1D</span>`;
+            // New Blue Badge for the 50-Period Flat Breakout
+            if (p.isSqueezed) badges += `<span class="badge sq-badge">SQZ 50</span>`;
 
             return `
             <tr class="${isGolden ? 'golden-zone' : ''}">
