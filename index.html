@@ -9,41 +9,36 @@
             --bg: #0b0e11; --card: #181a20; --border: #2b3139;
             --text: #eaecef; --dim: #848e9c; --green: #0ecb81;
             --red: #f6465d; --accent: #fcd535; --orange: #f0b90b;
-            /* Default set to max (20px) as requested */
-            --table-font: 20px; 
+            /* Default set to 16px (A+) as requested */
+            --table-font: 16px; 
         }
-        body { background: var(--bg); color: var(--text); font-family: 'Inter', sans-serif; margin: 0; padding: 5px; overflow-x: hidden; }
-        .header-row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-bottom: 8px; }
-        .search-box { flex: 1; min-width: 120px; }
-        .search-box input { width: 100%; background: var(--card); border: 1px solid var(--border); padding: 6px 10px; border-radius: 4px; color: #fff; outline: none; font-size: 14px; }
-        .size-control { display: flex; align-items: center; gap: 5px; background: var(--card); padding: 4px 10px; border-radius: 4px; border: 1px solid var(--border); font-size: 11px; }
-        .status-bar { flex: 1.5; min-width: 200px; background: #1e2026; padding: 6px 12px; border-radius: 6px; border: 1px solid var(--border); }
-        #scan-status { font-size: 10px; color: var(--accent); text-transform: uppercase; letter-spacing: 0.5px; font-weight: bold; }
-        
-        .tabs { display: flex; gap: 4px; margin-bottom: 8px; }
-        .tab { padding: 4px 12px; font-size: 11px; cursor: pointer; border-radius: 4px; color: var(--dim); background: var(--card); border: 1px solid var(--border); font-weight: bold; }
-        .tab.active { color: #000; background: var(--accent); border-color: var(--accent); }
-
-        .main-grid { display: flex; gap: 8px; width: 100%; }
-        .table-container { flex: 1; background: var(--card); border: 1px solid var(--border); border-radius: 6px; overflow: hidden; }
-        .table-title { padding: 5px 10px; font-weight: 900; font-size: 12px; background: #1e2026; border-bottom: 1px solid var(--border); }
-        .scroll-area { max-height: 85vh; overflow-y: auto; width: 100%; }
-        
+        body { background: var(--bg); color: var(--text); font-family: 'Inter', sans-serif; margin: 0; padding: 10px; overflow-x: hidden; }
+        .header-row { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin-bottom: 10px; }
+        .search-box { flex: 1; min-width: 150px; }
+        .search-box input { width: 100%; background: var(--card); border: 1px solid var(--border); padding: 8px 12px; border-radius: 4px; color: #fff; outline: none; }
+        .size-control { display: flex; align-items: center; gap: 8px; background: var(--card); padding: 5px 12px; border-radius: 4px; border: 1px solid var(--border); font-size: 11px; }
+        .status-bar { flex: 2; min-width: 250px; background: #1e2026; padding: 8px 15px; border-radius: 8px; border: 1px solid var(--border); }
+        #scan-status { font-size: 10px; color: var(--accent); text-transform: uppercase; letter-spacing: 1px; font-weight: bold; }
+        .tabs { display: flex; gap: 5px; margin-bottom: 10px; }
+        .tab { padding: 6px 18px; font-size: 11px; cursor: pointer; border-radius: 4px; color: var(--dim); background: var(--card); border: 1px solid var(--border); font-weight: bold; }
+        .tab.active { color: #000; background: var(--accent); border-color: var(--accent); box-shadow: 0 0 15px rgba(252, 213, 53, 0.3); }
+        .main-grid { display: flex; gap: 10px; width: 100%; }
+        .table-container { flex: 1; background: var(--card); border: 1px solid var(--border); border-radius: 8px; overflow: hidden; }
+        .table-title { padding: 8px 12px; font-weight: 900; font-size: 13px; background: #1e2026; border-bottom: 1px solid var(--border); }
+        .scroll-area { max-height: 80vh; overflow-y: auto; width: 100%; }
         table { width: 100%; border-collapse: collapse; table-layout: fixed; font-size: var(--table-font); }
-        th { position: sticky; top: 0; background: #1e2026; color: var(--dim); font-size: 10px; padding: 6px 2px; text-align: right; z-index: 10; border-bottom: 1px solid var(--border); }
-        /* Tightened padding here */
-        td { padding: 4px 2px; text-align: right; border-bottom: 1px solid rgba(255,255,255,0.03); font-family: 'JetBrains Mono', monospace; white-space: nowrap; overflow: hidden; }
+        th { position: sticky; top: 0; background: #1e2026; color: var(--dim); font-size: 10px; padding: 8px 2px; text-align: right; z-index: 10; border-bottom: 1px solid var(--border); }
+        td { padding: 4px 2px; text-align: right; border-bottom: 1px solid rgba(255,255,255,0.03); font-family: 'JetBrains Mono', monospace; white-space: nowrap; }
+        th.active-header { color: var(--accent); background: #2c2f36; border-bottom: 2px solid var(--accent); }
+        td.active-col { background: rgba(252, 213, 53, 0.12) !important; font-weight: bold; color: #fff; }
         
-        th.active-header { color: var(--accent); background: #2c2f36; }
-        td.active-col { background: rgba(252, 213, 53, 0.08) !important; font-weight: bold; }
-
-        /* Narrowed symbol and rank columns */
-        .col-rank { width: 25px; text-align: left; padding-left: 4px; font-size: 0.7em; color: var(--dim); }
-        .col-sym { width: 65px; text-align: left; position: sticky; left: 0; background: var(--card); z-index: 5; border-right: 1px solid var(--border); color: var(--accent); font-weight: 800; }
-        .col-price { width: 80px; }
+        /* Reduced widths and spacing to bring Symbol and Price closer */
+        .col-rank { width: 25px; text-align: left; padding-left: 5px; }
+        .col-sym { width: 65px; text-align: left; position: sticky; left: 0; background: var(--card); z-index: 5; border-right: 1px solid var(--border); color: #fff; font-weight: bold; }
+        .col-price { width: 85px; padding-right: 8px; }
         .col-pct { width: 60px; }
-        .col-vol { width: 65px; color: var(--orange); font-size: 0.9em; }
-
+        .col-vol { width: 70px; color: var(--orange); }
+        
         .green { color: var(--green); }
         .red { color: var(--red); }
         @media (max-width: 1000px) { .main-grid { flex-direction: column; } }
@@ -54,10 +49,10 @@
 <div class="header-row">
     <div class="search-box"><input type="text" id="cryptoSearch" placeholder="Search Symbol..." oninput="render()"></div>
     <div class="size-control">
-        <span>A-</span><input type="range" min="10" max="22" value="20" id="sizeSlider" oninput="updateSize(this.value)"><span>A+</span>
+        <span>A-</span><input type="range" min="8" max="16" value="16" id="sizeSlider" oninput="updateSize(this.value)"><span>A+</span>
     </div>
     <div class="status-bar">
-        <div id="scan-status">INITIALIZING ENGINE...</div>
+        <div id="scan-status">Initializing Engine...</div>
     </div>
 </div>
 
@@ -70,14 +65,14 @@
 
 <div class="main-grid">
     <div class="table-container">
-        <div class="table-title" style="color: var(--green);">▲ TOP GAINERS</div>
+        <div class="table-title" style="color: var(--green);">TOP GAINERS</div>
         <div class="scroll-area">
             <table>
                 <thead>
                     <tr>
-                        <th class="col-rank">#</th><th class="col-sym">Sym</th><th class="col-price">Price</th>
-                        <th class="col-pct h-5m">5m%</th><th class="col-pct h-15m">15m%</th><th class="col-pct h-1h">1h%</th><th class="col-pct h-24h">24h%</th>
-                        <th class="col-vol">TF Vol</th><th class="col-vol">24h Vol</th>
+                        <th class="col-rank">#</th><th class="col-sym">Symbol</th><th class="col-price">Price</th>
+                        <th class="col-pct h-5m">5M%</th><th class="col-pct h-15m">15M%</th><th class="col-pct h-1h">1H%</th><th class="col-pct h-24h">24H%</th>
+                        <th class="col-vol">TF Vol</th><th class="col-vol">24H Vol</th>
                     </tr>
                 </thead>
                 <tbody id="gainers-body"></tbody>
@@ -85,14 +80,14 @@
         </div>
     </div>
     <div class="table-container">
-        <div class="table-title" style="color: var(--red);">▼ TOP LOSERS</div>
+        <div class="table-title" style="color: var(--red);">TOP LOSERS</div>
         <div class="scroll-area">
             <table>
                 <thead>
                     <tr>
-                        <th class="col-rank">#</th><th class="col-sym">Sym</th><th class="col-price">Price</th>
-                        <th class="col-pct h-5m">5m%</th><th class="col-pct h-15m">15m%</th><th class="col-pct h-1h">1h%</th><th class="col-pct h-24h">24h%</th>
-                        <th class="col-vol">TF Vol</th><th class="col-vol">24h Vol</th>
+                        <th class="col-rank">#</th><th class="col-sym">Symbol</th><th class="col-price">Price</th>
+                        <th class="col-pct h-5m">5M%</th><th class="col-pct h-15m">15M%</th><th class="col-pct h-1h">1H%</th><th class="col-pct h-24h">24H%</th>
+                        <th class="col-vol">TF Vol</th><th class="col-vol">24H Vol</th>
                     </tr>
                 </thead>
                 <tbody id="losers-body"></tbody>
@@ -114,7 +109,7 @@
     async function fetchAllData() {
         try {
             const tickerRes = await fetch(`${API}/ticker/24hr`);
-            if (!tickerRes.ok) throw new Error("Rate limit");
+            if (tickerRes.status === 429) throw new Error("Rate limit");
             const allTickers = (await tickerRes.json()).filter(t => t.symbol.endsWith('USDT'));
             
             allTickers.forEach(t => {
@@ -133,46 +128,50 @@
                     pairs[sym].price = parseFloat(t.lastPrice);
                     pairs[sym].vol24h = parseFloat(t.quoteVolume);
                     pairs[sym]['24h'] = parseFloat(t.priceChangePercent);
-                    calculatePcts(sym); // Update live calcs
                 }
             });
 
             if (!isSyncing) syncMissingOpens(Object.keys(pairs));
             render();
         } catch (e) { 
-            document.getElementById('scan-status').innerText = "API BUSY - RETRYING..."; 
+            document.getElementById('scan-status').innerText = "Cooldown: Slowing scan to respect API..."; 
         }
     }
 
     async function syncMissingOpens(symbols) {
         if (isSyncing) return;
         isSyncing = true;
-        const batchSize = 10; // Optimized batch size
         
+        // Slower, more reliable batching to prevent API bans
+        const batchSize = 3; 
         for (let i = 0; i < symbols.length; i += batchSize) {
             const batch = symbols.slice(i, i + batchSize);
+            
             await Promise.all(batch.map(async (sym) => {
                 try {
-                    // Only fetch if data is missing or it's a new hour/interval
-                    if (!pairs[sym].o1h) {
-                        const [k5, k15, k1] = await Promise.all([
-                            fetch(`${API}/klines?symbol=${sym}&interval=5m&limit=1`).then(r => r.json()),
-                            fetch(`${API}/klines?symbol=${sym}&interval=15m&limit=1`).then(r => r.json()),
-                            fetch(`${API}/klines?symbol=${sym}&interval=1h&limit=1`).then(r => r.json())
-                        ]);
-                        if (k5?.[0]) { pairs[sym].o5m = parseFloat(k5[0][1]); pairs[sym].v5m = parseFloat(k5[0][7]); }
-                        if (k15?.[0]) { pairs[sym].o15m = parseFloat(k15[0][1]); pairs[sym].v15m = parseFloat(k15[0][7]); }
-                        if (k1?.[0]) { pairs[sym].o1h = parseFloat(k1[0][1]); pairs[sym].v1h = parseFloat(k1[0][7]); }
-                        calculatePcts(sym);
-                    }
-                } catch (err) {}
+                    // Fetching klines for the missing historical data
+                    const [k5, k15, k1] = await Promise.all([
+                        fetch(`${API}/klines?symbol=${sym}&interval=5m&limit=1`).then(r => r.json()),
+                        fetch(`${API}/klines?symbol=${sym}&interval=15m&limit=1`).then(r => r.json()),
+                        fetch(`${API}/klines?symbol=${sym}&interval=1h&limit=1`).then(r => r.json())
+                    ]);
+                    
+                    if (k5?.[0]) { pairs[sym].o5m = parseFloat(k5[0][1]); pairs[sym].v5m = parseFloat(k5[0][7]); }
+                    if (k15?.[0]) { pairs[sym].o15m = parseFloat(k15[0][1]); pairs[sym].v15m = parseFloat(k15[0][7]); }
+                    if (k1?.[0]) { pairs[sym].o1h = parseFloat(k1[0][1]); pairs[sym].v1h = parseFloat(k1[0][7]); }
+                    
+                    calculatePcts(sym);
+                } catch (err) { /* Silent fail for individual asset errors */ }
             }));
             
-            document.getElementById('scan-status').innerText = `SCANNING: ${Math.round((i/symbols.length)*100)}% | ${symbols.length} ASSETS`;
-            await delay(250); // Sustained rate-limit health
-            if (i % 30 === 0) render(); 
+            const progress = Math.round((i / symbols.length) * 100);
+            document.getElementById('scan-status').innerText = `Deep Scanning: ${progress}% | ${symbols.length} Assets`;
+            
+            // Critical delay to stay under 1200 weight/min
+            await delay(300); 
+            if (i % 15 === 0) render(); 
         }
-        document.getElementById('scan-status').innerText = "LIVE: SYNC COMPLETE";
+        document.getElementById('scan-status').innerText = "Live: Deep Sync Complete";
         isSyncing = false;
     }
 
@@ -208,19 +207,20 @@
         const gainers = sorted.slice(0, 50);
         const losers = [...sorted].reverse().slice(0, 50);
 
+        document.querySelectorAll('th').forEach(th => th.classList.remove('active-header'));
+        document.querySelectorAll(`.h-${rankBy}`).forEach(th => th.classList.add('active-header'));
+
         const row = (p, i) => {
             const tfVol = rankBy === '5m' ? p.v5m : rankBy === '15m' ? p.v15m : rankBy === '1h' ? p.v1h : p.vol24h;
-            const priceStr = p.price < 0.01 ? p.price.toFixed(6) : p.price < 1 ? p.price.toFixed(4) : p.price.toLocaleString(undefined, {minimumFractionDigits: 2});
-            
             return `
             <tr>
                 <td class="col-rank">${i+1}</td>
                 <td class="col-sym">${p.symbol}</td>
-                <td class="col-price">${priceStr}</td>
-                <td class="col-pct ${p['5m']>=0?'green':'red'} ${rankBy==='5m'?'active-col':''}">${(p['5m']||0).toFixed(1)}%</td>
-                <td class="col-pct ${p['15m']>=0?'green':'red'} ${rankBy==='15m'?'active-col':''}">${(p['15m']||0).toFixed(1)}%</td>
-                <td class="col-pct ${p['1h']>=0?'green':'red'} ${rankBy==='1h'?'active-col':''}">${(p['1h']||0).toFixed(1)}%</td>
-                <td class="col-pct ${p['24h']>=0?'green':'red'} ${rankBy==='24h'?'active-col':''}">${(p['24h']||0).toFixed(1)}%</td>
+                <td class="col-price">${p.price < 1 ? p.price.toFixed(5) : p.price.toLocaleString()}</td>
+                <td class="col-pct ${p['5m']>=0?'green':'red'} ${rankBy==='5m'?'active-col':''}">${(p['5m']||0).toFixed(2)}%</td>
+                <td class="col-pct ${p['15m']>=0?'green':'red'} ${rankBy==='15m'?'active-col':''}">${(p['15m']||0).toFixed(2)}%</td>
+                <td class="col-pct ${p['1h']>=0?'green':'red'} ${rankBy==='1h'?'active-col':''}">${(p['1h']||0).toFixed(2)}%</td>
+                <td class="col-pct ${p['24h']>=0?'green':'red'} ${rankBy==='24h'?'active-col':''}">${(p['24h']||0).toFixed(2)}%</td>
                 <td class="col-vol">${formatVol(tfVol)}</td>
                 <td class="col-vol">${formatVol(p.vol24h)}</td>
             </tr>`;
@@ -230,8 +230,12 @@
         document.getElementById('losers-body').innerHTML = losers.map((p, i) => row(p, i)).join('');
     }
 
+    // Initialize at A+
+    updateSize(16);
     fetchAllData(); 
-    setInterval(fetchAllData, 3000); 
+    setInterval(fetchAllData, 5000); 
+    // Re-sync historical opens every 2 minutes to keep Timeframes accurate
+    setInterval(() => { if(!isSyncing) syncMissingOpens(Object.keys(pairs)); }, 120000);
 </script>
 </body>
 </html>
