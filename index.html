@@ -73,9 +73,9 @@
 
 <div class="tabs">
     <div class="tab" id="tab-5m" onclick="setRank('5m')">5M</div>
-    <div class="tab active" id="tab-15m" onclick="setRank('15m')">15M</div>
+    <div class="tab" id="tab-15m" onclick="setRank('15m')">15M</div>
     <div class="tab" id="tab-1h" onclick="setRank('1h')">1H</div>
-    <div class="tab" id="tab-24h" onclick="setRank('24h')">24H</div>
+    <div class="tab active" id="tab-24h" onclick="setRank('24h')">24H</div>
 </div>
 
 <div class="main-grid">
@@ -114,7 +114,7 @@
 <script>
     const API = "https://fapi.binance.com/fapi/v1";
     let pairs = {};
-    let rankBy = '15m'; 
+    let rankBy = '24h'; 
     let isSyncing = false;
 
     function updateSize(v) { document.documentElement.style.setProperty('--table-font', v + 'px'); }
@@ -165,7 +165,7 @@
                         if (!data || data.length < (period + flatCount)) return false;
                         const highsAtT = [];
                         // Look back up to 10 candles for a breakout persistent check
-                        for (let j = 0; j < 10; j++) {
+                        for (let j = 0; j < 5; j++) {
                             const segment = data.slice(data.length - (period + j), data.length - j);
                             if(segment.length < period) break;
                             const currentHigh = Math.max(...segment.map(c => parseFloat(c[2])));
