@@ -9,7 +9,7 @@
             --bg: #0b0e11; --card: #181a20; --border: #2b3139;
             --text: #eaecef; --dim: #848e9c; --green: #0ecb81;
             --red: #f6465d; --accent: #fcd535; --orange: #f0b90b;
-            /* Default set to 16px (A+) as requested */
+            /* Defaulting to Max Size (16px) */
             --table-font: 16px; 
         }
         body { background: var(--bg); color: var(--text); font-family: 'Inter', sans-serif; margin: 0; padding: 10px; overflow-x: hidden; }
@@ -28,14 +28,14 @@
         .scroll-area { max-height: 80vh; overflow-y: auto; width: 100%; }
         table { width: 100%; border-collapse: collapse; table-layout: fixed; font-size: var(--table-font); }
         th { position: sticky; top: 0; background: #1e2026; color: var(--dim); font-size: 10px; padding: 8px 2px; text-align: right; z-index: 10; border-bottom: 1px solid var(--border); }
-        td { padding: 4px 2px; text-align: right; border-bottom: 1px solid rgba(255,255,255,0.03); font-family: 'JetBrains Mono', monospace; white-space: nowrap; }
+        td { padding: 6px 4px; text-align: right; border-bottom: 1px solid rgba(255,255,255,0.03); font-family: 'JetBrains Mono', monospace; white-space: nowrap; }
         th.active-header { color: var(--accent); background: #2c2f36; border-bottom: 2px solid var(--accent); }
         td.active-col { background: rgba(252, 213, 53, 0.12) !important; font-weight: bold; color: #fff; }
         
-        /* Reduced widths and spacing to bring Symbol and Price closer */
+        /* Tightened spacing between symbol and following columns */
         .col-rank { width: 25px; text-align: left; padding-left: 5px; }
         .col-sym { width: 65px; text-align: left; position: sticky; left: 0; background: var(--card); z-index: 5; border-right: 1px solid var(--border); color: #fff; font-weight: bold; }
-        .col-price { width: 85px; padding-right: 8px; }
+        .col-price { width: 85px; }
         .col-pct { width: 60px; }
         .col-vol { width: 70px; color: var(--orange); }
         
@@ -47,20 +47,20 @@
 <body>
 
 <div class="header-row">
-    <div class="search-box"><input type="text" id="cryptoSearch" placeholder="Search Symbol..." oninput="render()"></div>
+    <div class="search-box"><input type="text" id="cryptoSearch" placeholder="Search..." oninput="render()"></div>
     <div class="size-control">
         <span>A-</span><input type="range" min="8" max="16" value="16" id="sizeSlider" oninput="updateSize(this.value)"><span>A+</span>
     </div>
     <div class="status-bar">
-        <div id="scan-status">Initializing Engine...</div>
+        <div id="scan-status">Initializing...</div>
     </div>
 </div>
 
 <div class="tabs">
     <div class="tab" id="tab-5m" onclick="setRank('5m')">5M</div>
-    <div class="tab" id="tab-15m" onclick="setRank('15m')">15M</div>
+    <div class="tab active" id="tab-15m" onclick="setRank('15m')">15M</div>
     <div class="tab" id="tab-1h" onclick="setRank('1h')">1H</div>
-    <div class="tab active" id="tab-24h" onclick="setRank('24h')">24H</div>
+    <div class="tab" id="tab-24h" onclick="setRank('24h')">24H</div>
 </div>
 
 <div class="main-grid">
@@ -99,7 +99,7 @@
 <script>
     const API = "https://fapi.binance.com/fapi/v1";
     let pairs = {};
-    let rankBy = '24h';
+    let rankBy = '15m'; // Default set to 15m
     let isSyncing = false;
 
     function updateSize(v) { document.documentElement.style.setProperty('--table-font', v + 'px'); }
@@ -109,7 +109,7 @@
     async function fetchAllData() {
         try {
             const tickerRes = await fetch(`${API}/ticker/24hr`);
-            if (tickerRes.status === 429) throw new Error("Rate limit");
+            if (!tickerRes.ok) throw new Error("Rate limit");
             const allTickers = (await tickerRes.json()).filter(t => t.symbol.endsWith('USDT'));
             
             allTickers.forEach(t => {
@@ -129,27 +129,26 @@
                     pairs[sym].vol24h = parseFloat(t.quoteVolume);
                     pairs[sym]['24h'] = parseFloat(t.priceChangePercent);
                 }
+                calculatePcts(sym);
             });
 
             if (!isSyncing) syncMissingOpens(Object.keys(pairs));
             render();
         } catch (e) { 
-            document.getElementById('scan-status').innerText = "Cooldown: Slowing scan to respect API..."; 
+            document.getElementById('scan-status').innerText = "Cooldown: Waiting for API slot..."; 
         }
     }
 
     async function syncMissingOpens(symbols) {
         if (isSyncing) return;
         isSyncing = true;
+        const batchSize = 3; // Reduced batch size for stability
         
-        // Slower, more reliable batching to prevent API bans
-        const batchSize = 3; 
         for (let i = 0; i < symbols.length; i += batchSize) {
             const batch = symbols.slice(i, i + batchSize);
-            
             await Promise.all(batch.map(async (sym) => {
                 try {
-                    // Fetching klines for the missing historical data
+                    // Only fetch if missing to save weight
                     const [k5, k15, k1] = await Promise.all([
                         fetch(`${API}/klines?symbol=${sym}&interval=5m&limit=1`).then(r => r.json()),
                         fetch(`${API}/klines?symbol=${sym}&interval=15m&limit=1`).then(r => r.json()),
@@ -161,17 +160,14 @@
                     if (k1?.[0]) { pairs[sym].o1h = parseFloat(k1[0][1]); pairs[sym].v1h = parseFloat(k1[0][7]); }
                     
                     calculatePcts(sym);
-                } catch (err) { /* Silent fail for individual asset errors */ }
+                } catch (err) { }
             }));
             
-            const progress = Math.round((i / symbols.length) * 100);
-            document.getElementById('scan-status').innerText = `Deep Scanning: ${progress}% | ${symbols.length} Assets`;
-            
-            // Critical delay to stay under 1200 weight/min
-            await delay(300); 
+            document.getElementById('scan-status').innerText = `Pro Sync: ${Math.round((i/symbols.length)*100)}% | Deep Scanning Assets`;
+            await delay(250); // Increased delay to avoid Binance blocks
             if (i % 15 === 0) render(); 
         }
-        document.getElementById('scan-status').innerText = "Live: Deep Sync Complete";
+        document.getElementById('scan-status').innerText = "Live: Market Fully Synced";
         isSyncing = false;
     }
 
@@ -191,9 +187,9 @@
 
     function formatVol(v) {
         if (!v) return '0';
-        if (v >= 1e9) return (v / 1e9).toFixed(1) + 'B';
+        if (v >= 1e9) return (v / 1e9).toFixed(2) + 'B';
         if (v >= 1e6) return (v / 1e6).toFixed(1) + 'M';
-        if (v >= 1e3) return (v / 1e3).toFixed(0) + 'K';
+        if (v >= 1e3) return (v / 1e3).toFixed(1) + 'K';
         return Math.round(v).toLocaleString();
     }
 
@@ -212,11 +208,12 @@
 
         const row = (p, i) => {
             const tfVol = rankBy === '5m' ? p.v5m : rankBy === '15m' ? p.v15m : rankBy === '1h' ? p.v1h : p.vol24h;
+            
             return `
             <tr>
                 <td class="col-rank">${i+1}</td>
                 <td class="col-sym">${p.symbol}</td>
-                <td class="col-price">${p.price < 1 ? p.price.toFixed(5) : p.price.toLocaleString()}</td>
+                <td class="col-price">$${p.price < 1 ? p.price.toFixed(5) : p.price.toLocaleString()}</td>
                 <td class="col-pct ${p['5m']>=0?'green':'red'} ${rankBy==='5m'?'active-col':''}">${(p['5m']||0).toFixed(2)}%</td>
                 <td class="col-pct ${p['15m']>=0?'green':'red'} ${rankBy==='15m'?'active-col':''}">${(p['15m']||0).toFixed(2)}%</td>
                 <td class="col-pct ${p['1h']>=0?'green':'red'} ${rankBy==='1h'?'active-col':''}">${(p['1h']||0).toFixed(2)}%</td>
@@ -230,12 +227,11 @@
         document.getElementById('losers-body').innerHTML = losers.map((p, i) => row(p, i)).join('');
     }
 
-    // Initialize at A+
+    // Init with A+ (16px) and 15m default
     updateSize(16);
     fetchAllData(); 
     setInterval(fetchAllData, 5000); 
-    // Re-sync historical opens every 2 minutes to keep Timeframes accurate
-    setInterval(() => { if(!isSyncing) syncMissingOpens(Object.keys(pairs)); }, 120000);
+    setInterval(() => { if(!isSyncing) syncMissingOpens(Object.keys(pairs)); }, 60000);
 </script>
 </body>
 </html>
