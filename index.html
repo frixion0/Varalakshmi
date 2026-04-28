@@ -3,38 +3,58 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Crypto Live Screener - Pro Sync</title>
+    <title>Crypto Live Screener - Multi-Breakout Pro</title>
     <style>
         :root {
             --bg: #0b0e11; --card: #181a20; --border: #2b3139;
             --text: #eaecef; --dim: #848e9c; --green: #0ecb81;
             --red: #f6465d; --accent: #fcd535; --orange: #f0b90b;
-            /* Defaulting to Max Size (16px) */
+            --pink: #ff78f8;
             --table-font: 16px; 
         }
         body { background: var(--bg); color: var(--text); font-family: 'Inter', sans-serif; margin: 0; padding: 10px; overflow-x: hidden; }
+        
         .header-row { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin-bottom: 10px; }
         .search-box { flex: 1; min-width: 150px; }
         .search-box input { width: 100%; background: var(--card); border: 1px solid var(--border); padding: 8px 12px; border-radius: 4px; color: #fff; outline: none; }
         .size-control { display: flex; align-items: center; gap: 8px; background: var(--card); padding: 5px 12px; border-radius: 4px; border: 1px solid var(--border); font-size: 11px; }
         .status-bar { flex: 2; min-width: 250px; background: #1e2026; padding: 8px 15px; border-radius: 8px; border: 1px solid var(--border); }
         #scan-status { font-size: 10px; color: var(--accent); text-transform: uppercase; letter-spacing: 1px; font-weight: bold; }
+        
         .tabs { display: flex; gap: 5px; margin-bottom: 10px; }
         .tab { padding: 6px 18px; font-size: 11px; cursor: pointer; border-radius: 4px; color: var(--dim); background: var(--card); border: 1px solid var(--border); font-weight: bold; }
         .tab.active { color: #000; background: var(--accent); border-color: var(--accent); box-shadow: 0 0 15px rgba(252, 213, 53, 0.3); }
+        
         .main-grid { display: flex; gap: 10px; width: 100%; }
         .table-container { flex: 1; background: var(--card); border: 1px solid var(--border); border-radius: 8px; overflow: hidden; }
         .table-title { padding: 8px 12px; font-weight: 900; font-size: 13px; background: #1e2026; border-bottom: 1px solid var(--border); }
         .scroll-area { max-height: 80vh; overflow-y: auto; width: 100%; }
+        
         table { width: 100%; border-collapse: collapse; table-layout: fixed; font-size: var(--table-font); }
         th { position: sticky; top: 0; background: #1e2026; color: var(--dim); font-size: 10px; padding: 8px 2px; text-align: right; z-index: 10; border-bottom: 1px solid var(--border); }
         td { padding: 6px 4px; text-align: right; border-bottom: 1px solid rgba(255,255,255,0.03); font-family: 'JetBrains Mono', monospace; white-space: nowrap; }
-        th.active-header { color: var(--accent); background: #2c2f36; border-bottom: 2px solid var(--accent); }
-        td.active-col { background: rgba(252, 213, 53, 0.12) !important; font-weight: bold; color: #fff; }
         
-        /* Tightened spacing between symbol and following columns */
+        th.active-header { color: var(--accent); background: #2c2f36; border-bottom: 2px solid var(--accent); }
+        td.active-col { background: rgba(252, 213, 53, 0.08) !important; font-weight: bold; color: #fff; }
+        
+        .badge { 
+            font-size: 7.5px; 
+            padding: 1px 3px; 
+            border-radius: 2px; 
+            margin-left: 3px; 
+            font-weight: 900; 
+            vertical-align: middle;
+            text-transform: uppercase;
+            display: inline-block;
+        }
+        .top-badge { background: var(--accent); color: #000; box-shadow: 0 0 5px rgba(252, 213, 53, 0.4); }
+        .bo-badge { background: var(--green); color: #000; box-shadow: 0 0 5px rgba(14, 203, 129, 0.4); }
+        .d1-badge { background: var(--pink); color: #000; box-shadow: 0 0 5px rgba(255, 120, 248, 0.4); }
+
+        .golden-zone { background: linear-gradient(90deg, rgba(252, 213, 53, 0.12) 0%, transparent 100%) !important; }
+
         .col-rank { width: 25px; text-align: left; padding-left: 5px; }
-        .col-sym { width: 65px; text-align: left; position: sticky; left: 0; background: var(--card); z-index: 5; border-right: 1px solid var(--border); color: #fff; font-weight: bold; }
+        .col-sym { width: 125px; text-align: left; position: sticky; left: 0; background: var(--card); z-index: 5; border-right: 1px solid var(--border); color: #fff; font-weight: bold; }
         .col-price { width: 85px; }
         .col-pct { width: 60px; }
         .col-vol { width: 70px; color: var(--orange); }
@@ -47,12 +67,12 @@
 <body>
 
 <div class="header-row">
-    <div class="search-box"><input type="text" id="cryptoSearch" placeholder="Search..." oninput="render()"></div>
+    <div class="search-box"><input type="text" id="cryptoSearch" placeholder="Search Assets..." oninput="render()"></div>
     <div class="size-control">
-        <span>A-</span><input type="range" min="8" max="16" value="16" id="sizeSlider" oninput="updateSize(this.value)"><span>A+</span>
+        <span>A-</span><input type="range" min="8" max="18" value="16" id="sizeSlider" oninput="updateSize(this.value)"><span>A+</span>
     </div>
     <div class="status-bar">
-        <div id="scan-status">Initializing...</div>
+        <div id="scan-status">Connecting...</div>
     </div>
 </div>
 
@@ -65,7 +85,7 @@
 
 <div class="main-grid">
     <div class="table-container">
-        <div class="table-title" style="color: var(--green);">TOP GAINERS</div>
+        <div class="table-title" style="color: var(--green);">BULLISH MOMENTUM</div>
         <div class="scroll-area">
             <table>
                 <thead>
@@ -80,7 +100,7 @@
         </div>
     </div>
     <div class="table-container">
-        <div class="table-title" style="color: var(--red);">TOP LOSERS</div>
+        <div class="table-title" style="color: var(--red);">BEARISH PRESSURE</div>
         <div class="scroll-area">
             <table>
                 <thead>
@@ -99,11 +119,10 @@
 <script>
     const API = "https://fapi.binance.com/fapi/v1";
     let pairs = {};
-    let rankBy = '15m'; // Default set to 15m
+    let rankBy = '15m'; 
     let isSyncing = false;
 
     function updateSize(v) { document.documentElement.style.setProperty('--table-font', v + 'px'); }
-
     const delay = ms => new Promise(res => setTimeout(res, ms));
 
     async function fetchAllData() {
@@ -121,6 +140,7 @@
                         vol24h: parseFloat(t.quoteVolume),
                         '24h': parseFloat(t.priceChangePercent),
                         o5m: null, o15m: null, o1h: null,
+                        h10_5m: 0, h10_15m: 0, h10_1h: 0, h10_1d: 0,
                         v5m: 0, v15m: 0, v1h: 0,
                         '5m': 0, '15m': 0, '1h': 0
                     };
@@ -135,39 +155,50 @@
             if (!isSyncing) syncMissingOpens(Object.keys(pairs));
             render();
         } catch (e) { 
-            document.getElementById('scan-status').innerText = "Cooldown: Waiting for API slot..."; 
+            document.getElementById('scan-status').innerText = "API Cooldown..."; 
         }
     }
 
     async function syncMissingOpens(symbols) {
         if (isSyncing) return;
         isSyncing = true;
-        const batchSize = 3; // Reduced batch size for stability
+        const batchSize = 3; 
         
         for (let i = 0; i < symbols.length; i += batchSize) {
             const batch = symbols.slice(i, i + batchSize);
             await Promise.all(batch.map(async (sym) => {
                 try {
-                    // Only fetch if missing to save weight
-                    const [k5, k15, k1] = await Promise.all([
-                        fetch(`${API}/klines?symbol=${sym}&interval=5m&limit=1`).then(r => r.json()),
-                        fetch(`${API}/klines?symbol=${sym}&interval=15m&limit=1`).then(r => r.json()),
-                        fetch(`${API}/klines?symbol=${sym}&interval=1h&limit=1`).then(r => r.json())
+                    const [k5, k15, k1, k1d] = await Promise.all([
+                        fetch(`${API}/klines?symbol=${sym}&interval=5m&limit=11`).then(r => r.json()),
+                        fetch(`${API}/klines?symbol=${sym}&interval=15m&limit=11`).then(r => r.json()),
+                        fetch(`${API}/klines?symbol=${sym}&interval=1h&limit=11`).then(r => r.json()),
+                        fetch(`${API}/klines?symbol=${sym}&interval=1d&limit=11`).then(r => r.json())
                     ]);
                     
-                    if (k5?.[0]) { pairs[sym].o5m = parseFloat(k5[0][1]); pairs[sym].v5m = parseFloat(k5[0][7]); }
-                    if (k15?.[0]) { pairs[sym].o15m = parseFloat(k15[0][1]); pairs[sym].v15m = parseFloat(k15[0][7]); }
-                    if (k1?.[0]) { pairs[sym].o1h = parseFloat(k1[0][1]); pairs[sym].v1h = parseFloat(k1[0][7]); }
+                    const process = (data, pKey, hKey, vKey) => {
+                        if (data && data.length > 0) {
+                            const latest = data[data.length - 1];
+                            if(pKey) pairs[sym][pKey] = parseFloat(latest[1]); 
+                            if(vKey) pairs[sym][vKey] = parseFloat(latest[7]); 
+                            const prev10 = data.slice(0, 10);
+                            pairs[sym][hKey] = Math.max(...prev10.map(c => parseFloat(c[2])));
+                        }
+                    };
+
+                    process(k5, 'o5m', 'h10_5m', 'v5m');
+                    process(k15, 'o15m', 'h10_15m', 'v15m');
+                    process(k1, 'o1h', 'h10_1h', 'v1h');
+                    process(k1d, null, 'h10_1d', null);
                     
                     calculatePcts(sym);
                 } catch (err) { }
             }));
             
-            document.getElementById('scan-status').innerText = `Pro Sync: ${Math.round((i/symbols.length)*100)}% | Deep Scanning Assets`;
-            await delay(250); // Increased delay to avoid Binance blocks
+            document.getElementById('scan-status').innerText = `SYNC: ${Math.round((i/symbols.length)*100)}% | SCANNING DONCHIAN 10`;
+            await delay(200); 
             if (i % 15 === 0) render(); 
         }
-        document.getElementById('scan-status').innerText = "Live: Market Fully Synced";
+        document.getElementById('scan-status').innerText = "LIVE: FULL SPECTRUM SYNCED";
         isSyncing = false;
     }
 
@@ -195,9 +226,16 @@
 
     function render() {
         const query = document.getElementById('cryptoSearch').value.toUpperCase();
-        let list = Object.values(pairs);
-        if (query) list = list.filter(p => p.symbol.includes(query));
+        let fullList = Object.values(pairs);
+        
+        const tfs = ['5m', '15m', '1h', '24h'];
+        const leaders = {};
+        tfs.forEach(tf => {
+            const top = fullList.reduce((prev, curr) => ((curr[tf]||-999) > (prev[tf]||-999) ? curr : prev), { [tf]: -999 });
+            if (top.symbol) leaders[tf] = top.symbol;
+        });
 
+        let list = query ? fullList.filter(p => p.symbol.includes(query)) : fullList;
         const sorted = list.sort((a, b) => (b[rankBy] || -999) - (a[rankBy] || -999));
         
         const gainers = sorted.slice(0, 50);
@@ -209,10 +247,29 @@
         const row = (p, i) => {
             const tfVol = rankBy === '5m' ? p.v5m : rankBy === '15m' ? p.v15m : rankBy === '1h' ? p.v1h : p.vol24h;
             
+            let badges = '';
+            let isGolden = false;
+
+            // 1. Top Gainer (Gold)
+            tfs.forEach(tf => {
+                if(leaders[tf] === p.symbol) {
+                    badges += `<span class="badge top-badge">${tf.toUpperCase()}</span>`;
+                    isGolden = true;
+                }
+            });
+
+            // 2. Breakouts (Green for 5m/15m/1h)
+            if (p.h10_5m > 0 && p.price > p.h10_5m) badges += `<span class="badge bo-badge">5M</span>`;
+            if (p.h10_15m > 0 && p.price > p.h10_15m) badges += `<span class="badge bo-badge">15M</span>`;
+            if (p.h10_1h > 0 && p.price > p.h10_1h) badges += `<span class="badge bo-badge">1H</span>`;
+
+            // 3. 1 Day Breakout (Pink)
+            if (p.h10_1d > 0 && p.price > p.h10_1d) badges += `<span class="badge d1-badge">1D</span>`;
+
             return `
-            <tr>
+            <tr class="${isGolden ? 'golden-zone' : ''}">
                 <td class="col-rank">${i+1}</td>
-                <td class="col-sym">${p.symbol}</td>
+                <td class="col-sym">${p.symbol}${badges}</td>
                 <td class="col-price">$${p.price < 1 ? p.price.toFixed(5) : p.price.toLocaleString()}</td>
                 <td class="col-pct ${p['5m']>=0?'green':'red'} ${rankBy==='5m'?'active-col':''}">${(p['5m']||0).toFixed(2)}%</td>
                 <td class="col-pct ${p['15m']>=0?'green':'red'} ${rankBy==='15m'?'active-col':''}">${(p['15m']||0).toFixed(2)}%</td>
@@ -227,7 +284,6 @@
         document.getElementById('losers-body').innerHTML = losers.map((p, i) => row(p, i)).join('');
     }
 
-    // Init with A+ (16px) and 15m default
     updateSize(16);
     fetchAllData(); 
     setInterval(fetchAllData, 5000); 
