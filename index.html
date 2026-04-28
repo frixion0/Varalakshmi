@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Crypto Live Screener - Squeeze & Breakout Pro</title>
+    <title>Crypto Live Screener - Squeeze Pro Elite</title>
     <style>
         :root {
             --bg: #0b0e11; --card: #181a20; --border: #2b3139;
@@ -42,14 +42,14 @@
             vertical-align: middle; text-transform: uppercase; display: inline-block;
         }
         .top-badge { background: var(--accent); color: #000; }
-        .bo-badge { background: var(--green); color: #000; }
+        .bo-badge { background: var(--green); color: #000; box-shadow: 0 0 5px rgba(14, 203, 129, 0.3); }
         .d1-badge { background: var(--pink); color: #000; }
         .sq-badge { background: var(--blue); color: #fff; box-shadow: 0 0 5px rgba(61, 126, 255, 0.5); }
 
         .golden-zone { background: linear-gradient(90deg, rgba(252, 213, 53, 0.12) 0%, transparent 100%) !important; }
 
         .col-rank { width: 25px; text-align: left; padding-left: 5px; }
-        .col-sym { width: 140px; text-align: left; position: sticky; left: 0; background: var(--card); z-index: 5; border-right: 1px solid var(--border); color: #fff; font-weight: bold; }
+        .col-sym { width: 155px; text-align: left; position: sticky; left: 0; background: var(--card); z-index: 5; border-right: 1px solid var(--border); color: #fff; font-weight: bold; }
         .col-price { width: 85px; }
         .col-pct { width: 60px; }
         .col-vol { width: 70px; color: var(--orange); }
@@ -67,7 +67,7 @@
         <span>A-</span><input type="range" min="8" max="18" value="16" id="sizeSlider" oninput="updateSize(this.value)"><span>A+</span>
     </div>
     <div class="status-bar">
-        <div id="scan-status">Neural Link...</div>
+        <div id="scan-status">Syncing Neural Data...</div>
     </div>
 </div>
 
@@ -131,8 +131,7 @@
                         symbol: sym.replace('USDT', ''), price: parseFloat(t.lastPrice),
                         vol24h: parseFloat(t.quoteVolume), '24h': parseFloat(t.priceChangePercent),
                         o5m: null, o15m: null, o1h: null,
-                        h10_5m: 0, h10_15m: 0, h10_1h: 0, h10_1d: 0, 
-                        isSqueezed: false, // New Blue Label State
+                        sqz: { '5m': false, '15m': false, '1h': false, '1d': false, 'd50': false },
                         v5m: 0, v15m: 0, v1h: 0, '5m': 0, '15m': 0, '1h': 0
                     };
                 } else {
@@ -144,7 +143,7 @@
             });
             if (!isSyncing) syncMissingOpens(Object.keys(pairs));
             render();
-        } catch (e) { document.getElementById('scan-status').innerText = "API Busy..."; }
+        } catch (e) { document.getElementById('scan-status').innerText = "API Rate Limit..."; }
     }
 
     async function syncMissingOpens(symbols) {
@@ -156,49 +155,63 @@
             await Promise.all(batch.map(async (sym) => {
                 try {
                     const [k5, k15, k1, k1d] = await Promise.all([
-                        fetch(`${API}/klines?symbol=${sym}&interval=5m&limit=11`).then(r => r.json()),
-                        fetch(`${API}/klines?symbol=${sym}&interval=15m&limit=11`).then(r => r.json()),
-                        fetch(`${API}/klines?symbol=${sym}&interval=1h&limit=11`).then(r => r.json()),
-                        fetch(`${API}/klines?symbol=${sym}&interval=1d&limit=60`).then(r => r.json()) // Fetch more for D50 squeeze
+                        fetch(`${API}/klines?symbol=${sym}&interval=5m&limit=25`).then(r => r.json()),
+                        fetch(`${API}/klines?symbol=${sym}&interval=15m&limit=25`).then(r => r.json()),
+                        fetch(`${API}/klines?symbol=${sym}&interval=1h&limit=25`).then(r => r.json()),
+                        fetch(`${API}/klines?symbol=${sym}&interval=1d&limit=70`).then(r => r.json())
                     ]);
                     
-                    const p = (data, pKey, hKey, vKey) => {
-                        if (data && data.length > 0) {
-                            const latest = data[data.length-1];
-                            if(pKey) pairs[sym][pKey] = parseFloat(latest[1]); 
-                            if(vKey) pairs[sym][vKey] = parseFloat(latest[7]); 
-                            pairs[sym][hKey] = Math.max(...data.slice(-11, -1).map(c => parseFloat(c[2])));
+                    const checkSqueeze = (data, period, flatCount, tfKey) => {
+                        if (!data || data.length < (period + flatCount)) return false;
+                        const highsAtT = [];
+                        // Look back up to 10 candles for a breakout persistent check
+                        for (let j = 0; j < 10; j++) {
+                            const segment = data.slice(data.length - (period + j), data.length - j);
+                            if(segment.length < period) break;
+                            const currentHigh = Math.max(...segment.map(c => parseFloat(c[2])));
+                            
+                            // Check if the previous 'flatCount' versions of this Donchian line were identical
+                            const histHighs = [];
+                            for(let f = 1; f <= flatCount; f++) {
+                                const fSegment = data.slice(data.length - (period + j + f), data.length - j - f);
+                                histHighs.push(Math.max(...fSegment.map(c => parseFloat(c[2]))));
+                            }
+                            const isFlat = histHighs.every(h => h === histHighs[0]);
+                            
+                            if (isFlat && pairs[sym].price > histHighs[0]) return true;
                         }
+                        return false;
                     };
-                    p(k5, 'o5m', 'h10_5m', 'v5m');
-                    p(k15, 'o15m', 'h10_15m', 'v15m');
-                    p(k1, 'o1h', 'h10_1h', 'v1h');
-                    p(k1d, null, 'h10_1d', null);
 
-                    // --- Donchian 50 Period + 10 Candle Flat Squeeze Logic ---
-                    if (k1d && k1d.length >= 60) {
-                        const dailyHighsAtT = [];
-                        for (let j = 0; j < 11; j++) {
-                            const segment = k1d.slice(k1d.length - (50 + j), k1d.length - j);
-                            dailyHighsAtT.push(Math.max(...segment.map(c => parseFloat(c[2]))));
-                        }
-                        
-                        // Check if the Donchian line was straight/flat for the 10 candles prior
-                        const prior10Highs = dailyHighsAtT.slice(1); 
-                        const isFlat = prior10Highs.every(h => h === prior10Highs[0]);
-                        
-                        // Blue Label Trigger: Is flat AND current price is above that flat ceiling
-                        // This stays true if the breakout happened within the last 10 candles
-                        pairs[sym].isSqueezed = isFlat && (pairs[sym].price > prior10Highs[0]);
+                    // Update TF specific data
+                    if(k5?.length) { 
+                        pairs[sym].o5m = parseFloat(k5[k5.length-1][1]); 
+                        pairs[sym].v5m = parseFloat(k5[k5.length-1][7]);
+                        pairs[sym].sqz['5m'] = checkSqueeze(k5, 10, 5, '5m'); 
                     }
+                    if(k15?.length) { 
+                        pairs[sym].o15m = parseFloat(k15[k15.length-1][1]); 
+                        pairs[sym].v15m = parseFloat(k15[k15.length-1][7]);
+                        pairs[sym].sqz['15m'] = checkSqueeze(k15, 10, 5, '15m'); 
+                    }
+                    if(k1?.length) { 
+                        pairs[sym].o1h = parseFloat(k1[k1.length-1][1]); 
+                        pairs[sym].v1h = parseFloat(k1[k1.length-1][7]);
+                        pairs[sym].sqz['1h'] = checkSqueeze(k1, 10, 5, '1h'); 
+                    }
+                    if(k1d?.length) {
+                        pairs[sym].sqz['1d'] = checkSqueeze(k1d, 10, 5, '1d');
+                        pairs[sym].sqz['d50'] = checkSqueeze(k1d, 50, 10, 'd50');
+                    }
+                    
                     calculatePcts(sym);
                 } catch (err) { }
             }));
-            document.getElementById('scan-status').innerText = `DEEP SCAN: ${Math.round((i/symbols.length)*100)}%`;
+            document.getElementById('scan-status').innerText = `SQUEEZE MAP: ${Math.round((i/symbols.length)*100)}%`;
             await delay(180); 
             if (i % 15 === 0) render(); 
         }
-        document.getElementById('scan-status').innerText = "LIVE: SQUEEZE DETECTOR ACTIVE";
+        document.getElementById('scan-status').innerText = "LIVE: SQUEEZE ENGINE READY";
         isSyncing = false;
     }
 
@@ -244,13 +257,13 @@
             let badges = ''; let isGolden = false;
 
             tfs.forEach(tf => { if(leaders[tf] === p.symbol) { badges += `<span class="badge top-badge">${tf}</span>`; isGolden = true; } });
-            if (p.price > p.h10_5m) badges += `<span class="badge bo-badge">5M</span>`;
-            if (p.price > p.h10_15m) badges += `<span class="badge bo-badge">15M</span>`;
-            if (p.price > p.h10_1h) badges += `<span class="badge bo-badge">1H</span>`;
-            if (p.price > p.h10_1d) badges += `<span class="badge d1-badge">1D</span>`;
             
-            // New Blue Badge for the 50-Period Flat Breakout
-            if (p.isSqueezed) badges += `<span class="badge sq-badge">SQZ 50</span>`;
+            // Squeeze-based Breakout Badges
+            if (p.sqz['5m']) badges += `<span class="badge bo-badge">5M</span>`;
+            if (p.sqz['15m']) badges += `<span class="badge bo-badge">15M</span>`;
+            if (p.sqz['1h']) badges += `<span class="badge bo-badge">1H</span>`;
+            if (p.sqz['1d']) badges += `<span class="badge d1-badge">1D</span>`;
+            if (p.sqz['d50']) badges += `<span class="badge sq-badge">SQZ 50</span>`;
 
             return `
             <tr class="${isGolden ? 'golden-zone' : ''}">
