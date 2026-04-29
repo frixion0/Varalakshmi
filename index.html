@@ -26,12 +26,14 @@
         .tab.active { color: #000; background: var(--accent); border-color: var(--accent); box-shadow: 0 0 15px rgba(252, 213, 53, 0.3); }
         
         .main-grid { display: flex; gap: 10px; width: 100%; }
-        .table-container { flex: 1; background: var(--card); border: 1px solid var(--border); border-radius: 8px; overflow: hidden; }
-        .table-title { padding: 8px 12px; font-weight: 900; font-size: 13px; background: #1e2026; border-bottom: 1px solid var(--border); }
-        .scroll-area { max-height: 80vh; overflow-y: auto; width: 100%; }
+        .table-container { flex: 1; background: var(--card); border: 1px solid var(--border); border-radius: 8px; overflow: hidden; display: flex; flex-direction: column; }
+        .table-container.watchlist-panel { flex: 0 0 520px; min-width: 400px; }
+        .table-title { padding: 8px 12px; font-weight: 900; font-size: 13px; background: #1e2026; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
+        .table-title .wl-count { font-size: 10px; color: var(--dim); font-weight: 600; }
+        .scroll-area { max-height: 82vh; overflow-y: auto; width: 100%; flex: 1; }
         
         table { width: 100%; border-collapse: collapse; table-layout: fixed; font-size: var(--table-font); }
-        th { position: sticky; top: 0; background: #1e2026; color: var(--dim); font-size: 10px; padding: 8px 2px; text-align: right; z-index: 10; border-bottom: 1px solid var(--border); }
+        th { position: sticky; top: 0; background: #1e2026; color: var(--dim); font-size: 10px; padding: 8px 2px; text-align: right; z-index: 10; border-bottom: 1px solid var(--border); transition: background 0.2s, color 0.2s; }
         td { padding: 6px 4px; text-align: right; border-bottom: 1px solid rgba(255,255,255,0.03); font-family: 'JetBrains Mono', monospace; white-space: nowrap; }
         
         th.active-header { color: var(--accent); background: #2c2f36; border-bottom: 2px solid var(--accent); }
@@ -49,14 +51,38 @@
         .golden-zone { background: linear-gradient(90deg, rgba(252, 213, 53, 0.12) 0%, transparent 100%) !important; }
 
         .col-rank { width: 25px; text-align: left; padding-left: 5px; }
-        .col-sym { width: 155px; text-align: left; position: sticky; left: 0; background: var(--card); z-index: 5; border-right: 1px solid var(--border); color: #fff; font-weight: bold; }
+        .col-sym { width: 155px; text-align: left; position: sticky; left: 0; background: var(--card); z-index: 5; border-right: 1px solid var(--border); color: #fff; font-weight: bold; cursor: pointer; transition: background 0.15s; }
+        .col-sym:hover { background: #252830; }
         .col-price { width: 85px; }
         .col-pct { width: 60px; }
         .col-vol { width: 70px; color: var(--orange); }
+        .col-action { width: 30px; }
+        
+        .watchlist-panel .col-sym { cursor: default; }
+        .watchlist-panel .col-sym:hover { background: var(--card); }
+
+        .btn-remove {
+            background: none; border: 1px solid var(--border); color: var(--dim); cursor: pointer;
+            border-radius: 3px; font-size: 14px; line-height: 1; padding: 2px 5px; transition: all 0.15s;
+        }
+        .btn-remove:hover { background: var(--red); color: #fff; border-color: var(--red); }
+        
+        .btn-add {
+            background: none; border: 1px solid var(--border); color: var(--dim); cursor: pointer;
+            border-radius: 3px; font-size: 11px; line-height: 1; padding: 2px 5px; transition: all 0.15s;
+        }
+        .btn-add:hover { background: var(--accent); color: #000; border-color: var(--accent); }
+
+        .wl-empty { text-align: center; padding: 40px 10px; color: var(--dim); font-size: 12px; }
+        .wl-empty span { font-size: 20px; display: block; margin-bottom: 8px; opacity: 0.4; }
         
         .green { color: var(--green); }
         .red { color: var(--red); }
-        @media (max-width: 1000px) { .main-grid { flex-direction: column; } }
+
+        @media (max-width: 1100px) { 
+            .main-grid { flex-direction: column; }
+            .table-container.watchlist-panel { flex: none; min-width: 0; }
+        }
     </style>
 </head>
 <body>
@@ -80,33 +106,40 @@
 
 <div class="main-grid">
     <div class="table-container">
-        <div class="table-title" style="color: var(--green);">BULLISH MOMENTUM</div>
+        <div class="table-title" style="color: var(--green);">LIVE SCREENER <span style="font-size:9px;color:var(--dim);font-weight:500;margin-left:8px;">Click symbol to watch</span></div>
         <div class="scroll-area">
             <table>
                 <thead>
                     <tr>
                         <th class="col-rank">#</th><th class="col-sym">Symbol</th><th class="col-price">Price</th>
-                        <th class="col-pct h-5m">5M%</th><th class="col-pct h-15m">15M%</th><th class="col-pct h-1h">1H%</th><th class="col-pct h-24h">24H%</th>
-                        <th class="col-vol">TF Vol</th><th class="col-vol">24H Vol</th>
+                        <th class="col-pct h-5m" data-tf="5m">5M%</th><th class="col-pct h-15m" data-tf="15m">15M%</th><th class="col-pct h-1h" data-tf="1h">1H%</th><th class="col-pct h-24h" data-tf="24h">24H%</th>
+                        <th class="col-vol">TF Vol</th><th class="col-vol">24H Vol</th><th class="col-action"></th>
                     </tr>
                 </thead>
                 <tbody id="gainers-body"></tbody>
             </table>
         </div>
     </div>
-    <div class="table-container">
-        <div class="table-title" style="color: var(--red);">BEARISH PRESSURE</div>
+    <div class="table-container watchlist-panel">
+        <div class="table-title" style="color: var(--accent);">
+            <span>&#9733; WATCHLIST</span>
+            <span class="wl-count" id="wl-count">0 assets</span>
+        </div>
         <div class="scroll-area">
             <table>
                 <thead>
                     <tr>
                         <th class="col-rank">#</th><th class="col-sym">Symbol</th><th class="col-price">Price</th>
-                        <th class="col-pct h-5m">5M%</th><th class="col-pct h-15m">15M%</th><th class="col-pct h-1h">1H%</th><th class="col-pct h-24h">24H%</th>
-                        <th class="col-vol">TF Vol</th><th class="col-vol">24H Vol</th>
+                        <th class="col-pct h-5m" data-tf="5m">5M%</th><th class="col-pct h-15m" data-tf="15m">15M%</th><th class="col-pct h-1h" data-tf="1h">1H%</th><th class="col-pct h-24h" data-tf="24h">24H%</th>
+                        <th class="col-vol">TF Vol</th><th class="col-vol">24H Vol</th><th class="col-action"></th>
                     </tr>
                 </thead>
-                <tbody id="losers-body"></tbody>
+                <tbody id="watchlist-body"></tbody>
             </table>
+            <div class="wl-empty" id="wl-empty">
+                <span>+</span>
+                Click any symbol on the left to start tracking
+            </div>
         </div>
     </div>
 </div>
@@ -116,9 +149,35 @@
     let pairs = {};
     let rankBy = '24h'; 
     let isSyncing = false;
+    let watchlist = new Set();
+
+    try {
+        const saved = JSON.parse(localStorage.getItem('sq_watchlist') || '[]');
+        saved.forEach(s => watchlist.add(s));
+    } catch(e) {}
+
+    function saveWatchlist() {
+        localStorage.setItem('sq_watchlist', JSON.stringify([...watchlist]));
+    }
+
+    function toggleWatch(sym) {
+        if (watchlist.has(sym)) {
+            watchlist.delete(sym);
+        } else {
+            watchlist.add(sym);
+        }
+        saveWatchlist();
+        render();
+    }
 
     function updateSize(v) { document.documentElement.style.setProperty('--table-font', v + 'px'); }
     const delay = ms => new Promise(res => setTimeout(res, ms));
+
+    function highlightHeaders() {
+        document.querySelectorAll('th[data-tf]').forEach(th => {
+            th.classList.toggle('active-header', th.dataset.tf === rankBy);
+        });
+    }
 
     async function fetchAllData() {
         try {
@@ -146,73 +205,98 @@
         } catch (e) { document.getElementById('scan-status').innerText = "API Rate Limit..."; }
     }
 
+    /* ── Concurrency limiter: caps live in-flight requests ── */
+    class Limiter {
+        constructor(max) { this.max = max; this.running = 0; this.queue = []; }
+        async run(fn) {
+            if (this.running >= this.max) await new Promise(r => this.queue.push(r));
+            this.running++;
+            try { return await fn(); }
+            finally { this.running--; if (this.queue.length) this.queue.shift()(); }
+        }
+    }
+    const netLimiter = new Limiter(25);
+
     async function syncMissingOpens(symbols) {
         if (isSyncing) return;
         isSyncing = true;
-        const batchSize = 3; 
-        for (let i = 0; i < symbols.length; i += batchSize) {
-            const batch = symbols.slice(i, i + batchSize);
-            await Promise.all(batch.map(async (sym) => {
-                try {
-                    const [k5, k15, k1, k1d] = await Promise.all([
-                        fetch(`${API}/klines?symbol=${sym}&interval=5m&limit=25`).then(r => r.json()),
-                        fetch(`${API}/klines?symbol=${sym}&interval=15m&limit=25`).then(r => r.json()),
-                        fetch(`${API}/klines?symbol=${sym}&interval=1h&limit=25`).then(r => r.json()),
-                        fetch(`${API}/klines?symbol=${sym}&interval=1d&limit=70`).then(r => r.json())
-                    ]);
-                    
-                    const checkSqueeze = (data, period, flatCount, tfKey) => {
-                        if (!data || data.length < (period + flatCount)) return false;
-                        const highsAtT = [];
-                        // Look back up to 10 candles for a breakout persistent check
-                        for (let j = 0; j < 5; j++) {
-                            const segment = data.slice(data.length - (period + j), data.length - j);
-                            if(segment.length < period) break;
-                            const currentHigh = Math.max(...segment.map(c => parseFloat(c[2])));
-                            
-                            // Check if the previous 'flatCount' versions of this Donchian line were identical
-                            const histHighs = [];
-                            for(let f = 1; f <= flatCount; f++) {
-                                const fSegment = data.slice(data.length - (period + j + f), data.length - j - f);
-                                histHighs.push(Math.max(...fSegment.map(c => parseFloat(c[2]))));
-                            }
-                            const isFlat = histHighs.every(h => h === histHighs[0]);
-                            
-                            if (isFlat && pairs[sym].price > histHighs[0]) return true;
-                        }
-                        return false;
-                    };
 
-                    // Update TF specific data
-                    if(k5?.length) { 
-                        pairs[sym].o5m = parseFloat(k5[k5.length-1][1]); 
-                        pairs[sym].v5m = parseFloat(k5[k5.length-1][7]);
-                        pairs[sym].sqz['5m'] = checkSqueeze(k5, 10, 5, '5m'); 
+        let done = 0;
+        const total = symbols.length;
+        const renderEvery = 20;
+        let lastRender = 0;
+
+        const workers = 6;
+        for (let w = 0; w < workers; w++) {
+            (async () => {
+                for (let i = w; i < total; i += workers) {
+                    const sym = symbols[i];
+                    try {
+                        const [k5, k15, k1, k1d] = await Promise.all([
+                            netLimiter.run(() => fetch(`${API}/klines?symbol=${sym}&interval=5m&limit=25`).then(r => r.json())),
+                            netLimiter.run(() => fetch(`${API}/klines?symbol=${sym}&interval=15m&limit=25`).then(r => r.json())),
+                            netLimiter.run(() => fetch(`${API}/klines?symbol=${sym}&interval=1h&limit=25`).then(r => r.json())),
+                            netLimiter.run(() => fetch(`${API}/klines?symbol=${sym}&interval=1d&limit=70`).then(r => r.json()))
+                        ]);
+
+                        const checkSqueeze = (data, period, flatCount) => {
+                            if (!data || data.length < (period + flatCount)) return false;
+                            for (let j = 0; j < 5; j++) {
+                                const segment = data.slice(data.length - (period + j), data.length - j);
+                                if (segment.length < period) break;
+                                const histHighs = [];
+                                for (let f = 1; f <= flatCount; f++) {
+                                    const fSeg = data.slice(data.length - (period + j + f), data.length - j - f);
+                                    histHighs.push(Math.max(...fSeg.map(c => parseFloat(c[2]))));
+                                }
+                                const isFlat = histHighs.every(h => h === histHighs[0]);
+                                if (isFlat && pairs[sym].price > histHighs[0]) return true;
+                            }
+                            return false;
+                        };
+
+                        if (k5?.length) {
+                            pairs[sym].o5m = parseFloat(k5[k5.length - 1][1]);
+                            pairs[sym].v5m = parseFloat(k5[k5.length - 1][7]);
+                            pairs[sym].sqz['5m'] = checkSqueeze(k5, 10, 5);
+                        }
+                        if (k15?.length) {
+                            pairs[sym].o15m = parseFloat(k15[k15.length - 1][1]);
+                            pairs[sym].v15m = parseFloat(k15[k15.length - 1][7]);
+                            pairs[sym].sqz['15m'] = checkSqueeze(k15, 10, 5);
+                        }
+                        if (k1?.length) {
+                            pairs[sym].o1h = parseFloat(k1[k1.length - 1][1]);
+                            pairs[sym].v1h = parseFloat(k1[k1.length - 1][7]);
+                            pairs[sym].sqz['1h'] = checkSqueeze(k1, 10, 5);
+                        }
+                        if (k1d?.length) {
+                            pairs[sym].sqz['1d'] = checkSqueeze(k1d, 10, 5);
+                            pairs[sym].sqz['d50'] = checkSqueeze(k1d, 50, 10);
+                        }
+
+                        calculatePcts(sym);
+                    } catch (err) { }
+
+                    done++;
+                    if (done - lastRender >= renderEvery) {
+                        lastRender = done;
+                        document.getElementById('scan-status').innerText = `SQUEEZE MAP: ${Math.round((done / total) * 100)}%`;
+                        render();
                     }
-                    if(k15?.length) { 
-                        pairs[sym].o15m = parseFloat(k15[k15.length-1][1]); 
-                        pairs[sym].v15m = parseFloat(k15[k15.length-1][7]);
-                        pairs[sym].sqz['15m'] = checkSqueeze(k15, 10, 5, '15m'); 
-                    }
-                    if(k1?.length) { 
-                        pairs[sym].o1h = parseFloat(k1[k1.length-1][1]); 
-                        pairs[sym].v1h = parseFloat(k1[k1.length-1][7]);
-                        pairs[sym].sqz['1h'] = checkSqueeze(k1, 10, 5, '1h'); 
-                    }
-                    if(k1d?.length) {
-                        pairs[sym].sqz['1d'] = checkSqueeze(k1d, 10, 5, '1d');
-                        pairs[sym].sqz['d50'] = checkSqueeze(k1d, 50, 10, 'd50');
-                    }
-                    
-                    calculatePcts(sym);
-                } catch (err) { }
-            }));
-            document.getElementById('scan-status').innerText = `SQUEEZE MAP: ${Math.round((i/symbols.length)*100)}%`;
-            await delay(180); 
-            if (i % 15 === 0) render(); 
+                }
+            })();
         }
+
+        await new Promise(resolve => {
+            const check = setInterval(() => {
+                if (done >= total) { clearInterval(check); resolve(); }
+            }, 200);
+        });
+
         document.getElementById('scan-status').innerText = "LIVE: SQUEEZE ENGINE READY";
         isSyncing = false;
+        render();
     }
 
     function calculatePcts(sym) {
@@ -226,6 +310,7 @@
         rankBy = key;
         document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
         document.getElementById(`tab-${key}`).classList.add('active');
+        highlightHeaders();
         render();
     }
 
@@ -236,57 +321,84 @@
         return Math.round(v).toLocaleString();
     }
 
+    function buildBadges(p, leaders, tfs) {
+        let badges = ''; let isGolden = false;
+        tfs.forEach(tf => { if (leaders[tf] === p.symbol) { badges += `<span class="badge top-badge">${tf}</span>`; isGolden = true; } });
+        if (p.sqz['5m']) badges += `<span class="badge bo-badge">5M</span>`;
+        if (p.sqz['15m']) badges += `<span class="badge bo-badge">15M</span>`;
+        if (p.sqz['1h']) badges += `<span class="badge bo-badge">1H</span>`;
+        if (p.sqz['1d']) badges += `<span class="badge d1-badge">1D</span>`;
+        if (p.sqz['d50']) badges += `<span class="badge sq-badge">SQZ 50</span>`;
+        return { badges, isGolden };
+    }
+
     function render() {
+        highlightHeaders();
+
         const query = document.getElementById('cryptoSearch').value.toUpperCase();
         let fullList = Object.values(pairs);
         const tfs = ['5m', '15m', '1h', '24h'];
         const leaders = {};
         tfs.forEach(tf => {
-            const top = fullList.reduce((prev, curr) => ((curr[tf]||-999) > (prev[tf]||-999) ? curr : prev), { [tf]: -999 });
+            const top = fullList.reduce((prev, curr) => ((curr[tf] || -999) > (prev[tf] || -999) ? curr : prev), { [tf]: -999 });
             if (top.symbol) leaders[tf] = top.symbol;
         });
 
         let list = query ? fullList.filter(p => p.symbol.includes(query)) : fullList;
         const sorted = list.sort((a, b) => (b[rankBy] || -999) - (a[rankBy] || -999));
-        
-        const gainers = sorted.slice(0, 50);
-        const losers = [...sorted].reverse().slice(0, 50);
+        const top60 = sorted.slice(0, 60);
 
-        const row = (p, i) => {
+        const mainRows = top60.map((p, i) => {
             const tfVol = rankBy === '5m' ? p.v5m : rankBy === '15m' ? p.v15m : rankBy === '1h' ? p.v1h : p.vol24h;
-            let badges = ''; let isGolden = false;
-
-            tfs.forEach(tf => { if(leaders[tf] === p.symbol) { badges += `<span class="badge top-badge">${tf}</span>`; isGolden = true; } });
-            
-            // Squeeze-based Breakout Badges
-            if (p.sqz['5m']) badges += `<span class="badge bo-badge">5M</span>`;
-            if (p.sqz['15m']) badges += `<span class="badge bo-badge">15M</span>`;
-            if (p.sqz['1h']) badges += `<span class="badge bo-badge">1H</span>`;
-            if (p.sqz['1d']) badges += `<span class="badge d1-badge">1D</span>`;
-            if (p.sqz['d50']) badges += `<span class="badge sq-badge">SQZ 50</span>`;
-
+            const { badges, isGolden } = buildBadges(p, leaders, tfs);
+            const isWatched = watchlist.has(p.symbol);
             return `
             <tr class="${isGolden ? 'golden-zone' : ''}">
-                <td class="col-rank">${i+1}</td>
-                <td class="col-sym">${p.symbol}${badges}</td>
+                <td class="col-rank">${i + 1}</td>
+                <td class="col-sym" onclick="toggleWatch('${p.symbol}')">${p.symbol}${badges}</td>
                 <td class="col-price">$${p.price < 1 ? p.price.toFixed(5) : p.price.toLocaleString()}</td>
-                <td class="col-pct ${p['5m']>=0?'green':'red'} ${rankBy==='5m'?'active-col':''}">${(p['5m']||0).toFixed(2)}%</td>
-                <td class="col-pct ${p['15m']>=0?'green':'red'} ${rankBy==='15m'?'active-col':''}">${(p['15m']||0).toFixed(2)}%</td>
-                <td class="col-pct ${p['1h']>=0?'green':'red'} ${rankBy==='1h'?'active-col':''}">${(p['1h']||0).toFixed(2)}%</td>
-                <td class="col-pct ${p['24h']>=0?'green':'red'} ${rankBy==='24h'?'active-col':''}">${(p['24h']||0).toFixed(2)}%</td>
+                <td class="col-pct ${p['5m'] >= 0 ? 'green' : 'red'} ${rankBy === '5m' ? 'active-col' : ''}">${(p['5m'] || 0).toFixed(2)}%</td>
+                <td class="col-pct ${p['15m'] >= 0 ? 'green' : 'red'} ${rankBy === '15m' ? 'active-col' : ''}">${(p['15m'] || 0).toFixed(2)}%</td>
+                <td class="col-pct ${p['1h'] >= 0 ? 'green' : 'red'} ${rankBy === '1h' ? 'active-col' : ''}">${(p['1h'] || 0).toFixed(2)}%</td>
+                <td class="col-pct ${p['24h'] >= 0 ? 'green' : 'red'} ${rankBy === '24h' ? 'active-col' : ''}">${(p['24h'] || 0).toFixed(2)}%</td>
                 <td class="col-vol">${formatVol(tfVol)}</td>
                 <td class="col-vol">${formatVol(p.vol24h)}</td>
+                <td class="col-action"><button class="btn-add" onclick="event.stopPropagation();toggleWatch('${p.symbol}')" style="${isWatched ? 'color:var(--accent);border-color:var(--accent);' : ''}">${isWatched ? '&#9733;' : '+'}</button></td>
             </tr>`;
-        };
+        });
+        document.getElementById('gainers-body').innerHTML = mainRows.join('');
 
-        document.getElementById('gainers-body').innerHTML = gainers.map((p, i) => row(p, i)).join('');
-        document.getElementById('losers-body').innerHTML = losers.map((p, i) => row(p, i)).join('');
+        const wlSymbols = [...watchlist];
+        const wlData = wlSymbols.map(sym => pairs[sym + 'USDT']).filter(Boolean);
+        wlData.sort((a, b) => (b[rankBy] || -999) - (a[rankBy] || -999));
+
+        document.getElementById('wl-count').innerText = wlData.length + ' asset' + (wlData.length !== 1 ? 's' : '');
+        document.getElementById('wl-empty').style.display = wlData.length === 0 ? 'block' : 'none';
+
+        const wlRows = wlData.map((p, i) => {
+            const tfVol = rankBy === '5m' ? p.v5m : rankBy === '15m' ? p.v15m : rankBy === '1h' ? p.v1h : p.vol24h;
+            const { badges, isGolden } = buildBadges(p, leaders, tfs);
+            return `
+            <tr class="${isGolden ? 'golden-zone' : ''}">
+                <td class="col-rank">${i + 1}</td>
+                <td class="col-sym">${p.symbol}${badges}</td>
+                <td class="col-price">$${p.price < 1 ? p.price.toFixed(5) : p.price.toLocaleString()}</td>
+                <td class="col-pct ${p['5m'] >= 0 ? 'green' : 'red'} ${rankBy === '5m' ? 'active-col' : ''}">${(p['5m'] || 0).toFixed(2)}%</td>
+                <td class="col-pct ${p['15m'] >= 0 ? 'green' : 'red'} ${rankBy === '15m' ? 'active-col' : ''}">${(p['15m'] || 0).toFixed(2)}%</td>
+                <td class="col-pct ${p['1h'] >= 0 ? 'green' : 'red'} ${rankBy === '1h' ? 'active-col' : ''}">${(p['1h'] || 0).toFixed(2)}%</td>
+                <td class="col-pct ${p['24h'] >= 0 ? 'green' : 'red'} ${rankBy === '24h' ? 'active-col' : ''}">${(p['24h'] || 0).toFixed(2)}%</td>
+                <td class="col-vol">${formatVol(tfVol)}</td>
+                <td class="col-vol">${formatVol(p.vol24h)}</td>
+                <td class="col-action"><button class="btn-remove" onclick="toggleWatch('${p.symbol}')">&#10005;</button></td>
+            </tr>`;
+        });
+        document.getElementById('watchlist-body').innerHTML = wlRows.join('');
     }
 
     updateSize(16);
-    fetchAllData(); 
-    setInterval(fetchAllData, 5000); 
-    setInterval(() => { if(!isSyncing) syncMissingOpens(Object.keys(pairs)); }, 60000);
+    fetchAllData();
+    setInterval(fetchAllData, 5000);
+    setInterval(() => { if (!isSyncing) syncMissingOpens(Object.keys(pairs)); }, 60000);
 </script>
 </body>
 </html>
