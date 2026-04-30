@@ -15,39 +15,38 @@
         }
         * { box-sizing: border-box; }
         body { background: var(--bg); color: var(--text); font-family: 'Inter', sans-serif; margin: 0; padding: 10px; overflow-x: hidden; }
-
+        body.modal-open { overflow: hidden; }
         .header-row { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin-bottom: 10px; }
         .search-box { flex: 1; min-width: 150px; }
         .search-box input { width: 100%; background: var(--card); border: 1px solid var(--border); padding: 8px 12px; border-radius: 4px; color: #fff; outline: none; font-size: 13px; }
         .size-control { display: flex; align-items: center; gap: 8px; background: var(--card); padding: 5px 12px; border-radius: 4px; border: 1px solid var(--border); font-size: 11px; }
         .status-bar { flex: 2; min-width: 250px; background: #1e2026; padding: 8px 15px; border-radius: 8px; border: 1px solid var(--border); }
         #scan-status { font-size: 10px; color: var(--accent); text-transform: uppercase; letter-spacing: 1px; font-weight: bold; }
-
+        #mirror-display { font-size: 9px; color: var(--dim); margin-top: 2px; letter-spacing: 0.5px; display: flex; gap: 6px; align-items: center; }
+        .mirror-dot { width: 6px; height: 6px; border-radius: 50%; display: inline-block; }
+        .mirror-dot.ok { background: var(--green); box-shadow: 0 0 4px var(--green); }
+        .mirror-dot.cooldown { background: var(--red); box-shadow: 0 0 4px var(--red); animation: blink 1s infinite; }
+        @keyframes blink { 50% { opacity: 0.3; } }
         .tabs { display: flex; gap: 5px; margin-bottom: 10px; }
         .tab { padding: 6px 18px; font-size: 11px; cursor: pointer; border-radius: 4px; color: var(--dim); background: var(--card); border: 1px solid var(--border); font-weight: bold; }
         .tab.active { color: #000; background: var(--accent); border-color: var(--accent); box-shadow: 0 0 15px rgba(252, 213, 53, 0.3); }
-
         .main-grid { display: flex; gap: 10px; width: 100%; }
         .table-container { flex: 1; background: var(--card); border: 1px solid var(--border); border-radius: 8px; overflow: hidden; display: flex; flex-direction: column; }
-        .table-container.watchlist-panel { flex: 0 0 430px; min-width: 340px; }
+        .table-container.watchlist-panel { flex: 0 0 420px; min-width: 340px; }
         .table-title { padding: 8px 12px; font-weight: 900; font-size: 13px; background: #1e2026; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
         .table-title .wl-count { font-size: 10px; color: var(--dim); font-weight: 600; }
         .scroll-area { max-height: 82vh; overflow-y: auto; width: 100%; flex: 1; }
-
         table { width: 100%; border-collapse: collapse; table-layout: fixed; font-size: var(--table-font); }
         th { position: sticky; top: 0; background: #1e2026; color: var(--dim); font-size: 10px; padding: 8px 2px; text-align: right; z-index: 10; border-bottom: 1px solid var(--border); }
         td { padding: 6px 4px; text-align: right; border-bottom: 1px solid rgba(255,255,255,0.03); font-family: 'JetBrains Mono', monospace; white-space: nowrap; }
-
         th.active-header { color: var(--accent); background: #2c2f36; border-bottom: 2px solid var(--accent); }
         td.active-col { background: rgba(252, 213, 53, 0.08) !important; font-weight: bold; color: #fff; }
-
         .badge { font-size: 7.5px; padding: 1px 3px; border-radius: 2px; margin-left: 3px; font-weight: 900; vertical-align: middle; text-transform: uppercase; display: inline-block; }
         .top-badge { background: var(--accent); color: #000; }
         .bo-badge { background: var(--green); color: #000; box-shadow: 0 0 5px rgba(14, 203, 129, 0.3); }
         .d1-badge { background: var(--pink); color: #000; }
         .sq-badge { background: var(--blue); color: #fff; box-shadow: 0 0 5px rgba(61, 126, 255, 0.5); }
         .golden-zone { background: linear-gradient(90deg, rgba(252, 213, 53, 0.12) 0%, transparent 100%) !important; }
-
         .col-rank { width: 25px; text-align: left; padding-left: 5px; }
         .col-sym { width: 155px; text-align: left; position: sticky; left: 0; background: var(--card); z-index: 5; border-right: 1px solid var(--border); color: #fff; font-weight: bold; cursor: pointer; transition: background 0.15s; }
         .col-sym:hover { background: #252830; }
@@ -55,27 +54,31 @@
         .col-pct { width: 60px; }
         .col-vol { width: 70px; color: var(--orange); }
         .col-action { width: 30px; }
-
-        .watchlist-panel .wl-sym { width: 105px; text-align: left; position: sticky; left: 0; background: var(--card); z-index: 5; border-right: 1px solid var(--border); color: #fff; font-weight: bold; }
-        .watchlist-panel .wl-price { width: 95px; }
+        .watchlist-panel .wl-sym { width: 100px; text-align: left; position: sticky; left: 0; background: var(--card); z-index: 5; border-right: 1px solid var(--border); color: #fff; font-weight: bold; cursor: pointer; transition: background 0.15s; }
+        .watchlist-panel .wl-sym:hover { background: #252830; }
+        .watchlist-panel .wl-price { width: 90px; }
         .watchlist-panel .wl-pct { width: 75px; }
-        .watchlist-panel .wl-vol { width: 100px; color: var(--orange); }
+        .watchlist-panel .wl-vol { width: 95px; color: var(--orange); }
         .watchlist-panel .wl-action { width: 28px; }
-
         .btn-remove { background: none; border: 1px solid var(--border); color: var(--dim); cursor: pointer; border-radius: 3px; font-size: 14px; line-height: 1; padding: 2px 5px; transition: all 0.15s; }
         .btn-remove:hover { background: var(--red); color: #fff; border-color: var(--red); }
         .btn-add { background: none; border: 1px solid var(--border); color: var(--dim); cursor: pointer; border-radius: 3px; font-size: 11px; line-height: 1; padding: 2px 5px; transition: all 0.15s; }
         .btn-add:hover { background: var(--accent); color: #000; border-color: var(--accent); }
-
         .wl-empty { text-align: center; padding: 40px 10px; color: var(--dim); font-size: 12px; }
         .wl-empty span { font-size: 20px; display: block; margin-bottom: 8px; opacity: 0.4; }
         .green { color: var(--green); }
         .red { color: var(--red); }
-
-        @media (max-width: 1100px) {
-            .main-grid { flex-direction: column; }
-            .table-container.watchlist-panel { flex: none; min-width: 0; }
-        }
+        .chart-overlay { position: fixed; inset: 0; z-index: 9999; background: var(--bg); display: none; flex-direction: column; }
+        .chart-overlay.open { display: flex; }
+        .chart-topbar { display: flex; align-items: center; justify-content: space-between; padding: 8px 15px; background: var(--card); border-bottom: 1px solid var(--border); flex-shrink: 0; min-height: 44px; }
+        .chart-topbar .chart-sym-name { font-size: 16px; font-weight: 900; color: var(--accent); }
+        .chart-topbar .chart-info { font-size: 11px; font-family: 'JetBrains Mono', monospace; margin-left: 15px; color: var(--dim); display: flex; gap: 14px; align-items: center; flex-wrap: wrap; }
+        .chart-topbar .chart-info .ci-val { color: var(--text); }
+        .chart-close { background: none; border: 1px solid var(--border); color: var(--dim); cursor: pointer; font-size: 18px; width: 32px; height: 32px; border-radius: 4px; transition: all 0.15s; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+        .chart-close:hover { background: var(--red); color: #fff; border-color: var(--red); }
+        .chart-body { flex: 1; position: relative; overflow: hidden; }
+        .chart-body canvas { display: block; width: 100%; height: 100%; }
+        @media (max-width: 1100px) { .main-grid { flex-direction: column; } .table-container.watchlist-panel { flex: none; min-width: 0; } }
     </style>
 </head>
 <body>
@@ -87,6 +90,7 @@
     </div>
     <div class="status-bar">
         <div id="scan-status">Initializing...</div>
+        <div id="mirror-display"></div>
     </div>
 </div>
 
@@ -99,16 +103,14 @@
 
 <div class="main-grid">
     <div class="table-container">
-        <div class="table-title" style="color: var(--green);">LIVE SCREENER <span style="font-size:9px;color:var(--dim);font-weight:500;margin-left:8px;">Click symbol to watch</span></div>
+        <div class="table-title" style="color: var(--green);">LIVE SCREENER <span style="font-size:9px;color:var(--dim);font-weight:500;margin-left:8px;">Click symbol for chart · + to watch</span></div>
         <div class="scroll-area">
             <table>
-                <thead>
-                    <tr>
-                        <th class="col-rank">#</th><th class="col-sym">Symbol</th><th class="col-price">Price</th>
-                        <th class="col-pct h-5m" data-tf="5m">5M%</th><th class="col-pct h-15m" data-tf="15m">15M%</th><th class="col-pct h-1h" data-tf="1h">1H%</th><th class="col-pct h-24h" data-tf="24h">24H%</th>
-                        <th class="col-vol">TF Vol</th><th class="col-vol">24H Vol</th><th class="col-action"></th>
-                    </tr>
-                </thead>
+                <thead><tr>
+                    <th class="col-rank">#</th><th class="col-sym">Symbol</th><th class="col-price">Price</th>
+                    <th class="col-pct h-5m" data-tf="5m">5M%</th><th class="col-pct h-15m" data-tf="15m">15M%</th><th class="col-pct h-1h" data-tf="1h">1H%</th><th class="col-pct h-24h" data-tf="24h">24H%</th>
+                    <th class="col-vol">TF Vol</th><th class="col-vol">24H Vol</th><th class="col-action"></th>
+                </tr></thead>
                 <tbody id="gainers-body"></tbody>
             </table>
         </div>
@@ -120,368 +122,390 @@
         </div>
         <div class="scroll-area">
             <table>
-                <thead>
-                    <tr>
-                        <th class="col-rank">#</th><th class="wl-sym">Symbol</th><th class="wl-price">Price</th>
-                        <th class="wl-pct" data-tf="24h">24H%</th><th class="wl-vol">24H Vol</th><th class="wl-action"></th>
-                    </tr>
-                </thead>
+                <thead><tr>
+                    <th class="col-rank">#</th><th class="wl-sym">Symbol</th><th class="wl-price">Price</th>
+                    <th class="wl-pct" data-tf="24h">24H%</th><th class="wl-vol">24H Vol</th><th class="wl-action"></th>
+                </tr></thead>
                 <tbody id="watchlist-body"></tbody>
             </table>
-            <div class="wl-empty" id="wl-empty">
-                <span>+</span>
-                Click any symbol on the left to start tracking
-            </div>
+            <div class="wl-empty" id="wl-empty"><span>+</span>Click + on any symbol to start tracking</div>
         </div>
     </div>
 </div>
 
+<div class="chart-overlay" id="chartOverlay">
+    <div class="chart-topbar">
+        <div style="display:flex;align-items:center;flex-wrap:wrap;gap:4px;">
+            <span class="chart-sym-name" id="chartSymName">BTC</span>
+            <div class="chart-info" id="chartInfo"></div>
+        </div>
+        <button class="chart-close" onclick="closeChart()">&#10005;</button>
+    </div>
+    <div class="chart-body" id="chartBody"><canvas id="chartCanvas"></canvas></div>
+</div>
+
 <script>
-    const API = "https://fapi.binance.com/fapi/v1";
-    let pairs = {};
-    let rankBy = '24h';
-    let isSyncing = false;
-    let watchlist = new Set();
-    let initialSyncTriggered = false;
+/* ═══════════════════════════════════════════════════
+   MULTI-MIRROR API ROTATION
+   4 independent Binance Futures endpoints.
+   Each has its own rate limit counter.
+   When one gets 429, it goes on 60s cooldown
+   and traffic shifts to the next available mirror.
+   ═══════════════════════════════════════════════════ */
+var MIRRORS = [
+    { url: "https://fapi.binance.com/fapi/v1", label: "M1" },
+    { url: "https://fapi1.binance.com/fapi/v1", label: "M2" },
+    { url: "https://fapi2.binance.com/fapi/v1", label: "M3" },
+    { url: "https://fapi3.binance.com/fapi/v1", label: "M4" }
+];
 
-    /* ── Restore watchlist from localStorage ── */
-    try {
-        JSON.parse(localStorage.getItem('sq_watchlist') || '[]').forEach(s => watchlist.add(s));
-    } catch(e) {}
+/* Initialize mirror state */
+for (var mi = 0; mi < MIRRORS.length; mi++) {
+    MIRRORS[mi].weightLog = [];
+    MIRRORS[mi].cooldownUntil = 0;
+    MIRRORS[mi].totalUsed = 0;
+}
 
-    function saveWatchlist() {
-        localStorage.setItem('sq_watchlist', JSON.stringify([...watchlist]));
-    }
+var WEIGHT_PER_MIN_LIMIT = 2000; /* Conservative under 2400 */
+var WEIGHT_WINDOW = 60000;
+var activeMirrorIdx = 0;
 
-    /* ── Rate-limited fetch: hard cap at 6 requests/sec (30 weight/sec) ──
-       Binance futures limit = 2400 weight/min = 40 weight/sec.
-       Ticker refresh = 40 weight every 5s = 8 weight/sec.
-       Leaves 32 weight/sec for klines = 6.4 kline req/sec. We use 6. */
-    let rlTimestamps = [];
-    const MAX_RPS = 6;
+function cleanLog(mirror) {
+    var now = Date.now();
+    var cutoff = now - WEIGHT_WINDOW;
+    while (mirror.weightLog.length && mirror.weightLog[0] < cutoff) mirror.weightLog.shift();
+    return mirror.weightLog.length;
+}
 
-    async function rlFetch(url) {
-        while (true) {
-            const now = Date.now();
-            rlTimestamps = rlTimestamps.filter(t => now - t < 1000);
-            if (rlTimestamps.length < MAX_RPS) break;
-            await new Promise(r => setTimeout(r, 1050 - (now - rlTimestamps[0])));
+function pickMirror() {
+    var now = Date.now();
+    /* Reset expired cooldowns */
+    for (var i = 0; i < MIRRORS.length; i++) {
+        if (MIRRORS[i].cooldownUntil > 0 && now >= MIRRORS[i].cooldownUntil) {
+            MIRRORS[i].cooldownUntil = 0;
+            MIRRORS[i].weightLog = [];
         }
-        rlTimestamps.push(Date.now());
-        const res = await fetch(url);
-        if (res.status === 429) {
-            /* If we still hit 429, back off hard and reset window */
-            rlTimestamps = [];
-            await new Promise(r => setTimeout(r, 5000));
-            return rlFetch(url);
+    }
+    /* Try to find one with budget */
+    for (var j = 0; j < MIRRORS.length; j++) {
+        var idx = (activeMirrorIdx + j) % MIRRORS.length;
+        var m = MIRRORS[idx];
+        if (m.cooldownUntil > 0) continue;
+        var used = cleanLog(m);
+        if (used < WEIGHT_PER_MIN_LIMIT) {
+            activeMirrorIdx = idx;
+            return m;
         }
-        return res;
+        /* Near limit, put it in short cooldown */
+        m.cooldownUntil = now + 10000;
     }
+    return null;
+}
 
-    /* ── Session cache: instant restore on page refresh ── */
-    function saveCache() {
-        try {
-            const data = {};
-            for (const sym in pairs) {
-                const p = pairs[sym];
-                data[sym] = {
-                    symbol: p.symbol, price: p.price, vol24h: p.vol24h,
-                    '24h': p['24h'], '5m': p['5m'], '15m': p['15m'], '1h': p['1h'],
-                    v5m: p.v5m, v15m: p.v15m, v1h: p.v1h,
-                    o5m: p.o5m, o15m: p.o15m, o1h: p.o1h,
-                    sqz: { ...p.sqz }, _scanned: !!p._scanned
-                };
+async function apiFetch(path, weight) {
+    var attempts = 0;
+    while (attempts < MIRRORS.length * 2) {
+        attempts++;
+        var m = pickMirror();
+        if (!m) {
+            /* All mirrors on cooldown — wait for nearest */
+            var soonest = Infinity;
+            for (var k = 0; k < MIRRORS.length; k++) {
+                if (MIRRORS[k].cooldownUntil > 0 && MIRRORS[k].cooldownUntil < soonest) soonest = MIRRORS[k].cooldownUntil;
             }
-            sessionStorage.setItem('sq_cache', JSON.stringify(data));
-        } catch(e) {}
-    }
+            var wait = soonest - Date.now() + 500;
+            if (wait > 0) await new Promise(function(r) { setTimeout(r, Math.min(wait, 15000)); });
+            continue;
+        }
 
-    function loadCache() {
+        /* Record weight */
+        for (var w = 0; w < weight; w++) m.weightLog.push(Date.now());
+        m.totalUsed += weight;
+
         try {
-            const raw = sessionStorage.getItem('sq_cache');
-            if (!raw) return false;
-            const data = JSON.parse(raw);
-            let count = 0;
-            for (const sym in data) {
-                pairs[sym] = data[sym];
-                count++;
+            var res = await fetch(m.url + path);
+            if (res.status === 429) {
+                /* HIT LIMIT — this mirror goes on 60s cooldown */
+                m.cooldownUntil = Date.now() + 60000;
+                m.weightLog = [];
+                updateMirrorDisplay();
+                continue;
             }
-            return count > 0;
-        } catch(e) { return false; }
-    }
-
-    function toggleWatch(sym) {
-        if (watchlist.has(sym)) watchlist.delete(sym);
-        else watchlist.add(sym);
-        saveWatchlist();
-        render();
-    }
-
-    function updateSize(v) { document.documentElement.style.setProperty('--table-font', v + 'px'); }
-
-    function highlightHeaders() {
-        document.querySelectorAll('th[data-tf]').forEach(th => {
-            th.classList.toggle('active-header', th.dataset.tf === rankBy);
-        });
-    }
-
-    /* ── Single lightweight ticker call for all pairs ── */
-    async function fetchAllData() {
-        try {
-            const res = await fetch(`${API}/ticker/24hr`);
-            const allTickers = (await res.json()).filter(t => t.symbol.endsWith('USDT'));
-            allTickers.forEach(t => {
-                const sym = t.symbol;
-                if (!pairs[sym]) {
-                    pairs[sym] = {
-                        symbol: sym.replace('USDT', ''), price: parseFloat(t.lastPrice),
-                        vol24h: parseFloat(t.quoteVolume), '24h': parseFloat(t.priceChangePercent),
-                        o5m: null, o15m: null, o1h: null,
-                        sqz: { '5m': false, '15m': false, '1h': false, '1d': false, 'd50': false },
-                        v5m: 0, v15m: 0, v1h: 0, '5m': 0, '15m': 0, '1h': 0
-                    };
-                } else {
-                    pairs[sym].price = parseFloat(t.lastPrice);
-                    pairs[sym].vol24h = parseFloat(t.quoteVolume);
-                    pairs[sym]['24h'] = parseFloat(t.priceChangePercent);
-                }
-                calculatePcts(sym);
-            });
-            render();
-            /* Trigger squeeze scan only when needed */
-            if (!isSyncing && !initialSyncTriggered) {
-                initialSyncTriggered = true;
-                /* 3 second delay on first load so ticker settles, no burst */
-                setTimeout(() => triggerScan(), 3000);
-            }
+            updateMirrorDisplay();
+            return res;
         } catch (e) {
-            document.getElementById('scan-status').innerText = "API Rate Limit — Retrying...";
+            /* Network error — remove weight, short cooldown */
+            m.weightLog.splice(m.weightLog.length - weight, weight);
+            m.cooldownUntil = Date.now() + 8000;
+            updateMirrorDisplay();
+            continue;
         }
     }
 
-    function triggerScan() {
-        if (isSyncing) return;
-        const unscanned = Object.keys(pairs).filter(s => !pairs[s]._scanned);
-        if (unscanned.length > 0) {
-            syncMissingOpens(unscanned);
-        } else {
-            document.getElementById('scan-status').innerText = "LIVE: SQUEEZE ENGINE READY";
-            saveCache();
+    /* Absolute last resort */
+    MIRRORS[0].cooldownUntil = 0;
+    MIRRORS[0].weightLog = [];
+    await new Promise(function(r) { setTimeout(r, 20000); });
+    return apiFetch(path, weight);
+}
+
+function updateMirrorDisplay() {
+    var el = document.getElementById('mirror-display');
+    if (!el) return;
+    var html = 'MIRRORS: ';
+    for (var i = 0; i < MIRRORS.length; i++) {
+        var m = MIRRORS[i];
+        var used = cleanLog(m);
+        var isCooldown = m.cooldownUntil > 0;
+        var isActive = i === activeMirrorIdx && !isCooldown;
+        var cls = isCooldown ? 'cooldown' : 'ok';
+        html += '<span class="mirror-dot ' + cls + '" title="' + m.label + ': ' + used + ' weight' + (isCooldown ? ' COOLDOWN' : ' ACTIVE') + '"></span>';
+        html += '<span style="font-size:9px;color:' + (isCooldown ? 'var(--red)' : isActive ? 'var(--accent)' : 'var(--dim)') + '">' + m.label + ':' + used + '</span>';
+    }
+    el.innerHTML = html;
+}
+
+/* ═══════ APP STATE ═══════ */
+var pairs = {};
+var rankBy = '24h';
+var isSyncing = false;
+var watchlist = new Set();
+var currentChartSym = null;
+var chartRAF = null;
+var chartRefreshTimer = null;
+var chartCandles = [];
+var chartMouseX = -1;
+var chartMouseY = -1;
+
+try { JSON.parse(localStorage.getItem('sq_watchlist') || '[]').forEach(function(s) { watchlist.add(s); }); } catch(e) {}
+function saveWatchlist() { localStorage.setItem('sq_watchlist', JSON.stringify(Array.from(watchlist))); }
+
+function saveCache() {
+    try {
+        var data = {};
+        for (var sym in pairs) {
+            var p = pairs[sym];
+            data[sym] = { symbol:p.symbol, price:p.price, vol24h:p.vol24h, '24h':p['24h'], '5m':p['5m'], '15m':p['15m'], '1h':p['1h'], v5m:p.v5m, v15m:p.v15m, v1h:p.v1h, o5m:p.o5m, o15m:p.o15m, o1h:p.o1h, sqz:{'5m':p.sqz['5m'],'15m':p.sqz['15m'],'1h':p.sqz['1h'],'1d':p.sqz['1d'],'d50':p.sqz['d50']}, _scanned:!!p._scanned };
         }
-    }
+        sessionStorage.setItem('sq_cache', JSON.stringify(data));
+    } catch(e) {}
+}
+function loadCache() {
+    try {
+        var raw = sessionStorage.getItem('sq_cache');
+        if (!raw) return false;
+        var data = JSON.parse(raw), c = 0;
+        for (var sym in data) { pairs[sym] = data[sym]; c++; }
+        return c > 0;
+    } catch(e) { return false; }
+}
 
-    /* ── Priority-based squeeze scan ──
-       1. Watchlist symbols first (instant for user)
-       2. Top 120 by 24h volume (main table relevant)
-       3. Everything else (background fill)
-       All gated by rlFetch at 6 req/sec — zero burst, zero 429. */
-    async function syncMissingOpens(symbols) {
-        if (isSyncing) return;
-        isSyncing = true;
+/* ═══════ CANVAS CHART ═══════ */
+function getIntervalForRank() { return rankBy==='5m'?'5m':rankBy==='15m'?'15m':rankBy==='1h'?'1h':'1d'; }
 
-        const wlSet = new Set([...watchlist].map(s => s + 'USDT'));
-        const ordered = symbols.sort((a, b) => {
-            const aW = wlSet.has(a) ? 1 : 0;
-            const bW = wlSet.has(b) ? 1 : 0;
-            if (aW !== bW) return bW - aW;
-            return (pairs[b]?.vol24h || 0) - (pairs[a]?.vol24h || 0);
-        });
+async function openChart(sym) {
+    currentChartSym = sym;
+    document.getElementById('chartSymName').innerText = sym;
+    document.getElementById('chartInfo').innerHTML = '<span style="color:var(--dim)">Loading...</span>';
+    document.getElementById('chartOverlay').classList.add('open');
+    document.body.classList.add('modal-open');
+    chartMouseX = -1; chartMouseY = -1;
+    await loadChartCandles(sym);
+    startChartLoop();
+    chartRefreshTimer = setInterval(function() { if (currentChartSym) loadChartCandles(currentChartSym); }, 30000);
+}
 
-        let done = 0;
-        const total = ordered.length;
-        let lastRender = 0;
-
-        const workers = 5;
-        const tasks = [];
-
-        for (let w = 0; w < workers; w++) {
-            tasks.push((async () => {
-                for (let i = w; i < total; i += workers) {
-                    const sym = ordered[i];
-                    try {
-                        const [k5, k15, k1, k1d] = await Promise.all([
-                            rlFetch(`${API}/klines?symbol=${sym}&interval=5m&limit=25`).then(r => r.json()),
-                            rlFetch(`${API}/klines?symbol=${sym}&interval=15m&limit=25`).then(r => r.json()),
-                            rlFetch(`${API}/klines?symbol=${sym}&interval=1h&limit=25`).then(r => r.json()),
-                            rlFetch(`${API}/klines?symbol=${sym}&interval=1d&limit=70`).then(r => r.json())
-                        ]);
-
-                        const checkSqueeze = (data, period, flatCount) => {
-                            if (!data || data.length < (period + flatCount)) return false;
-                            for (let j = 0; j < 5; j++) {
-                                const segment = data.slice(data.length - (period + j), data.length - j);
-                                if (segment.length < period) break;
-                                const histHighs = [];
-                                for (let f = 1; f <= flatCount; f++) {
-                                    const fSeg = data.slice(data.length - (period + j + f), data.length - j - f);
-                                    histHighs.push(Math.max(...fSeg.map(c => parseFloat(c[2]))));
-                                }
-                                if (histHighs.every(h => h === histHighs[0]) && pairs[sym].price > histHighs[0]) return true;
-                            }
-                            return false;
-                        };
-
-                        if (k5?.length) {
-                            pairs[sym].o5m = parseFloat(k5[k5.length - 1][1]);
-                            pairs[sym].v5m = parseFloat(k5[k5.length - 1][7]);
-                            pairs[sym].sqz['5m'] = checkSqueeze(k5, 10, 5);
-                        }
-                        if (k15?.length) {
-                            pairs[sym].o15m = parseFloat(k15[k15.length - 1][1]);
-                            pairs[sym].v15m = parseFloat(k15[k15.length - 1][7]);
-                            pairs[sym].sqz['15m'] = checkSqueeze(k15, 10, 5);
-                        }
-                        if (k1?.length) {
-                            pairs[sym].o1h = parseFloat(k1[k1.length - 1][1]);
-                            pairs[sym].v1h = parseFloat(k1[k1.length - 1][7]);
-                            pairs[sym].sqz['1h'] = checkSqueeze(k1, 10, 5);
-                        }
-                        if (k1d?.length) {
-                            pairs[sym].sqz['1d'] = checkSqueeze(k1d, 10, 5);
-                            pairs[sym].sqz['d50'] = checkSqueeze(k1d, 50, 10);
-                        }
-
-                        pairs[sym]._scanned = true;
-                        calculatePcts(sym);
-                    } catch (err) { }
-
-                    done++;
-                    if (done - lastRender >= 12) {
-                        lastRender = done;
-                        document.getElementById('scan-status').innerText = `SQUEEZE MAP: ${Math.round((done / total) * 100)}%`;
-                        render();
-                        saveCache();
-                    }
-                }
-            })());
+async function loadChartCandles(sym) {
+    if (!currentChartSym || currentChartSym !== sym) return;
+    try {
+        var interval = getIntervalForRank();
+        var limit = rankBy === '24h' ? 120 : 200;
+        var res = await apiFetch('/klines?symbol=' + sym + 'USDT&interval=' + interval + '&limit=' + limit, 5);
+        var data = await res.json();
+        if (Array.isArray(data)) {
+            chartCandles = data.map(function(k) { return { t:k[0], o:parseFloat(k[1]), h:parseFloat(k[2]), l:parseFloat(k[3]), c:parseFloat(k[4]), v:parseFloat(k[5]) }; });
         }
+    } catch(e) {}
+    updateChartInfo(); drawChart();
+}
 
-        await Promise.all(tasks);
-        saveCache();
-        document.getElementById('scan-status').innerText = "LIVE: SQUEEZE ENGINE READY";
-        isSyncing = false;
+function updateChartInfo() {
+    if (!chartCandles.length) return;
+    var last = chartCandles[chartCandles.length-1], prev = chartCandles.length>1 ? chartCandles[chartCandles.length-2] : last;
+    var change = last.c-prev.c, changePct = prev.c ? (change/prev.c*100) : 0;
+    var color = change>=0?'var(--green)':'var(--red)', arrow = change>=0?'&#9650;':'&#9660;';
+    var fp = function(v){return v<1?v.toFixed(5):v<100?v.toFixed(3):v.toLocaleString();};
+    var fv = last.v>=1e9?(last.v/1e9).toFixed(2)+'B':last.v>=1e6?(last.v/1e6).toFixed(2)+'M':last.v>=1e3?(last.v/1e3).toFixed(1)+'K':Math.round(last.v);
+    document.getElementById('chartInfo').innerHTML =
+        '<span>O <span class="ci-val">'+fp(last.o)+'</span></span><span>H <span class="ci-val">'+fp(last.h)+'</span></span><span>L <span class="ci-val">'+fp(last.l)+'</span></span><span>C <span class="ci-val" style="color:'+color+'">'+fp(last.c)+'</span></span><span>Vol <span class="ci-val">'+fv+'</span></span><span style="color:'+color+'">'+arrow+' '+Math.abs(changePct).toFixed(2)+'%</span>';
+}
+
+function drawChart() {
+    var canvas = document.getElementById('chartCanvas'), container = document.getElementById('chartBody');
+    var dpr = window.devicePixelRatio||1, w = container.clientWidth, h = container.clientHeight;
+    if (w<10||h<10) return;
+    canvas.width=w*dpr; canvas.height=h*dpr; canvas.style.width=w+'px'; canvas.style.height=h+'px';
+    var ctx=canvas.getContext('2d'); ctx.scale(dpr,dpr);
+    var BG='#0b0e11',GRID='#1a1d23',TEXT='#848e9c',GREEN='#0ecb81',RED='#f6465d',UP_BG='rgba(14,203,129,0.15)',DN_BG='rgba(246,70,93,0.15)';
+    ctx.fillStyle=BG; ctx.fillRect(0,0,w,h);
+    if (!chartCandles.length){ctx.fillStyle=TEXT;ctx.font='13px Inter';ctx.textAlign='center';ctx.fillText('No data',w/2,h/2);return;}
+    var PAD_R=72,PAD_B=28,PAD_T=10,VOL_R=0.18,chartW=w-PAD_R,chartH=h-PAD_B-PAD_T,volH=chartH*VOL_R,priceH=chartH-volH-8;
+    var vc=Math.min(chartCandles.length,Math.floor(chartW/8)),cW=chartW/vc,bW=Math.max(1,cW*0.65),wkW=Math.max(1,cW<6?1:1.5),si=chartCandles.length-vc;
+    var sl=chartCandles.slice(si),mnP=Infinity,mxP=-Infinity,mxV=0;
+    for(var i=0;i<sl.length;i++){if(sl[i].l<mnP)mnP=sl[i].l;if(sl[i].h>mxP)mxP=sl[i].h;if(sl[i].v>mxV)mxV=sl[i].v;}
+    var pR=mxP-mnP;if(pR===0)pR=mxP*0.01||1;mnP-=pR*0.05;mxP+=pR*0.05;pR=mxP-mnP;
+    function pY(p){return PAD_T+priceH-((p-mnP)/pR)*priceH;}
+    function fpa(p){return p<1?p.toFixed(5):p<100?p.toFixed(3):p<10000?p.toFixed(1):p.toLocaleString();}
+    ctx.strokeStyle=GRID;ctx.lineWidth=0.5;ctx.fillStyle=TEXT;ctx.font='10px JetBrains Mono';ctx.textAlign='left';
+    for(var g=0;g<=6;g++){var gp=mnP+(pR/6)*g,gy=pY(gp);ctx.beginPath();ctx.moveTo(0,gy);ctx.lineTo(chartW,gy);ctx.stroke();ctx.fillText(fpa(gp),chartW+6,gy+3);}
+    var iv=getIntervalForRank(),le=Math.max(1,Math.floor(vc/8));ctx.textAlign='center';
+    for(var t=0;t<sl.length;t+=le){var tx=t*cW+cW/2,d=new Date(sl[t].t),lb;if(iv==='1d')lb=(d.getMonth()+1)+'/'+d.getDate();else if(iv==='1h')lb=d.getHours()+':00';else lb=d.getHours()+':'+(d.getMinutes()<10?'0':'')+d.getMinutes();ctx.fillText(lb,tx,h-8);ctx.beginPath();ctx.moveTo(tx,PAD_T);ctx.lineTo(tx,PAD_T+priceH);ctx.stroke();}
+    for(var c=0;c<sl.length;c++){var cd=sl[c],x=c*cW,cx=x+cW/2,isUp=cd.c>=cd.o,col=isUp?GREEN:RED;ctx.strokeStyle=col;ctx.lineWidth=wkW;ctx.beginPath();ctx.moveTo(cx,pY(cd.h));ctx.lineTo(cx,pY(cd.l));ctx.stroke();var yt=pY(Math.max(cd.o,cd.c)),yb=pY(Math.min(cd.o,cd.c)),bh=Math.max(1,yb-yt);ctx.fillStyle=col;ctx.fillRect(cx-bW/2,yt,bW,bh);var vt=PAD_T+priceH+8,vbH=mxV>0?(cd.v/mxV)*volH:0;ctx.fillStyle=isUp?UP_BG:DN_BG;ctx.fillRect(cx-bW/2,vt+volH-vbH,bW,vbH);}
+    var lc=sl[sl.length-1],lY=pY(lc.c),lCol=lc.c>=lc.o?GREEN:RED;ctx.strokeStyle=lCol;ctx.lineWidth=1;ctx.setLineDash([4,3]);ctx.beginPath();ctx.moveTo(0,lY);ctx.lineTo(chartW,lY);ctx.stroke();ctx.setLineDash([]);ctx.fillStyle=lCol;ctx.fillRect(chartW,lY-10,PAD_R,20);ctx.fillStyle=lc.c>=lc.o?'#000':'#fff';ctx.font='bold 10px JetBrains Mono';ctx.textAlign='left';ctx.fillText(fpa(lc.c),chartW+5,lY+4);
+    if(chartMouseX>=0&&chartMouseX<chartW&&chartMouseY>=PAD_T&&chartMouseY<PAD_T+priceH){
+        ctx.strokeStyle='rgba(234,236,239,0.2)';ctx.lineWidth=0.5;ctx.setLineDash([3,3]);ctx.beginPath();ctx.moveTo(chartMouseX,PAD_T);ctx.lineTo(chartMouseX,PAD_T+priceH+volH+8);ctx.stroke();ctx.beginPath();ctx.moveTo(0,chartMouseY);ctx.lineTo(chartW,chartMouseY);ctx.stroke();ctx.setLineDash([]);
+        var hp=mnP+(1-(chartMouseY-PAD_T)/priceH)*pR;ctx.fillStyle='#2b3139';ctx.fillRect(chartW,chartMouseY-10,PAD_R,20);ctx.fillStyle='#eaecef';ctx.font='10px JetBrains Mono';ctx.textAlign='left';ctx.fillText(fpa(hp),chartW+5,chartMouseY+4);
+        var ci=Math.floor(chartMouseX/cW);if(ci>=0&&ci<sl.length){var hcd=sl[ci],hf=function(v){return v<1?v.toFixed(5):v<100?v.toFixed(3):v.toLocaleString();},hcol=hcd.c>=hcd.o?GREEN:RED,hdt=new Date(hcd.t),htm=(hdt.getMonth()+1)+'/'+hdt.getDate()+' '+hdt.getHours()+':'+(hdt.getMinutes()<10?'0':'')+hdt.getMinutes();var tt=htm+'  O:'+hf(hcd.o)+' H:'+hf(hcd.h)+' L:'+hf(hcd.l)+' C:'+hf(hcd.c);ctx.font='10px JetBrains Mono';var tw=ctx.measureText(tt).width+12,tipX=Math.min(chartMouseX+10,chartW-tw-5);ctx.fillStyle='rgba(30,32,38,0.92)';ctx.fillRect(tipX,PAD_T+2,tw,18);ctx.fillStyle=hcol;ctx.textAlign='left';ctx.fillText(tt,tipX+6,PAD_T+14);}
+    }
+}
+
+function startChartLoop(){if(chartRAF)cancelAnimationFrame(chartRAF);(function lp(){if(!currentChartSym)return;drawChart();chartRAF=requestAnimationFrame(lp);})();}
+function closeChart(){if(chartRefreshTimer){clearInterval(chartRefreshTimer);chartRefreshTimer=null;}if(chartRAF){cancelAnimationFrame(chartRAF);chartRAF=null;}currentChartSym=null;chartCandles=[];document.getElementById('chartOverlay').classList.remove('open');document.body.classList.remove('modal-open');}
+document.getElementById('chartCanvas').addEventListener('mousemove',function(e){var r=this.getBoundingClientRect();chartMouseX=e.clientX-r.left;chartMouseY=e.clientY-r.top;});
+document.getElementById('chartCanvas').addEventListener('mouseleave',function(){chartMouseX=-1;chartMouseY=-1;});
+document.addEventListener('keydown',function(e){if(e.key==='Escape')closeChart();});
+window.addEventListener('resize',function(){if(currentChartSym)drawChart();});
+
+/* ═══════ SCREENER LOGIC ═══════ */
+function toggleWatch(sym){if(watchlist.has(sym))watchlist.delete(sym);else watchlist.add(sym);saveWatchlist();render();}
+function updateSize(v){document.documentElement.style.setProperty('--table-font',v+'px');}
+function highlightHeaders(){var ths=document.querySelectorAll('th[data-tf]');for(var i=0;i<ths.length;i++){if(ths[i].dataset.tf===rankBy)ths[i].classList.add('active-header');else ths[i].classList.remove('active-header');}}
+
+/* Ticker: 40 weight, every 10 seconds */
+async function fetchAllData(){
+    try{
+        var res=await apiFetch('/ticker/24hr',40);
+        var allTickers=(await res.json()).filter(function(t){return t.symbol.endsWith('USDT');});
+        for(var i=0;i<allTickers.length;i++){
+            var t=allTickers[i],sym=t.symbol;
+            if(!pairs[sym]){pairs[sym]={symbol:sym.replace('USDT',''),price:parseFloat(t.lastPrice),vol24h:parseFloat(t.quoteVolume),'24h':parseFloat(t.priceChangePercent),o5m:null,o15m:null,o1h:null,sqz:{'5m':false,'15m':false,'1h':false,'1d':false,'d50':false},v5m:0,v15m:0,v1h:0,'5m':0,'15m':0,'1h':0};}
+            else{pairs[sym].price=parseFloat(t.lastPrice);pairs[sym].vol24h=parseFloat(t.quoteVolume);pairs[sym]['24h']=parseFloat(t.priceChangePercent);}
+            calculatePcts(sym);
+        }
         render();
+        if(!isSyncing){
+            var unscanned=Object.keys(pairs).filter(function(s){return !pairs[s]._scanned;});
+            if(unscanned.length>0) syncMissingOpens(unscanned);
+            else document.getElementById('scan-status').innerText="LIVE: SQUEEZE ENGINE READY";
+        }
+    }catch(e){document.getElementById('scan-status').innerText="API Error — Rotating Mirror...";}
+}
+
+/* Squeeze scan: sequential through apiFetch (auto-rotates mirrors) */
+async function syncMissingOpens(symbols){
+    if(isSyncing)return;
+    isSyncing=true;
+    var done=0,total=symbols.length,lastRender=0;
+    for(var i=0;i<total;i++){
+        var sym=symbols[i];
+        if(pairs[sym]&&pairs[sym]._scanned){done++;continue;}
+        try{
+            var results=await Promise.all([
+                apiFetch('/klines?symbol='+sym+'&interval=5m&limit=25',5),
+                apiFetch('/klines?symbol='+sym+'&interval=15m&limit=25',5),
+                apiFetch('/klines?symbol='+sym+'&interval=1h&limit=25',5),
+                apiFetch('/klines?symbol='+sym+'&interval=1d&limit=70',5)
+            ]);
+            var k5=await results[0].json(),k15=await results[1].json(),k1=await results[2].json(),k1d=await results[3].json();
+            var checkSq=function(data,period,flatCount){
+                if(!data||data.length<(period+flatCount))return false;
+                for(var j=0;j<5;j++){var seg=data.slice(data.length-(period+j),data.length-j);if(seg.length<period)break;var hh=[];for(var f=1;f<=flatCount;f++){var fs=data.slice(data.length-(period+j+f),data.length-j-f);hh.push(Math.max.apply(null,fs.map(function(c){return parseFloat(c[2]);})));}if(hh.every(function(h){return h===hh[0];})&&pairs[sym].price>hh[0])return true;}return false;
+            };
+            if(k5&&k5.length){pairs[sym].o5m=parseFloat(k5[k5.length-1][1]);pairs[sym].v5m=parseFloat(k5[k5.length-1][7]);pairs[sym].sqz['5m']=checkSq(k5,10,5);}
+            if(k15&&k15.length){pairs[sym].o15m=parseFloat(k15[k15.length-1][1]);pairs[sym].v15m=parseFloat(k15[k15.length-1][7]);pairs[sym].sqz['15m']=checkSq(k15,10,5);}
+            if(k1&&k1.length){pairs[sym].o1h=parseFloat(k1[k1.length-1][1]);pairs[sym].v1h=parseFloat(k1[k1.length-1][7]);pairs[sym].sqz['1h']=checkSq(k1,10,5);}
+            if(k1d&&k1d.length){pairs[sym].sqz['1d']=checkSq(k1d,10,5);pairs[sym].sqz['d50']=checkSq(k1d,50,10);}
+            pairs[sym]._scanned=true;
+            calculatePcts(sym);
+        }catch(err){}
+        done++;
+        if(done-lastRender>=15){lastRender=done;document.getElementById('scan-status').innerText='SQUEEZE MAP: '+Math.round((done/total)*100)+'%';render();saveCache();}
     }
+    saveCache();
+    document.getElementById('scan-status').innerText="LIVE: SQUEEZE ENGINE READY";
+    isSyncing=false;
+    render();
+}
 
-    function calculatePcts(sym) {
-        const p = pairs[sym];
-        if (p.o5m != null) p['5m'] = ((p.price - p.o5m) / p.o5m * 100);
-        if (p.o15m != null) p['15m'] = ((p.price - p.o15m) / p.o15m * 100);
-        if (p.o1h != null) p['1h'] = ((p.price - p.o1h) / p.o1h * 100);
+function calculatePcts(sym){var p=pairs[sym];if(p.o5m!=null)p['5m']=((p.price-p.o5m)/p.o5m*100);if(p.o15m!=null)p['15m']=((p.price-p.o15m)/p.o15m*100);if(p.o1h!=null)p['1h']=((p.price-p.o1h)/p.o1h*100);}
+
+function setRank(key){
+    rankBy=key;var tabs=document.querySelectorAll('.tab');for(var i=0;i<tabs.length;i++)tabs[i].classList.remove('active');
+    document.getElementById('tab-'+key).classList.add('active');highlightHeaders();render();
+    if(currentChartSym)loadChartCandles(currentChartSym);
+}
+
+function formatVol(v){if(!v)return '0';if(v>=1e9)return (v/1e9).toFixed(1)+'B';if(v>=1e6)return (v/1e6).toFixed(1)+'M';return Math.round(v).toLocaleString();}
+
+function buildBadges(p,leaders,tfs){
+    var badges='',isGolden=false;
+    for(var i=0;i<tfs.length;i++){if(leaders[tfs[i]]===p.symbol){badges+='<span class="badge top-badge">'+tfs[i]+'</span>';isGolden=true;}}
+    if(p.sqz['5m'])badges+='<span class="badge bo-badge">5M</span>';
+    if(p.sqz['15m'])badges+='<span class="badge bo-badge">15M</span>';
+    if(p.sqz['1h'])badges+='<span class="badge bo-badge">1H</span>';
+    if(p.sqz['1d'])badges+='<span class="badge d1-badge">1D</span>';
+    if(p.sqz['d50'])badges+='<span class="badge sq-badge">SQZ 50</span>';
+    return{badges:badges,isGolden:isGolden};
+}
+
+function render(){
+    highlightHeaders();
+    var query=document.getElementById('cryptoSearch').value.toUpperCase();
+    var fullList=[];for(var k in pairs)fullList.push(pairs[k]);
+    var tfs=['5m','15m','1h','24h'],leaders={};
+    for(var ti=0;ti<tfs.length;ti++){var tf=tfs[ti],top={tf:-999};for(var fi=0;fi<fullList.length;fi++){if((fullList[fi][tf]||-999)>(top[tf]||-999))top=fullList[fi];}if(top.symbol)leaders[tf]=top.symbol;}
+    var list=query?fullList.filter(function(p){return p.symbol.indexOf(query)!==-1;}):fullList;
+    list.sort(function(a,b){return(b[rankBy]||-999)-(a[rankBy]||-999);});
+    var top60=list.slice(0,60);
+    var mhtml='';
+    for(var i=0;i<top60.length;i++){
+        var p=top60[i],tfVol=rankBy==='5m'?p.v5m:rankBy==='15m'?p.v15m:rankBy==='1h'?p.v1h:p.vol24h;
+        var bd=buildBadges(p,leaders,tfs),isW=watchlist.has(p.symbol);
+        var ps=p.price<1?'$'+p.price.toFixed(5):'$'+p.price.toLocaleString();
+        mhtml+='<tr class="'+(bd.isGolden?'golden-zone':'')+'"><td class="col-rank">'+(i+1)+'</td><td class="col-sym" onclick="openChart(\''+p.symbol+'\')">'+p.symbol+bd.badges+'</td><td class="col-price">'+ps+'</td><td class="col-pct '+(p['5m']>=0?'green':'red')+' '+(rankBy==='5m'?'active-col':'')+'">'+(p['5m']||0).toFixed(2)+'%</td><td class="col-pct '+(p['15m']>=0?'green':'red')+' '+(rankBy==='15m'?'active-col':'')+'">'+(p['15m']||0).toFixed(2)+'%</td><td class="col-pct '+(p['1h']>=0?'green':'red')+' '+(rankBy==='1h'?'active-col':'')+'">'+(p['1h']||0).toFixed(2)+'%</td><td class="col-pct '+(p['24h']>=0?'green':'red')+' '+(rankBy==='24h'?'active-col':'')+'">'+(p['24h']||0).toFixed(2)+'%</td><td class="col-vol">'+formatVol(tfVol)+'</td><td class="col-vol">'+formatVol(p.vol24h)+'</td><td class="col-action"><button class="btn-add" onclick="event.stopPropagation();toggleWatch(\''+p.symbol+'\')" style="'+(isW?'color:var(--accent);border-color:var(--accent);':'')+'">'+(isW?'&#9733;':'+')+'</button></td></tr>';
     }
-
-    function setRank(key) {
-        rankBy = key;
-        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-        document.getElementById(`tab-${key}`).classList.add('active');
-        highlightHeaders();
-        render();
+    document.getElementById('gainers-body').innerHTML=mhtml;
+    var wlS=Array.from(watchlist),wlD=wlS.map(function(s){return pairs[s+'USDT'];}).filter(Boolean);
+    wlD.sort(function(a,b){return(b['24h']||-999)-(a['24h']||-999);});
+    document.getElementById('wl-count').innerText=wlD.length+' asset'+(wlD.length!==1?'s':'');
+    document.getElementById('wl-empty').style.display=wlD.length===0?'block':'none';
+    var whtml='';
+    for(var j=0;j<wlD.length;j++){
+        var wp=wlD[j],wbd=buildBadges(wp,leaders,tfs),wps=wp.price<1?'$'+wp.price.toFixed(5):'$'+wp.price.toLocaleString();
+        whtml+='<tr class="'+(wbd.isGolden?'golden-zone':'')+'"><td class="col-rank">'+(j+1)+'</td><td class="wl-sym" onclick="openChart(\''+wp.symbol+'\')">'+wp.symbol+wbd.badges+'</td><td class="wl-price">'+wps+'</td><td class="wl-pct '+(wp['24h']>=0?'green':'red')+' '+(rankBy==='24h'?'active-col':'')+'">'+(wp['24h']||0).toFixed(2)+'%</td><td class="wl-vol">'+formatVol(wp.vol24h)+'</td><td class="wl-action"><button class="btn-remove" onclick="event.stopPropagation();toggleWatch(\''+wp.symbol+'\')">&#10005;</button></td></tr>';
     }
+    document.getElementById('watchlist-body').innerHTML=whtml;
+}
 
-    function formatVol(v) {
-        if (!v) return '0';
-        if (v >= 1e9) return (v / 1e9).toFixed(1) + 'B';
-        if (v >= 1e6) return (v / 1e6).toFixed(1) + 'M';
-        return Math.round(v).toLocaleString();
-    }
+/* ═══════ BOOTSTRAP ═══════ */
+updateSize(16);
+var hadCache=loadCache();
+if(hadCache){render();document.getElementById('scan-status').innerText="RESTORED — Syncing Live...";}
+updateMirrorDisplay();
 
-    function buildBadges(p, leaders, tfs) {
-        let badges = ''; let isGolden = false;
-        tfs.forEach(tf => { if (leaders[tf] === p.symbol) { badges += `<span class="badge top-badge">${tf}</span>`; isGolden = true; } });
-        if (p.sqz['5m']) badges += `<span class="badge bo-badge">5M</span>`;
-        if (p.sqz['15m']) badges += `<span class="badge bo-badge">15M</span>`;
-        if (p.sqz['1h']) badges += `<span class="badge bo-badge">1H</span>`;
-        if (p.sqz['1d']) badges += `<span class="badge d1-badge">1D</span>`;
-        if (p.sqz['d50']) badges += `<span class="badge sq-badge">SQZ 50</span>`;
-        return { badges, isGolden };
-    }
+fetchAllData();
+setInterval(fetchAllData, 10000);
 
-    function render() {
-        highlightHeaders();
+/* Watchlist re-scan every 3 minutes */
+setInterval(function(){
+    if(isSyncing||watchlist.size===0)return;
+    var wlSyms=[...watchlist].map(function(s){return s+'USDT';}).filter(function(s){return pairs[s];});
+    wlSyms.forEach(function(s){if(pairs[s])pairs[s]._scanned=false;});
+    syncMissingOpens(wlSyms);
+}, 180000);
 
-        const query = document.getElementById('cryptoSearch').value.toUpperCase();
-        let fullList = Object.values(pairs);
-        const tfs = ['5m', '15m', '1h', '24h'];
-        const leaders = {};
-        tfs.forEach(tf => {
-            const top = fullList.reduce((prev, curr) => ((curr[tf] || -999) > (prev[tf] || -999) ? curr : prev), { [tf]: -999 });
-            if (top.symbol) leaders[tf] = top.symbol;
-        });
-
-        let list = query ? fullList.filter(p => p.symbol.includes(query)) : fullList;
-        const sorted = list.sort((a, b) => (b[rankBy] || -999) - (a[rankBy] || -999));
-        const top60 = sorted.slice(0, 60);
-
-        /* ── Main screener ── */
-        const mainRows = top60.map((p, i) => {
-            const tfVol = rankBy === '5m' ? p.v5m : rankBy === '15m' ? p.v15m : rankBy === '1h' ? p.v1h : p.vol24h;
-            const { badges, isGolden } = buildBadges(p, leaders, tfs);
-            const isW = watchlist.has(p.symbol);
-            return `
-            <tr class="${isGolden ? 'golden-zone' : ''}">
-                <td class="col-rank">${i + 1}</td>
-                <td class="col-sym" onclick="toggleWatch('${p.symbol}')">${p.symbol}${badges}</td>
-                <td class="col-price">$${p.price < 1 ? p.price.toFixed(5) : p.price.toLocaleString()}</td>
-                <td class="col-pct ${p['5m'] >= 0 ? 'green' : 'red'} ${rankBy === '5m' ? 'active-col' : ''}">${(p['5m'] || 0).toFixed(2)}%</td>
-                <td class="col-pct ${p['15m'] >= 0 ? 'green' : 'red'} ${rankBy === '15m' ? 'active-col' : ''}">${(p['15m'] || 0).toFixed(2)}%</td>
-                <td class="col-pct ${p['1h'] >= 0 ? 'green' : 'red'} ${rankBy === '1h' ? 'active-col' : ''}">${(p['1h'] || 0).toFixed(2)}%</td>
-                <td class="col-pct ${p['24h'] >= 0 ? 'green' : 'red'} ${rankBy === '24h' ? 'active-col' : ''}">${(p['24h'] || 0).toFixed(2)}%</td>
-                <td class="col-vol">${formatVol(tfVol)}</td>
-                <td class="col-vol">${formatVol(p.vol24h)}</td>
-                <td class="col-action"><button class="btn-add" onclick="event.stopPropagation();toggleWatch('${p.symbol}')" style="${isW ? 'color:var(--accent);border-color:var(--accent);' : ''}">${isW ? '&#9733;' : '+'}</button></td>
-            </tr>`;
-        });
-        document.getElementById('gainers-body').innerHTML = mainRows.join('');
-
-        /* ── Watchlist (Symbol, Price, 24H%, 24H Vol only) ── */
-        const wlSymbols = [...watchlist];
-        const wlData = wlSymbols.map(sym => pairs[sym + 'USDT']).filter(Boolean);
-        wlData.sort((a, b) => (b['24h'] || -999) - (a['24h'] || -999));
-
-        document.getElementById('wl-count').innerText = wlData.length + ' asset' + (wlData.length !== 1 ? 's' : '');
-        document.getElementById('wl-empty').style.display = wlData.length === 0 ? 'block' : 'none';
-
-        const wlRows = wlData.map((p, i) => {
-            const { badges, isGolden } = buildBadges(p, leaders, tfs);
-            return `
-            <tr class="${isGolden ? 'golden-zone' : ''}">
-                <td class="col-rank">${i + 1}</td>
-                <td class="wl-sym">${p.symbol}${badges}</td>
-                <td class="wl-price">$${p.price < 1 ? p.price.toFixed(5) : p.price.toLocaleString()}</td>
-                <td class="wl-pct ${p['24h'] >= 0 ? 'green' : 'red'} ${rankBy === '24h' ? 'active-col' : ''}">${(p['24h'] || 0).toFixed(2)}%</td>
-                <td class="wl-vol">${formatVol(p.vol24h)}</td>
-                <td class="wl-action"><button class="btn-remove" onclick="toggleWatch('${p.symbol}')">&#10005;</button></td>
-            </tr>`;
-        });
-        document.getElementById('watchlist-body').innerHTML = wlRows.join('');
-    }
-
-    /* ── Bootstrap ── */
-    updateSize(16);
-
-    /* 1. Instant restore from session cache — zero API calls */
-    const hadCache = loadCache();
-    if (hadCache) {
-        render();
-        document.getElementById('scan-status').innerText = "RESTORED — Syncing Live...";
-    }
-
-    /* 2. Single ticker request to update all prices (40 weight) */
-    fetchAllData();
-
-    /* 3. Refresh prices every 5 seconds */
-    setInterval(fetchAllData, 5000);
-
-    /* 4. Every 60s, re-scan ONLY watchlist symbols for fresh squeeze data */
-    setInterval(() => {
-        if (isSyncing || watchlist.size === 0) return;
-        const wlSyms = [...watchlist].map(s => s + 'USDT').filter(s => pairs[s]);
-        wlSyms.forEach(s => { if (pairs[s]) pairs[s]._scanned = false; });
-        syncMissingOpens(wlSyms);
-    }, 60000);
-
-    /* 5. Persist cache every 15 seconds so refresh always has data */
-    setInterval(saveCache, 15000);
+setInterval(saveCache, 15000);
+setInterval(updateMirrorDisplay, 3000);
 </script>
 </body>
 </html>
