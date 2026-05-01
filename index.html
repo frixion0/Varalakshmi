@@ -120,22 +120,26 @@
         .panel-reorder-item .panel-toggle input:checked+.sw2::after{left:12px;background:#fff}
         .panel-reorder-item .panel-toggle input:disabled+.sw2{opacity:0.4;cursor:not-allowed}
 
-        /* AI Panel */
-        .ai-panel{position:absolute;top:0;left:0;width:340px;max-width:88vw;height:100%;background:#13161c;border-right:1px solid var(--border);z-index:100;transform:translateX(-100%);transition:transform .25s cubic-bezier(.4,0,.2,1);display:flex;flex-direction:column;overflow:hidden}
+        /* AI Chat Panel */
+        .ai-panel{position:absolute;top:0;left:0;width:360px;max-width:88vw;height:100%;background:#13161c;border-right:1px solid var(--border);z-index:100;transform:translateX(-100%);transition:transform .25s cubic-bezier(.4,0,.2,1);display:flex;flex-direction:column;overflow:hidden;touch-action:auto}
         .ai-panel.open{transform:translateX(0)}
         .ai-panel-head{display:flex;justify-content:space-between;align-items:center;padding:10px 12px;border-bottom:1px solid var(--border);flex-shrink:0}
         .ai-panel-head span{font-weight:900;font-size:11px;color:var(--accent);letter-spacing:.5px}
         .ai-panel-close{background:none;border:none;color:var(--dim);cursor:pointer;font-size:18px;line-height:1;padding:2px 6px;border-radius:3px;transition:all .15s}
         .ai-panel-close:hover{color:var(--red)}
-        .ai-panel-body{flex:1;overflow-y:auto;padding:12px;-webkit-overflow-scrolling:touch}
-        .ai-prompt-info{background:#1e2026;border:1px solid var(--border);border-radius:6px;padding:8px 10px;margin-bottom:12px;font-size:10px;color:var(--dim);line-height:1.4}
-        .ai-prompt-info .ai-sym{color:var(--accent);font-weight:bold}
-        .ai-response-box{background:#1e2026;border:1px solid var(--border);border-radius:6px;padding:12px;font-size:12px;line-height:1.6;color:var(--text);min-height:120px;white-space:pre-wrap;word-break:break-word}
-        .ai-response-box.ai-loading{color:var(--dim);font-style:italic}
-        .ai-response-box.ai-error{color:var(--red)}
-        .ai-send-btn{margin-top:10px;width:100%;padding:8px;background:var(--accent);color:#000;border:none;border-radius:6px;font-weight:900;font-size:11px;cursor:pointer;transition:all .15s;letter-spacing:.5px}
-        .ai-send-btn:hover:not(:disabled){box-shadow:0 0 15px rgba(252,213,53,.3)}
-        .ai-send-btn:disabled{opacity:.5;cursor:not-allowed}
+        .ai-chat-body{flex:1;overflow-y:auto;padding:12px;-webkit-overflow-scrolling:touch;display:flex;flex-direction:column;gap:8px}
+        .ai-msg{padding:8px 12px;border-radius:8px;font-size:11px;line-height:1.55;max-width:94%;white-space:pre-wrap;word-break:break-word}
+        .ai-msg.user{background:var(--accent);color:#000;align-self:flex-end;border-bottom-right-radius:2px}
+        .ai-msg.ai{background:#1e2026;color:var(--text);align-self:flex-start;border-bottom-left-radius:2px;border:1px solid var(--border)}
+        .ai-msg.ai.loading{color:var(--dim);font-style:italic;align-self:flex-start}
+        .ai-msg .ai-bold{font-weight:700}
+        .ai-input-area{display:flex;gap:6px;padding:10px 12px;border-top:1px solid var(--border);flex-shrink:0}
+        .ai-input{flex:1;background:#1e2026;border:1px solid var(--border);color:var(--text);padding:8px 10px;border-radius:6px;font-size:11px;font-family:'Inter',sans-serif;outline:none;resize:none;max-height:80px;min-height:32px}
+        .ai-input:focus{border-color:var(--accent)}
+        .ai-input::placeholder{color:var(--dim)}
+        .ai-send{background:var(--accent);color:#000;border:none;border-radius:6px;padding:8px 14px;font-weight:900;font-size:11px;cursor:pointer;transition:all .15s;flex-shrink:0}
+        .ai-send:hover:not(:disabled){box-shadow:0 0 12px rgba(252,213,53,.4)}
+        .ai-send:disabled{opacity:.5;cursor:not-allowed}
 
         @media(max-width:1100px){.main-grid{flex-direction:column}.table-container.watchlist-panel{flex:none;min-width:0}}
     </style>
@@ -191,11 +195,11 @@
     <div class="chart-body" id="chartBody">
         <canvas id="chartCanvas"></canvas>
         <div class="ai-panel" id="aiPanel">
-            <div class="ai-panel-head"><span>AI NEWS</span><button class="ai-panel-close" onclick="toggleAiPanel()">&#10005;</button></div>
-            <div class="ai-panel-body" id="aiPanelBody">
-                <div class="ai-prompt-info">Fetching news for: <span class="ai-sym" id="aiSymLabel">-</span></div>
-                <div class="ai-response-box ai-loading" id="aiResponseBox">Ask AI for latest crypto news...</div>
-                <button class="ai-send-btn" id="aiSendBtn" onclick="fetchAiNews()">&#128227; ASK AI FOR NEWS</button>
+            <div class="ai-panel-head"><span>&#129302; AI CHAT</span><button class="ai-panel-close" onclick="toggleAiPanel()">&#10005;</button></div>
+            <div class="ai-chat-body" id="aiChatBody"></div>
+            <div class="ai-input-area">
+                <textarea class="ai-input" id="aiInput" placeholder="Ask a follow-up question..." rows="1"></textarea>
+                <button class="ai-send" id="aiSendBtn" onclick="sendAiChat()">&#10148;</button>
             </div>
         </div>
         <div class="ind-panel" id="indPanel">
@@ -266,11 +270,24 @@ var indPanelOpen=false;
 /* AI Panel state */
 var aiPanelOpen=false;
 var aiFetching=false;
-function toggleAiPanel(){aiPanelOpen=!aiPanelOpen;document.getElementById('aiPanel').classList.toggle('open',aiPanelOpen);document.getElementById('chartAiBtn').classList.toggle('active-btn',aiPanelOpen);if(aiPanelOpen&&currentChartSym){document.getElementById('aiSymLabel').textContent=currentChartSym;document.getElementById('aiResponseBox').className='ai-response-box ai-loading';document.getElementById('aiResponseBox').textContent='Ask AI for latest crypto news...';document.getElementById('aiSendBtn').disabled=false}}
+var aiChatHistory=[];
 
-function formatMarkdown(text){return text.replace(/\*\*(.*?)\*\*/g,'<b>$1</b>').replace(/\*(.*?)\*/g,'<i>$1</i>').replace(/\n/g,'<br>')}
+function toggleAiPanel(){aiPanelOpen=!aiPanelOpen;document.getElementById('aiPanel').classList.toggle('open',aiPanelOpen);document.getElementById('chartAiBtn').classList.toggle('active-btn',aiPanelOpen);if(aiPanelOpen&&currentChartSym){aiChatHistory=[];var body=document.getElementById('aiChatBody');body.innerHTML='';buildAiInitialMessage();autoSendAiPrompt()}}
 
-async function fetchAiNews(){if(!currentChartSym||aiFetching)return;aiFetching=true;var btn=document.getElementById('aiSendBtn'),box=document.getElementById('aiResponseBox');btn.disabled=true;btn.textContent='⏳ FETCHING...';box.className='ai-response-box ai-loading';box.textContent='Fetching news about '+currentChartSym+' from AI...';try{var prompt='give me news about this crypto '+currentChartSym;var resp=await fetch('https://text.pollinations.ai/'+encodeURIComponent(prompt));if(!resp.ok)throw new Error('API error: '+resp.status);var data=await resp.text();box.className='ai-response-box';box.innerHTML=formatMarkdown(data);btn.textContent='🔄 REFRESH';}catch(e){box.className='ai-response-box ai-error';box.textContent='Error: '+e.message;btn.textContent='🔁 RETRY';}finally{aiFetching=false;btn.disabled=false}}
+function buildAiInitialMessage(){var sym=currentChartSym;var initPrompt=sym+' usdt future give me fundamentals and a score based on how good it is and the movement is either driven by news affect or else fundamental or growth orientated or development or speculative or big whale movement and summarise in 4-10lines';aiChatHistory.push({role:'system',content:initPrompt});var body=document.getElementById('aiChatBody');body.innerHTML='';addAiChatBubble('system','🔍 Analyzing '+sym+'...','loading')}
+
+function addAiChatBubble(role,text,extraClass){var body=document.getElementById('aiChatBody');var div=document.createElement('div');div.className='ai-msg '+(role==='user'?'user':'ai')+(extraClass?' '+extraClass:'');if(role==='system'){div.innerHTML='🔍 '+formatMarkdown(text)}else{div.innerHTML=formatMarkdown(text)}body.appendChild(div);body.scrollTop=body.scrollHeight;return div}
+
+function formatMarkdown(text){return text.replace(/\*\*(.*?)\*\*/g,'<span class="ai-bold">$1</span>').replace(/\*(.*?)\*/g,'<i>$1</i>').replace(/\n/g,'<br>')}
+
+async function autoSendAiPrompt(){if(aiFetching||!currentChartSym)return;aiFetching=true;var btn=document.getElementById('aiSendBtn');btn.disabled=true;var prompt='give me news about '+currentChartSym+' usdt future give me fundamentals and a score based on how good it is and the movement is either driven by news affect or else fundamental or growth orientated or development or speculative or big whale movement and summarise in 4-10lines';try{var encoded=encodeURIComponent(prompt);var resp=await fetch('https://text.pollinations.ai/'+encoded);if(!resp.ok)throw new Error('API error: '+resp.status);var data=await resp.text();var bubble=addAiChatBubble('ai',data,'');aiChatHistory.push({role:'ai',content:data});bubble.classList.remove('loading')}catch(e){var bubble=document.querySelector('.ai-msg.ai.loading');if(bubble){bubble.textContent='Error: '+e.message;bubble.classList.remove('loading')}aiChatHistory.push({role:'ai',content:'Error: '+e.message})}finally{aiFetching=false;btn.disabled=false}}
+
+async function sendAiChat(){if(aiFetching)return;var input=document.getElementById('aiInput');var q=input.value.trim();if(!q)return;input.value='';addAiChatBubble('user',q);aiChatHistory.push({role:'user',content:q});aiFetching=true;var btn=document.getElementById('aiSendBtn');btn.disabled=true;addAiChatBubble('ai','Thinking...','loading');try{var fullPrompt='';for(var i=0;i<aiChatHistory.length;i++){var m=aiChatHistory[i];if(m.role==='system')fullPrompt+=m.content+'\n\n';else if(m.role==='user')fullPrompt+='User: '+m.content+'\n';else if(m.role==='ai')fullPrompt+='AI: '+m.content+'\n\n'}fullPrompt+='User: '+q;var encoded=encodeURIComponent(fullPrompt);var resp=await fetch('https://text.pollinations.ai/'+encoded);if(!resp.ok)throw new Error('API error: '+resp.status);var data=await resp.text();var bubble=document.querySelector('.ai-msg.ai.loading');if(bubble){bubble.innerHTML=formatMarkdown(data);bubble.classList.remove('loading')}aiChatHistory.push({role:'ai',content:data})}catch(e){var bubble=document.querySelector('.ai-msg.ai.loading');if(bubble){bubble.textContent='Error: '+e.message;bubble.classList.remove('loading')}aiChatHistory.push({role:'ai',content:'Error: '+e.message})}finally{aiFetching=false;btn.disabled=false}}
+
+document.getElementById('aiInput').addEventListener('keydown',function(e){if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendAiChat()}});
+document.getElementById('aiPanel').addEventListener('touchstart',function(e){e.stopPropagation()},{passive:false});
+document.getElementById('aiPanel').addEventListener('touchmove',function(e){e.stopPropagation()},{passive:false});
+document.getElementById('aiPanel').addEventListener('touchend',function(e){e.stopPropagation()},{passive:false});
 
 var colorPickerCb=null;
 (function(){var popup=document.getElementById('colorPickerPopup'),html='';for(var i=0;i<PRESET_COLORS.length;i++)html+='<div class="cpick" style="background:'+PRESET_COLORS[i]+'" data-c="'+PRESET_COLORS[i]+'"></div>';popup.innerHTML=html;popup.addEventListener('click',function(e){var el=e.target.closest('.cpick');if(el&&colorPickerCb){colorPickerCb(el.dataset.c);colorPickerCb=null;popup.classList.remove('show')}})})();
@@ -455,10 +472,6 @@ function bindIndEvents(){
 document.getElementById('indPanel').addEventListener('touchstart',function(e){e.stopPropagation()},{passive:false});
 document.getElementById('indPanel').addEventListener('touchmove',function(e){e.stopPropagation()},{passive:false});
 document.getElementById('indPanel').addEventListener('touchend',function(e){e.stopPropagation()},{passive:false});
-
-document.getElementById('aiPanel').addEventListener('touchstart',function(e){e.stopPropagation()},{passive:false});
-document.getElementById('aiPanel').addEventListener('touchmove',function(e){e.stopPropagation()},{passive:false});
-document.getElementById('aiPanel').addEventListener('touchend',function(e){e.stopPropagation()},{passive:false});
 
 var chartInd={ema:[[],[],[]],volMA:[],rsi:[],donchU:[],donchL:[],donchM:[],bbU:[],bbL:[],bbM:[],macdLine:[],macdSignal:[],macdHist:[]};
 function calcEMA(d,p){var e=[],k=2/(p+1);if(!d.length)return e;e[0]=d[0];for(var i=1;i<d.length;i++)e[i]=d[i]*k+e[i-1]*(1-k);return e}
@@ -659,7 +672,7 @@ function drawChart(){
 }
 
 function startChartLoop(){if(chartRAF)cancelAnimationFrame(chartRAF);(function lp(){if(!currentChartSym)return;if(chartDirty){chartDirty=false;drawChart()}chartRAF=requestAnimationFrame(lp)})()}
-function closeChart(){if(chartWs){try{chartWs.close()}catch(e){}chartWs=null}if(chartRAF){cancelAnimationFrame(chartRAF);chartRAF=null}if(gesture.momentumRAF){cancelAnimationFrame(gesture.momentumRAF);gesture.momentumRAF=null}clearTimeout(gesture.longPressTimer);currentChartSym=null;chartCandles=[];chartInd={ema:[[],[],[]],volMA:[],rsi:[],donchU:[],donchL:[],donchM:[],bbU:[],bbL:[],bbM:[],macdLine:[],macdSignal:[],macdHist:[]};gesture.crosshairActive=false;gesture.mode=null;gesture.isTouch=false;indPanelOpen=false;document.getElementById('indPanel').classList.remove('open');document.getElementById('chartSettingsBtn').classList.remove('active-btn');aiPanelOpen=false;document.getElementById('aiPanel').classList.remove('open');document.getElementById('chartAiBtn').classList.remove('active-btn');document.getElementById('chartOverlay').classList.remove('open');document.body.classList.remove('modal-open')}
+function closeChart(){if(chartWs){try{chartWs.close()}catch(e){}chartWs=null}if(chartRAF){cancelAnimationFrame(chartRAF);chartRAF=null}if(gesture.momentumRAF){cancelAnimationFrame(gesture.momentumRAF);gesture.momentumRAF=null}clearTimeout(gesture.longPressTimer);currentChartSym=null;chartCandles=[];chartInd={ema:[[],[],[]],volMA:[],rsi:[],donchU:[],donchL:[],donchM:[],bbU:[],bbL:[],bbM:[],macdLine:[],macdSignal:[],macdHist:[]};gesture.crosshairActive=false;gesture.mode=null;gesture.isTouch=false;indPanelOpen=false;document.getElementById('indPanel').classList.remove('open');document.getElementById('chartSettingsBtn').classList.remove('active-btn');aiPanelOpen=false;aiChatHistory=[];document.getElementById('aiPanel').classList.remove('open');document.getElementById('chartAiBtn').classList.remove('active-btn');document.getElementById('chartOverlay').classList.remove('open');document.body.classList.remove('modal-open')}
 
 var chartCanvasEl=document.getElementById('chartCanvas'),chartBodyEl=document.getElementById('chartBody');
 function touchDist(t1,t2){var dx=t1.clientX-t2.clientX,dy=t1.clientY-t2.clientY;return Math.sqrt(dx*dx+dy*dy)}
