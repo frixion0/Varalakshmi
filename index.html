@@ -105,7 +105,7 @@
         .ind-reset{display:block;margin:8px 12px 14px;padding:7px;text-align:center;background:transparent;border:1px solid var(--border);color:var(--dim);font-size:9px;font-weight:700;border-radius:4px;cursor:pointer;transition:all .15s;letter-spacing:.5px}
         .ind-reset:hover{border-color:var(--red);color:var(--red)}
 
-        /* NEW: Indicator Reordering Panel */
+        /* Panel Reordering Panel */
         .panel-reorder-section{border-top:1px solid var(--border);margin-top:8px;padding-top:10px}
         .panel-reorder-item{display:flex;align-items:center;gap:6px;padding:6px 8px;margin-bottom:4px;background:#1e2026;border:1px solid var(--border);border-radius:4px;cursor:grab;transition:background .15s,transform .1s;user-select:none}
         .panel-reorder-item:active{cursor:grabbing}
@@ -119,6 +119,23 @@
         .panel-reorder-item .panel-toggle input:checked+.sw2{background:var(--green)}
         .panel-reorder-item .panel-toggle input:checked+.sw2::after{left:12px;background:#fff}
         .panel-reorder-item .panel-toggle input:disabled+.sw2{opacity:0.4;cursor:not-allowed}
+
+        /* AI Panel */
+        .ai-panel{position:absolute;top:0;left:0;width:340px;max-width:88vw;height:100%;background:#13161c;border-right:1px solid var(--border);z-index:100;transform:translateX(-100%);transition:transform .25s cubic-bezier(.4,0,.2,1);display:flex;flex-direction:column;overflow:hidden}
+        .ai-panel.open{transform:translateX(0)}
+        .ai-panel-head{display:flex;justify-content:space-between;align-items:center;padding:10px 12px;border-bottom:1px solid var(--border);flex-shrink:0}
+        .ai-panel-head span{font-weight:900;font-size:11px;color:var(--accent);letter-spacing:.5px}
+        .ai-panel-close{background:none;border:none;color:var(--dim);cursor:pointer;font-size:18px;line-height:1;padding:2px 6px;border-radius:3px;transition:all .15s}
+        .ai-panel-close:hover{color:var(--red)}
+        .ai-panel-body{flex:1;overflow-y:auto;padding:12px;-webkit-overflow-scrolling:touch}
+        .ai-prompt-info{background:#1e2026;border:1px solid var(--border);border-radius:6px;padding:8px 10px;margin-bottom:12px;font-size:10px;color:var(--dim);line-height:1.4}
+        .ai-prompt-info .ai-sym{color:var(--accent);font-weight:bold}
+        .ai-response-box{background:#1e2026;border:1px solid var(--border);border-radius:6px;padding:12px;font-size:12px;line-height:1.6;color:var(--text);min-height:120px;white-space:pre-wrap;word-break:break-word}
+        .ai-response-box.ai-loading{color:var(--dim);font-style:italic}
+        .ai-response-box.ai-error{color:var(--red)}
+        .ai-send-btn{margin-top:10px;width:100%;padding:8px;background:var(--accent);color:#000;border:none;border-radius:6px;font-weight:900;font-size:11px;cursor:pointer;transition:all .15s;letter-spacing:.5px}
+        .ai-send-btn:hover:not(:disabled){box-shadow:0 0 15px rgba(252,213,53,.3)}
+        .ai-send-btn:disabled{opacity:.5;cursor:not-allowed}
 
         @media(max-width:1100px){.main-grid{flex-direction:column}.table-container.watchlist-panel{flex:none;min-width:0}}
     </style>
@@ -168,10 +185,19 @@
             <span class="ctf" data-iv="1d" onclick="changeChartTf('1d')">1d</span>
         </div>
         <button class="chart-settings-btn" id="chartSettingsBtn" onclick="toggleIndPanel()">&#9881;</button>
+        <button class="chart-settings-btn" id="chartAiBtn" onclick="toggleAiPanel()">&#129302;</button>
         <button class="chart-close" onclick="closeChart()">&#10005;</button>
     </div>
     <div class="chart-body" id="chartBody">
         <canvas id="chartCanvas"></canvas>
+        <div class="ai-panel" id="aiPanel">
+            <div class="ai-panel-head"><span>AI NEWS</span><button class="ai-panel-close" onclick="toggleAiPanel()">&#10005;</button></div>
+            <div class="ai-panel-body" id="aiPanelBody">
+                <div class="ai-prompt-info">Fetching news for: <span class="ai-sym" id="aiSymLabel">-</span></div>
+                <div class="ai-response-box ai-loading" id="aiResponseBox">Ask AI for latest crypto news...</div>
+                <button class="ai-send-btn" id="aiSendBtn" onclick="fetchAiNews()">&#128227; ASK AI FOR NEWS</button>
+            </div>
+        </div>
         <div class="ind-panel" id="indPanel">
             <div class="ind-panel-head"><span>INDICATORS</span><button class="ind-panel-close" onclick="toggleIndPanel()">&#10005;</button></div>
             <div class="ind-panel-body" id="indPanelBody"></div>
@@ -226,7 +252,7 @@ var DEF_IND={
 };
 var indSettings=JSON.parse(JSON.stringify(DEF_IND));
 
-/* NEW: Panel order for sub-indicators */
+/* Panel order for sub-indicators */
 var DEFAULT_PANEL_ORDER=['vol','macd','rsi'];
 var panelOrder=[];
 function loadPanelOrder(){try{var s=localStorage.getItem('sq_panelOrder');if(s){var d=JSON.parse(s);panelOrder=d.filter(function(p){return DEFAULT_PANEL_ORDER.indexOf(p)!==-1});DEFAULT_PANEL_ORDER.forEach(function(p){if(panelOrder.indexOf(p)===-1)panelOrder.push(p)})}else{panelOrder=DEFAULT_PANEL_ORDER.slice()}}catch(e){panelOrder=DEFAULT_PANEL_ORDER.slice()}}
@@ -236,6 +262,15 @@ function saveInd(){try{localStorage.setItem('sq_ind4',JSON.stringify(indSettings
 function resetIndDefaults(){indSettings=JSON.parse(JSON.stringify(DEF_IND));panelOrder=DEFAULT_PANEL_ORDER.slice();saveInd();savePanelOrder();buildIndPanel();recalcInd();chartDirty=true}
 function toggleIndPanel(){indPanelOpen=!indPanelOpen;document.getElementById('indPanel').classList.toggle('open',indPanelOpen);document.getElementById('chartSettingsBtn').classList.toggle('active-btn',indPanelOpen)}
 var indPanelOpen=false;
+
+/* AI Panel state */
+var aiPanelOpen=false;
+var aiFetching=false;
+function toggleAiPanel(){aiPanelOpen=!aiPanelOpen;document.getElementById('aiPanel').classList.toggle('open',aiPanelOpen);document.getElementById('chartAiBtn').classList.toggle('active-btn',aiPanelOpen);if(aiPanelOpen&&currentChartSym){document.getElementById('aiSymLabel').textContent=currentChartSym;document.getElementById('aiResponseBox').className='ai-response-box ai-loading';document.getElementById('aiResponseBox').textContent='Ask AI for latest crypto news...';document.getElementById('aiSendBtn').disabled=false}}
+
+function formatMarkdown(text){return text.replace(/\*\*(.*?)\*\*/g,'<b>$1</b>').replace(/\*(.*?)\*/g,'<i>$1</i>').replace(/\n/g,'<br>')}
+
+async function fetchAiNews(){if(!currentChartSym||aiFetching)return;aiFetching=true;var btn=document.getElementById('aiSendBtn'),box=document.getElementById('aiResponseBox');btn.disabled=true;btn.textContent='⏳ FETCHING...';box.className='ai-response-box ai-loading';box.textContent='Fetching news about '+currentChartSym+' from AI...';try{var prompt='give me news about this crypto '+currentChartSym;var resp=await fetch('https://text.pollinations.ai/'+encodeURIComponent(prompt));if(!resp.ok)throw new Error('API error: '+resp.status);var data=await resp.text();box.className='ai-response-box';box.innerHTML=formatMarkdown(data);btn.textContent='🔄 REFRESH';}catch(e){box.className='ai-response-box ai-error';box.textContent='Error: '+e.message;btn.textContent='🔁 RETRY';}finally{aiFetching=false;btn.disabled=false}}
 
 var colorPickerCb=null;
 (function(){var popup=document.getElementById('colorPickerPopup'),html='';for(var i=0;i<PRESET_COLORS.length;i++)html+='<div class="cpick" style="background:'+PRESET_COLORS[i]+'" data-c="'+PRESET_COLORS[i]+'"></div>';popup.innerHTML=html;popup.addEventListener('click',function(e){var el=e.target.closest('.cpick');if(el&&colorPickerCb){colorPickerCb(el.dataset.c);colorPickerCb=null;popup.classList.remove('show')}})})();
@@ -305,7 +340,7 @@ function buildIndPanel(){
     h+='<div class="ind-color" id="'+p+'-col" style="background:'+vm.color+'"></div></div>';
     h+='</div>';
 
-    /* NEW: Panel Reorder Section */
+    /* Panel Reorder Section */
     h+='<div class="panel-reorder-section"><div class="ind-section-title">Panel Order (drag to reorder)</div><div id="panelReorderList">';
     var panelLabels={'vol':'Volume','macd':'MACD','rsi':'RSI'};
     for(var pi=0;pi<panelOrder.length;pi++){var pk=panelOrder[pi];
@@ -320,7 +355,7 @@ function buildIndPanel(){
     bindPanelReorder();
 }
 
-/* NEW: Bind panel reorder drag-and-drop */
+/* Bind panel reorder drag-and-drop */
 function bindPanelReorder(){
     var container=document.getElementById('panelReorderList');if(!container)return;
     var items=container.querySelectorAll('.panel-reorder-item');
@@ -421,6 +456,10 @@ document.getElementById('indPanel').addEventListener('touchstart',function(e){e.
 document.getElementById('indPanel').addEventListener('touchmove',function(e){e.stopPropagation()},{passive:false});
 document.getElementById('indPanel').addEventListener('touchend',function(e){e.stopPropagation()},{passive:false});
 
+document.getElementById('aiPanel').addEventListener('touchstart',function(e){e.stopPropagation()},{passive:false});
+document.getElementById('aiPanel').addEventListener('touchmove',function(e){e.stopPropagation()},{passive:false});
+document.getElementById('aiPanel').addEventListener('touchend',function(e){e.stopPropagation()},{passive:false});
+
 var chartInd={ema:[[],[],[]],volMA:[],rsi:[],donchU:[],donchL:[],donchM:[],bbU:[],bbL:[],bbM:[],macdLine:[],macdSignal:[],macdHist:[]};
 function calcEMA(d,p){var e=[],k=2/(p+1);if(!d.length)return e;e[0]=d[0];for(var i=1;i<d.length;i++)e[i]=d[i]*k+e[i-1]*(1-k);return e}
 function calcSMA(d,p){var s=[];for(var i=0;i<d.length;i++){if(i<p-1){s.push(null);continue}var sum=0;for(var j=i-p+1;j<=i;j++)sum+=d[j];s.push(sum/p)}return s}
@@ -432,7 +471,7 @@ function recalcInd(){if(chartCandles.length<2)return;var cl=[],hi=[],lo=[],vl=[]
 
 var gesture={mode:null,startTime:0,startX:0,startY:0,lastX:0,lastY:0,velocityX:0,longPressTimer:null,crosshairActive:false,pinchStartDist:0,pinchStartZoom:0,pinchStartOffset:0,pinchFrac:0.5,lastTapTime:0,lastTapX:0,momentumRAF:null,lastMoveTime:0,moved:false,priceAuto:true,priceZoom:1,resetBtn:null,isTouch:false};
 
-async function openChart(sym){currentChartSym=sym;document.getElementById('chartSymName').innerText=sym;document.getElementById('chartInfo').innerHTML='<span style="color:var(--dim)">Loading...</span>';document.getElementById('chartOverlay').classList.add('open');document.body.classList.add('modal-open');chartMX=-1;chartMY=-1;gesture.crosshairActive=false;chartCandles=[];chartZoom=120;chartOffset=0;gesture.priceAuto=true;gesture.priceZoom=1;chartInterval='1d';updateTfBtns();await loadChartRest(sym);connectChartWs(sym);startChartLoop()}
+async function openChart(sym){currentChartSym=sym;document.getElementById('chartSymName').innerText=sym;document.getElementById('chartInfo').innerHTML='<span style="color:var(--dim)">Loading...</span>';document.getElementById('chartOverlay').classList.add('open');document.body.classList.add('modal-open');chartMX=-1;chartMY=-1;gesture.crosshairActive=false;chartCandles=[];chartZoom=120;chartOffset=0;gesture.priceAuto=true;gesture.priceZoom=1;chartInterval='1d';updateTfBtns();aiPanelOpen=false;document.getElementById('aiPanel').classList.remove('open');document.getElementById('chartAiBtn').classList.remove('active-btn');await loadChartRest(sym);connectChartWs(sym);startChartLoop()}
 async function loadChartRest(sym){try{var res=await safeFetch('/klines?symbol='+sym+'USDT&interval='+chartInterval+'&limit=300',5);if(!res)return;var d=await res.json();if(Array.isArray(d)){chartCandles=d.map(function(k){return{t:parseInt(k[0]),o:parseFloat(k[1]),h:parseFloat(k[2]),l:parseFloat(k[3]),c:parseFloat(k[4]),v:parseFloat(k[5])}});recalcInd()}updateChartInfo();chartDirty=true}catch(e){}}
 function connectChartWs(sym){if(chartWs){try{chartWs.close()}catch(e){}chartWs=null}try{chartWs=new WebSocket(WS_URL+'/'+sym.toLowerCase()+'usdt@kline_'+chartInterval)}catch(e){return}chartWs.onmessage=function(ev){try{var k=JSON.parse(ev.data).k;if(!k)return;var cd={t:parseInt(k.t),o:parseFloat(k.o),h:parseFloat(k.h),l:parseFloat(k.l),c:parseFloat(k.c),v:parseFloat(k.v)};var last=chartCandles.length?chartCandles[chartCandles.length-1]:null;if(last&&last.t===cd.t){last.h=cd.h;last.l=cd.l;last.c=cd.c;last.v=cd.v}else{chartCandles.push(cd);if(chartCandles.length>500)chartCandles.shift()}recalcInd();updateChartInfo()}catch(e){}}}
 function changeChartTf(iv){chartInterval=iv;chartCandles=[];chartZoom=120;chartOffset=0;gesture.priceAuto=true;gesture.priceZoom=1;chartInd={ema:[[],[],[]],volMA:[],rsi:[],donchU:[],donchL:[],donchM:[],bbU:[],bbL:[],bbM:[],macdLine:[],macdSignal:[],macdHist:[]};updateTfBtns();if(currentChartSym){loadChartRest(currentChartSym);connectChartWs(currentChartSym)}}
@@ -452,7 +491,7 @@ function drawChart(){
     var PR=CHART_PR,PB=22,PT=6,GAP=3;
     var chartW=w-PR,totalH=h-PT-PB;
 
-    /* NEW: Calculate panel heights independently based on panelOrder */
+    /* Calculate panel heights independently based on panelOrder */
     var activePanels=[];
     for(var pi=0;pi<panelOrder.length;pi++){
         var pk=panelOrder[pi];
@@ -600,7 +639,7 @@ function drawChart(){
 
     var showCH=(chartMX>=0&&chartMX<chartW&&chartMY>=PT&&chartMY<botBound);
     if(showCH){
-        /* CHANGED: More visible crosshair */
+        /* More visible crosshair */
         ctx.strokeStyle='rgba(252,213,53,0.55)';ctx.lineWidth=1.2;ctx.setLineDash([5,3]);
         ctx.beginPath();ctx.moveTo(chartMX,PT);ctx.lineTo(chartMX,botBound);ctx.stroke();
         ctx.beginPath();ctx.moveTo(0,chartMY);ctx.lineTo(chartW,chartMY);ctx.stroke();ctx.setLineDash([]);
@@ -620,7 +659,7 @@ function drawChart(){
 }
 
 function startChartLoop(){if(chartRAF)cancelAnimationFrame(chartRAF);(function lp(){if(!currentChartSym)return;if(chartDirty){chartDirty=false;drawChart()}chartRAF=requestAnimationFrame(lp)})()}
-function closeChart(){if(chartWs){try{chartWs.close()}catch(e){}chartWs=null}if(chartRAF){cancelAnimationFrame(chartRAF);chartRAF=null}if(gesture.momentumRAF){cancelAnimationFrame(gesture.momentumRAF);gesture.momentumRAF=null}clearTimeout(gesture.longPressTimer);currentChartSym=null;chartCandles=[];chartInd={ema:[[],[],[]],volMA:[],rsi:[],donchU:[],donchL:[],donchM:[],bbU:[],bbL:[],bbM:[],macdLine:[],macdSignal:[],macdHist:[]};gesture.crosshairActive=false;gesture.mode=null;gesture.isTouch=false;indPanelOpen=false;document.getElementById('indPanel').classList.remove('open');document.getElementById('chartSettingsBtn').classList.remove('active-btn');document.getElementById('chartOverlay').classList.remove('open');document.body.classList.remove('modal-open')}
+function closeChart(){if(chartWs){try{chartWs.close()}catch(e){}chartWs=null}if(chartRAF){cancelAnimationFrame(chartRAF);chartRAF=null}if(gesture.momentumRAF){cancelAnimationFrame(gesture.momentumRAF);gesture.momentumRAF=null}clearTimeout(gesture.longPressTimer);currentChartSym=null;chartCandles=[];chartInd={ema:[[],[],[]],volMA:[],rsi:[],donchU:[],donchL:[],donchM:[],bbU:[],bbL:[],bbM:[],macdLine:[],macdSignal:[],macdHist:[]};gesture.crosshairActive=false;gesture.mode=null;gesture.isTouch=false;indPanelOpen=false;document.getElementById('indPanel').classList.remove('open');document.getElementById('chartSettingsBtn').classList.remove('active-btn');aiPanelOpen=false;document.getElementById('aiPanel').classList.remove('open');document.getElementById('chartAiBtn').classList.remove('active-btn');document.getElementById('chartOverlay').classList.remove('open');document.body.classList.remove('modal-open')}
 
 var chartCanvasEl=document.getElementById('chartCanvas'),chartBodyEl=document.getElementById('chartBody');
 function touchDist(t1,t2){var dx=t1.clientX-t2.clientX,dy=t1.clientY-t2.clientY;return Math.sqrt(dx*dx+dy*dy)}
@@ -632,7 +671,7 @@ chartCanvasEl.addEventListener('mousedown',function(e){if(gesture.isTouch)return
 var chartIsDrag=false,chartDragSX=0,chartDragSO=0;
 window.addEventListener('mousemove',function(e){if(!chartIsDrag||gesture.isTouch)return;var dx=e.clientX-chartDragSX,cpp=chartZoom/(chartBodyEl.clientWidth-CHART_PR);chartOffset=clampOffset(chartDragSO+dx*cpp,chartZoom,chartCandles.length);chartDirty=true});
 window.addEventListener('mouseup',function(){if(chartIsDrag){chartIsDrag=false;chartCanvasEl.style.cursor='crosshair'}});
-document.addEventListener('keydown',function(e){if(e.key==='Escape'){if(indPanelOpen)toggleIndPanel();else closeChart()}});
+document.addEventListener('keydown',function(e){if(e.key==='Escape'){if(indPanelOpen)toggleIndPanel();else if(aiPanelOpen)toggleAiPanel();else closeChart()}});
 window.addEventListener('resize',function(){if(currentChartSym){chartOffset=clampOffset(chartOffset,chartZoom,chartCandles.length);chartDirty=true}});
 chartBodyEl.addEventListener('touchstart',function(e){if(!currentChartSym)return;e.preventDefault();gesture.isTouch=true;var rect=chartCanvasEl.getBoundingClientRect(),cw=rect.width;if(gesture.momentumRAF){cancelAnimationFrame(gesture.momentumRAF);gesture.momentumRAF=null}clearTimeout(gesture.longPressTimer);if(gesture.resetBtn&&e.touches.length===1){var t0=e.touches[0],bx=t0.clientX-rect.left,by=t0.clientY-rect.top,rb=gesture.resetBtn;if((bx-rb.x)*(bx-rb.x)+(by-rb.y)*(by-rb.y)<=rb.r*rb.r){chartOffset=0;chartDirty=true;return}}if(e.touches.length===1){var t=e.touches[0],x=t.clientX-rect.left,y=t.clientY-rect.top,now=Date.now();gesture.startTime=now;gesture.startX=x;gesture.startY=y;gesture.lastX=x;gesture.lastY=y;gesture.moved=false;gesture.velocityX=0;gesture.lastMoveTime=0;if(gesture.crosshairActive){gesture.mode='crosshair-pending';gesture.longPressTimer=setTimeout(function(){gesture.mode='crosshair';chartMX=gesture.startX;chartMY=gesture.startY;chartDirty=true},250);return}if(now-gesture.lastTapTime<320&&isInPS(x,cw)&&isInPS(gesture.lastTapX,cw)){gesture.priceAuto=true;gesture.priceZoom=1;gesture.lastTapTime=0;chartDirty=true;return}gesture.lastTapTime=now;gesture.lastTapX=x;if(isInPS(x,cw)){gesture.mode='price-scale';gesture.priceAuto=false}else{gesture.mode=null;gesture.longPressTimer=setTimeout(function(){gesture.mode='crosshair';gesture.crosshairActive=true;chartMX=gesture.startX;chartMY=gesture.startY;chartDirty=true},550)}}else if(e.touches.length===2){if(gesture.crosshairActive){gesture.crosshairActive=false;chartMX=-1;chartMY=-1;chartDirty=true}gesture.mode='pinch';gesture.pinchStartDist=touchDist(e.touches[0],e.touches[1]);gesture.pinchStartZoom=chartZoom;gesture.pinchStartOffset=chartOffset;gesture.pinchFrac=((e.touches[0].clientX+e.touches[1].clientX)/2-rect.left)/cw}},{passive:false});
 chartBodyEl.addEventListener('touchmove',function(e){if(!currentChartSym)return;e.preventDefault();var rect=chartCanvasEl.getBoundingClientRect(),cw=rect.width,now=Date.now();if(e.touches.length===1&&gesture.mode!=='pinch'){var t=e.touches[0],x=t.clientX-rect.left,y=t.clientY-rect.top,dx=x-gesture.lastX,dy=y-gesture.lastY,tDx=x-gesture.startX,tDy=y-gesture.startY;if(gesture.mode===null){if(Math.abs(tDx)>8||Math.abs(tDy)>8){gesture.moved=true;clearTimeout(gesture.longPressTimer);gesture.mode=isInPS(gesture.startX,cw)?'price-scale':'swipe';if(gesture.mode==='price-scale')gesture.priceAuto=false}}if(gesture.mode==='crosshair-pending'){if(Math.abs(tDx)>8||Math.abs(tDy)>8){gesture.crosshairActive=false;chartMX=-1;chartMY=-1;clearTimeout(gesture.longPressTimer);gesture.mode='swipe';gesture.moved=true;chartDirty=true}return}if(gesture.mode==='swipe'){chartOffset=clampOffset(chartOffset+dx*chartZoom/(cw-CHART_PR),chartZoom,chartCandles.length);chartDirty=true}else if(gesture.mode==='crosshair'){chartMX=x;chartMY=y;chartDirty=true}else if(gesture.mode==='price-scale'){gesture.priceZoom=Math.max(0.15,Math.min(10,gesture.priceZoom*Math.pow(1.004,dy)));gesture.priceAuto=false;chartDirty=true}if(gesture.mode==='swipe'){var dt=now-(gesture.lastMoveTime||now);if(dt>0)gesture.velocityX=dx/dt;gesture.lastMoveTime=now}gesture.lastX=x;gesture.lastY=y}else if(e.touches.length===2&&gesture.mode==='pinch'){var dist=touchDist(e.touches[0],e.touches[1]),scale=gesture.pinchStartDist/dist,newZ=Math.round(gesture.pinchStartZoom*scale);newZ=Math.max(15,Math.min(chartCandles.length||120,newZ));chartOffset=clampOffset(gesture.pinchStartOffset+(gesture.pinchStartZoom-newZ)*(1-gesture.pinchFrac),newZ,chartCandles.length);chartZoom=newZ;chartDirty=true}},{passive:false});
