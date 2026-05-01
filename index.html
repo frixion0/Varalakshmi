@@ -127,7 +127,9 @@
         .ai-msg{padding:8px 12px;border-radius:8px;font-size:11px;line-height:1.55;max-width:94%;white-space:pre-wrap;word-break:break-word}
         .ai-msg.user{background:var(--accent);color:#000;align-self:flex-end;border-bottom-right-radius:2px}
         .ai-msg.ai{background:#1e2026;color:var(--text);align-self:flex-start;border-bottom-left-radius:2px;border:1px solid var(--border)}
+        .ai-msg.system{background:#1e2026;color:var(--accent);align-self:flex-start;border-bottom-left-radius:2px;border:1px solid var(--border)}
         .ai-msg.ai.loading{color:var(--dim);font-style:italic;align-self:flex-start}
+        .ai-msg.system.loading{color:var(--dim);font-style:italic;align-self:flex-start}
         .ai-msg .ai-bold{font-weight:700}
         .ai-input-area{display:flex;gap:6px;padding:10px 12px;border-top:1px solid var(--border);flex-shrink:0}
         .ai-input{flex:1;background:#1e2026;border:1px solid var(--border);color:var(--text);padding:8px 10px;border-radius:6px;font-size:11px;font-family:'Inter',sans-serif;outline:none;resize:none;max-height:80px;min-height:32px}
@@ -261,20 +263,131 @@ function resetIndDefaults(){indSettings=JSON.parse(JSON.stringify(DEF_IND));pane
 function toggleIndPanel(){indPanelOpen=!indPanelOpen;document.getElementById('indPanel').classList.toggle('open',indPanelOpen);document.getElementById('chartSettingsBtn').classList.toggle('active-btn',indPanelOpen)}
 var indPanelOpen=false;
 
+/* AI Panel state */
 var aiPanelOpen=false;
 var aiFetching=false;
 var aiChatHistory=[];
+var aiLoadingBubble=null;
 var AI_SYSTEM_PROMPT="ALWAYS respond in bullet points. Maximum 10 points only. Use concise, direct language. Each point should be a short sentence or phrase.";
 
-function toggleAiPanel(){aiPanelOpen=!aiPanelOpen;document.getElementById('aiPanel').classList.toggle('open',aiPanelOpen);document.getElementById('chartAiBtn').classList.toggle('active-btn',aiPanelOpen);if(aiPanelOpen&&currentChartSym){aiChatHistory=[];var body=document.getElementById('aiChatBody');body.innerHTML='';var initBubble=addAiChatBubble('system','🔍 Analyzing '+currentChartSym+'...','loading');initBubble.innerHTML='🔍 Analyzing '+currentChartSym+'...';autoSendAiPrompt()}}
+function toggleAiPanel(){
+    aiPanelOpen=!aiPanelOpen;
+    document.getElementById('aiPanel').classList.toggle('open',aiPanelOpen);
+    document.getElementById('chartAiBtn').classList.toggle('active-btn',aiPanelOpen);
+    if(aiPanelOpen&&currentChartSym){
+        aiChatHistory=[];
+        aiLoadingBubble=null;
+        var body=document.getElementById('aiChatBody');
+        body.innerHTML='';
+        addAiChatBubble('system','🔍 Analyzing '+currentChartSym+'...','loading');
+        autoSendAiPrompt();
+    }
+}
 
-function addAiChatBubble(role,text,extraClass){var body=document.getElementById('aiChatBody');var div=document.createElement('div');div.className='ai-msg '+(role==='user'?'user':'ai')+(extraClass?' '+extraClass:'');if(role==='system'){div.innerHTML='🔍 '+formatMarkdown(text)}else{div.innerHTML=formatMarkdown(text)}body.appendChild(div);body.scrollTop=body.scrollHeight;return div}
+function addAiChatBubble(role,text,extraClass){
+    var body=document.getElementById('aiChatBody');
+    var div=document.createElement('div');
+    if(role==='system'){
+        div.className='ai-msg system'+(extraClass?' '+extraClass:'');
+        div.innerHTML='🔍 '+formatMarkdown(text);
+        div.id='ai-system-bubble';
+        aiLoadingBubble=div;
+    }else{
+        div.className='ai-msg '+(role==='user'?'user':'ai')+(extraClass?' '+extraClass:'');
+        div.innerHTML=formatMarkdown(text);
+    }
+    body.appendChild(div);
+    body.scrollTop=body.scrollHeight;
+    return div
+}
 
 function formatMarkdown(text){var s=text.replace(/\*\*(.*?)\*\*/g,'<span class="ai-bold">$1</span>').replace(/\*(.*?)\*/g,'<i>$1</i>');s=s.replace(/\n/g,'<br>');return s}
 
-async function autoSendAiPrompt(){if(aiFetching||!currentChartSym)return;aiFetching=true;var btn=document.getElementById('aiSendBtn');btn.disabled=true;var sym=currentChartSym;var prompt=AI_SYSTEM_PROMPT+'\n\nAnalyze '+sym+' USDT Futures. Give fundamentals and a score based on how good it is. Identify if the movement is driven by: news affect, fundamentals, growth orientated, development, speculative, or big whale movement. Summarise in 4-10 bullet points maximum.';aiChatHistory.push({role:'system',content:prompt});try{var encoded=encodeURIComponent(prompt);var resp=await fetch('https://text.pollinations.ai/'+encoded);if(!resp.ok)throw new Error('API error: '+resp.status);var data=await resp.text();var bubble=document.querySelector('.ai-msg.system');if(bubble){bubble.textContent='Analysis for '+sym;var aiDiv=document.createElement('div');aiDiv.className='ai-msg ai';aiDiv.innerHTML=formatMarkdown(data);document.getElementById('aiChatBody').appendChild(aiDiv);document.getElementById('aiChatBody').scrollTop=document.getElementById('aiChatBody').scrollHeight;aiChatHistory.push({role:'ai',content:data})}}catch(e){var bubble=document.querySelector('.ai-msg.system');if(bubble){var aiDiv=document.createElement('div');aiDiv.className='ai-msg ai';aiDiv.textContent='Error: '+e.message;document.getElementById('aiChatBody').appendChild(aiDiv);document.getElementById('aiChatBody').scrollTop=document.getElementById('aiChatBody').scrollHeight}aiChatHistory.push({role:'ai',content:'Error: '+e.message})}finally{aiFetching=false;btn.disabled=false}}
+async function autoSendAiPrompt(){
+    if(aiFetching||!currentChartSym||!aiLoadingBubble)return;
+    aiFetching=true;
+    var btn=document.getElementById('aiSendBtn');
+    btn.disabled=true;
+    var sym=currentChartSym;
+    var prompt=AI_SYSTEM_PROMPT+'\n\nAnalyze '+sym+' USDT Futures. Give fundamentals and a score based on how good it is. Identify if the movement is driven by: news affect, fundamentals, growth orientated, development, speculative, or big whale movement. Summarise in 4-10 bullet points maximum.';
+    aiChatHistory.push({role:'system',content:prompt});
+    try{
+        var encoded=encodeURIComponent(prompt);
+        var resp=await fetch('https://text.pollinations.ai/'+encoded);
+        if(!resp.ok)throw new Error('API error: '+resp.status);
+        var data=await resp.text();
+        if(aiLoadingBubble){
+            aiLoadingBubble.innerHTML='✅ Analysis complete for '+sym;
+            aiLoadingBubble.classList.remove('loading');
+            aiLoadingBubble.id='';
+            var aiDiv=document.createElement('div');
+            aiDiv.className='ai-msg ai';
+            aiDiv.innerHTML=formatMarkdown(data);
+            document.getElementById('aiChatBody').appendChild(aiDiv);
+            document.getElementById('aiChatBody').scrollTop=document.getElementById('aiChatBody').scrollHeight;
+            aiChatHistory.push({role:'ai',content:data});
+        }
+    }catch(e){
+        if(aiLoadingBubble){
+            aiLoadingBubble.innerHTML='❌ Error for '+sym;
+            aiLoadingBubble.classList.remove('loading');
+            aiLoadingBubble.id='';
+            var aiDiv=document.createElement('div');
+            aiDiv.className='ai-msg ai';
+            aiDiv.textContent='Error: '+e.message;
+            document.getElementById('aiChatBody').appendChild(aiDiv);
+            document.getElementById('aiChatBody').scrollTop=document.getElementById('aiChatBody').scrollHeight;
+        }
+        aiChatHistory.push({role:'ai',content:'Error: '+e.message});
+    }finally{
+        aiFetching=false;
+        btn.disabled=false;
+        aiLoadingBubble=null;
+    }
+}
 
-async function sendAiChat(){if(aiFetching)return;var input=document.getElementById('aiInput');var q=input.value.trim();if(!q)return;input.value='';addAiChatBubble('user',q);aiChatHistory.push({role:'user',content:q});aiFetching=true;var btn=document.getElementById('aiSendBtn');btn.disabled=true;addAiChatBubble('ai','Thinking...','loading');try{var fullPrompt=aiChatHistory[0]?aiChatHistory[0].content:'';for(var i=1;i<aiChatHistory.length;i++){var m=aiChatHistory[i];if(m.role==='system')fullPrompt+='\n\nContext: '+m.content;else if(m.role==='user')fullPrompt+='\nUser: '+m.content;else if(m.role==='ai')fullPrompt+='\nAI: '+m.content}fullPrompt+='\nUser: '+q;fullPrompt+='\n\nRemember: Always respond in bullet points, max 10 points.';var encoded=encodeURIComponent(fullPrompt);var resp=await fetch('https://text.pollinations.ai/'+encoded);if(!resp.ok)throw new Error('API error: '+resp.status);var data=await resp.text();var bubble=document.querySelector('.ai-msg.ai.loading');if(bubble){bubble.innerHTML=formatMarkdown(data);bubble.classList.remove('loading')}aiChatHistory.push({role:'ai',content:data})}catch(e){var bubble=document.querySelector('.ai-msg.ai.loading');if(bubble){bubble.textContent='Error: '+e.message;bubble.classList.remove('loading')}aiChatHistory.push({role:'ai',content:'Error: '+e.message})}finally{aiFetching=false;btn.disabled=false}}
+async function sendAiChat(){
+    if(aiFetching)return;
+    var input=document.getElementById('aiInput');
+    var q=input.value.trim();
+    if(!q)return;
+    input.value='';
+    addAiChatBubble('user',q);
+    aiChatHistory.push({role:'user',content:q});
+    aiFetching=true;
+    var btn=document.getElementById('aiSendBtn');
+    btn.disabled=true;
+    var loadDiv=addAiChatBubble('ai','Thinking...','loading');
+    try{
+        var fullPrompt=aiChatHistory[0]?aiChatHistory[0].content:'';
+        for(var i=1;i<aiChatHistory.length;i++){
+            var m=aiChatHistory[i];
+            if(m.role==='system')fullPrompt+='\n\nContext: '+m.content;
+            else if(m.role==='user')fullPrompt+='\nUser: '+m.content;
+            else if(m.role==='ai')fullPrompt+='\nAI: '+m.content;
+        }
+        fullPrompt+='\nUser: '+q;
+        fullPrompt+='\n\nRemember: Always respond in bullet points, max 10 points.';
+        var encoded=encodeURIComponent(fullPrompt);
+        var resp=await fetch('https://text.pollinations.ai/'+encoded);
+        if(!resp.ok)throw new Error('API error: '+resp.status);
+        var data=await resp.text();
+        if(loadDiv){
+            loadDiv.innerHTML=formatMarkdown(data);
+            loadDiv.classList.remove('loading');
+        }
+        aiChatHistory.push({role:'ai',content:data});
+    }catch(e){
+        if(loadDiv){
+            loadDiv.textContent='Error: '+e.message;
+            loadDiv.classList.remove('loading');
+        }
+        aiChatHistory.push({role:'ai',content:'Error: '+e.message});
+    }finally{
+        aiFetching=false;
+        btn.disabled=false;
+    }
+}
 
 document.getElementById('aiInput').addEventListener('keydown',function(e){if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendAiChat()}});
 document.getElementById('aiPanel').addEventListener('touchstart',function(e){e.stopPropagation()},{passive:false});
@@ -619,7 +732,7 @@ function drawChart(){
 }
 
 function startChartLoop(){if(chartRAF)cancelAnimationFrame(chartRAF);(function lp(){if(!currentChartSym)return;if(chartDirty){chartDirty=false;drawChart()}chartRAF=requestAnimationFrame(lp)})()}
-function closeChart(){if(chartWs){try{chartWs.close()}catch(e){}chartWs=null}if(chartRAF){cancelAnimationFrame(chartRAF);chartRAF=null}if(gesture.momentumRAF){cancelAnimationFrame(gesture.momentumRAF);gesture.momentumRAF=null}clearTimeout(gesture.longPressTimer);currentChartSym=null;chartCandles=[];chartInd={ema:[[],[],[]],volMA:[],rsi:[],donchU:[],donchL:[],donchM:[],bbU:[],bbL:[],bbM:[],macdLine:[],macdSignal:[],macdHist:[]};gesture.crosshairActive=false;gesture.mode=null;gesture.isTouch=false;indPanelOpen=false;document.getElementById('indPanel').classList.remove('open');document.getElementById('chartSettingsBtn').classList.remove('active-btn');aiPanelOpen=false;aiChatHistory=[];document.getElementById('aiPanel').classList.remove('open');document.getElementById('chartAiBtn').classList.remove('active-btn');document.getElementById('chartOverlay').classList.remove('open');document.body.classList.remove('modal-open')}
+function closeChart(){if(chartWs){try{chartWs.close()}catch(e){}chartWs=null}if(chartRAF){cancelAnimationFrame(chartRAF);chartRAF=null}if(gesture.momentumRAF){cancelAnimationFrame(gesture.momentumRAF);gesture.momentumRAF=null}clearTimeout(gesture.longPressTimer);currentChartSym=null;chartCandles=[];chartInd={ema:[[],[],[]],volMA:[],rsi:[],donchU:[],donchL:[],donchM:[],bbU:[],bbL:[],bbM:[],macdLine:[],macdSignal:[],macdHist:[]};gesture.crosshairActive=false;gesture.mode=null;gesture.isTouch=false;indPanelOpen=false;document.getElementById('indPanel').classList.remove('open');document.getElementById('chartSettingsBtn').classList.remove('active-btn');aiPanelOpen=false;aiChatHistory=[];aiLoadingBubble=null;document.getElementById('aiPanel').classList.remove('open');document.getElementById('chartAiBtn').classList.remove('active-btn');document.getElementById('chartOverlay').classList.remove('open');document.body.classList.remove('modal-open')}
 
 var chartCanvasEl=document.getElementById('chartCanvas'),chartBodyEl=document.getElementById('chartBody');
 function touchDist(t1,t2){var dx=t1.clientX-t2.clientX,dy=t1.clientY-t2.clientY;return Math.sqrt(dx*dx+dy*dy)}
