@@ -104,8 +104,6 @@
         .cpick:hover{border-color:#fff;transform:scale(1.15)}
         .ind-reset{display:block;margin:8px 12px 14px;padding:7px;text-align:center;background:transparent;border:1px solid var(--border);color:var(--dim);font-size:9px;font-weight:700;border-radius:4px;cursor:pointer;transition:all .15s;letter-spacing:.5px}
         .ind-reset:hover{border-color:var(--red);color:var(--red)}
-
-        /* Panel Reordering Panel */
         .panel-reorder-section{border-top:1px solid var(--border);margin-top:8px;padding-top:10px}
         .panel-reorder-item{display:flex;align-items:center;gap:6px;padding:6px 8px;margin-bottom:4px;background:#1e2026;border:1px solid var(--border);border-radius:4px;cursor:grab;transition:background .15s,transform .1s;user-select:none}
         .panel-reorder-item:active{cursor:grabbing}
@@ -119,8 +117,6 @@
         .panel-reorder-item .panel-toggle input:checked+.sw2{background:var(--green)}
         .panel-reorder-item .panel-toggle input:checked+.sw2::after{left:12px;background:#fff}
         .panel-reorder-item .panel-toggle input:disabled+.sw2{opacity:0.4;cursor:not-allowed}
-
-        /* AI Chat Panel */
         .ai-panel{position:absolute;top:0;left:0;width:360px;max-width:88vw;height:100%;background:#13161c;border-right:1px solid var(--border);z-index:100;transform:translateX(-100%);transition:transform .25s cubic-bezier(.4,0,.2,1);display:flex;flex-direction:column;overflow:hidden;touch-action:auto}
         .ai-panel.open{transform:translateX(0)}
         .ai-panel-head{display:flex;justify-content:space-between;align-items:center;padding:10px 12px;border-bottom:1px solid var(--border);flex-shrink:0}
@@ -140,7 +136,6 @@
         .ai-send{background:var(--accent);color:#000;border:none;border-radius:6px;padding:8px 14px;font-weight:900;font-size:11px;cursor:pointer;transition:all .15s;flex-shrink:0}
         .ai-send:hover:not(:disabled){box-shadow:0 0 12px rgba(252,213,53,.4)}
         .ai-send:disabled{opacity:.5;cursor:not-allowed}
-
         @media(max-width:1100px){.main-grid{flex-direction:column}.table-container.watchlist-panel{flex:none;min-width:0}}
     </style>
 </head>
@@ -256,7 +251,6 @@ var DEF_IND={
 };
 var indSettings=JSON.parse(JSON.stringify(DEF_IND));
 
-/* Panel order for sub-indicators */
 var DEFAULT_PANEL_ORDER=['vol','macd','rsi'];
 var panelOrder=[];
 function loadPanelOrder(){try{var s=localStorage.getItem('sq_panelOrder');if(s){var d=JSON.parse(s);panelOrder=d.filter(function(p){return DEFAULT_PANEL_ORDER.indexOf(p)!==-1});DEFAULT_PANEL_ORDER.forEach(function(p){if(panelOrder.indexOf(p)===-1)panelOrder.push(p)})}else{panelOrder=DEFAULT_PANEL_ORDER.slice()}}catch(e){panelOrder=DEFAULT_PANEL_ORDER.slice()}}
@@ -267,22 +261,20 @@ function resetIndDefaults(){indSettings=JSON.parse(JSON.stringify(DEF_IND));pane
 function toggleIndPanel(){indPanelOpen=!indPanelOpen;document.getElementById('indPanel').classList.toggle('open',indPanelOpen);document.getElementById('chartSettingsBtn').classList.toggle('active-btn',indPanelOpen)}
 var indPanelOpen=false;
 
-/* AI Panel state */
 var aiPanelOpen=false;
 var aiFetching=false;
 var aiChatHistory=[];
+var AI_SYSTEM_PROMPT="ALWAYS respond in bullet points. Maximum 10 points only. Use concise, direct language. Each point should be a short sentence or phrase.";
 
-function toggleAiPanel(){aiPanelOpen=!aiPanelOpen;document.getElementById('aiPanel').classList.toggle('open',aiPanelOpen);document.getElementById('chartAiBtn').classList.toggle('active-btn',aiPanelOpen);if(aiPanelOpen&&currentChartSym){aiChatHistory=[];var body=document.getElementById('aiChatBody');body.innerHTML='';buildAiInitialMessage();autoSendAiPrompt()}}
-
-function buildAiInitialMessage(){var sym=currentChartSym;var initPrompt=sym+' usdt future give me fundamentals and a score based on how good it is and the movement is either driven by news affect or else fundamental or growth orientated or development or speculative or big whale movement and summarise in 4-10lines';aiChatHistory.push({role:'system',content:initPrompt});var body=document.getElementById('aiChatBody');body.innerHTML='';addAiChatBubble('system','🔍 Analyzing '+sym+'...','loading')}
+function toggleAiPanel(){aiPanelOpen=!aiPanelOpen;document.getElementById('aiPanel').classList.toggle('open',aiPanelOpen);document.getElementById('chartAiBtn').classList.toggle('active-btn',aiPanelOpen);if(aiPanelOpen&&currentChartSym){aiChatHistory=[];var body=document.getElementById('aiChatBody');body.innerHTML='';var initBubble=addAiChatBubble('system','🔍 Analyzing '+currentChartSym+'...','loading');initBubble.innerHTML='🔍 Analyzing '+currentChartSym+'...';autoSendAiPrompt()}}
 
 function addAiChatBubble(role,text,extraClass){var body=document.getElementById('aiChatBody');var div=document.createElement('div');div.className='ai-msg '+(role==='user'?'user':'ai')+(extraClass?' '+extraClass:'');if(role==='system'){div.innerHTML='🔍 '+formatMarkdown(text)}else{div.innerHTML=formatMarkdown(text)}body.appendChild(div);body.scrollTop=body.scrollHeight;return div}
 
-function formatMarkdown(text){return text.replace(/\*\*(.*?)\*\*/g,'<span class="ai-bold">$1</span>').replace(/\*(.*?)\*/g,'<i>$1</i>').replace(/\n/g,'<br>')}
+function formatMarkdown(text){var s=text.replace(/\*\*(.*?)\*\*/g,'<span class="ai-bold">$1</span>').replace(/\*(.*?)\*/g,'<i>$1</i>');s=s.replace(/\n/g,'<br>');return s}
 
-async function autoSendAiPrompt(){if(aiFetching||!currentChartSym)return;aiFetching=true;var btn=document.getElementById('aiSendBtn');btn.disabled=true;var prompt='give me news about '+currentChartSym+' usdt future give me fundamentals and a score based on how good it is and the movement is either driven by news affect or else fundamental or growth orientated or development or speculative or big whale movement and summarise in 4-10lines';try{var encoded=encodeURIComponent(prompt);var resp=await fetch('https://text.pollinations.ai/'+encoded);if(!resp.ok)throw new Error('API error: '+resp.status);var data=await resp.text();var bubble=addAiChatBubble('ai',data,'');aiChatHistory.push({role:'ai',content:data});bubble.classList.remove('loading')}catch(e){var bubble=document.querySelector('.ai-msg.ai.loading');if(bubble){bubble.textContent='Error: '+e.message;bubble.classList.remove('loading')}aiChatHistory.push({role:'ai',content:'Error: '+e.message})}finally{aiFetching=false;btn.disabled=false}}
+async function autoSendAiPrompt(){if(aiFetching||!currentChartSym)return;aiFetching=true;var btn=document.getElementById('aiSendBtn');btn.disabled=true;var sym=currentChartSym;var prompt=AI_SYSTEM_PROMPT+'\n\nAnalyze '+sym+' USDT Futures. Give fundamentals and a score based on how good it is. Identify if the movement is driven by: news affect, fundamentals, growth orientated, development, speculative, or big whale movement. Summarise in 4-10 bullet points maximum.';aiChatHistory.push({role:'system',content:prompt});try{var encoded=encodeURIComponent(prompt);var resp=await fetch('https://text.pollinations.ai/'+encoded);if(!resp.ok)throw new Error('API error: '+resp.status);var data=await resp.text();var bubble=document.querySelector('.ai-msg.system');if(bubble){bubble.textContent='Analysis for '+sym;var aiDiv=document.createElement('div');aiDiv.className='ai-msg ai';aiDiv.innerHTML=formatMarkdown(data);document.getElementById('aiChatBody').appendChild(aiDiv);document.getElementById('aiChatBody').scrollTop=document.getElementById('aiChatBody').scrollHeight;aiChatHistory.push({role:'ai',content:data})}}catch(e){var bubble=document.querySelector('.ai-msg.system');if(bubble){var aiDiv=document.createElement('div');aiDiv.className='ai-msg ai';aiDiv.textContent='Error: '+e.message;document.getElementById('aiChatBody').appendChild(aiDiv);document.getElementById('aiChatBody').scrollTop=document.getElementById('aiChatBody').scrollHeight}aiChatHistory.push({role:'ai',content:'Error: '+e.message})}finally{aiFetching=false;btn.disabled=false}}
 
-async function sendAiChat(){if(aiFetching)return;var input=document.getElementById('aiInput');var q=input.value.trim();if(!q)return;input.value='';addAiChatBubble('user',q);aiChatHistory.push({role:'user',content:q});aiFetching=true;var btn=document.getElementById('aiSendBtn');btn.disabled=true;addAiChatBubble('ai','Thinking...','loading');try{var fullPrompt='';for(var i=0;i<aiChatHistory.length;i++){var m=aiChatHistory[i];if(m.role==='system')fullPrompt+=m.content+'\n\n';else if(m.role==='user')fullPrompt+='User: '+m.content+'\n';else if(m.role==='ai')fullPrompt+='AI: '+m.content+'\n\n'}fullPrompt+='User: '+q;var encoded=encodeURIComponent(fullPrompt);var resp=await fetch('https://text.pollinations.ai/'+encoded);if(!resp.ok)throw new Error('API error: '+resp.status);var data=await resp.text();var bubble=document.querySelector('.ai-msg.ai.loading');if(bubble){bubble.innerHTML=formatMarkdown(data);bubble.classList.remove('loading')}aiChatHistory.push({role:'ai',content:data})}catch(e){var bubble=document.querySelector('.ai-msg.ai.loading');if(bubble){bubble.textContent='Error: '+e.message;bubble.classList.remove('loading')}aiChatHistory.push({role:'ai',content:'Error: '+e.message})}finally{aiFetching=false;btn.disabled=false}}
+async function sendAiChat(){if(aiFetching)return;var input=document.getElementById('aiInput');var q=input.value.trim();if(!q)return;input.value='';addAiChatBubble('user',q);aiChatHistory.push({role:'user',content:q});aiFetching=true;var btn=document.getElementById('aiSendBtn');btn.disabled=true;addAiChatBubble('ai','Thinking...','loading');try{var fullPrompt=aiChatHistory[0]?aiChatHistory[0].content:'';for(var i=1;i<aiChatHistory.length;i++){var m=aiChatHistory[i];if(m.role==='system')fullPrompt+='\n\nContext: '+m.content;else if(m.role==='user')fullPrompt+='\nUser: '+m.content;else if(m.role==='ai')fullPrompt+='\nAI: '+m.content}fullPrompt+='\nUser: '+q;fullPrompt+='\n\nRemember: Always respond in bullet points, max 10 points.';var encoded=encodeURIComponent(fullPrompt);var resp=await fetch('https://text.pollinations.ai/'+encoded);if(!resp.ok)throw new Error('API error: '+resp.status);var data=await resp.text();var bubble=document.querySelector('.ai-msg.ai.loading');if(bubble){bubble.innerHTML=formatMarkdown(data);bubble.classList.remove('loading')}aiChatHistory.push({role:'ai',content:data})}catch(e){var bubble=document.querySelector('.ai-msg.ai.loading');if(bubble){bubble.textContent='Error: '+e.message;bubble.classList.remove('loading')}aiChatHistory.push({role:'ai',content:'Error: '+e.message})}finally{aiFetching=false;btn.disabled=false}}
 
 document.getElementById('aiInput').addEventListener('keydown',function(e){if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendAiChat()}});
 document.getElementById('aiPanel').addEventListener('touchstart',function(e){e.stopPropagation()},{passive:false});
@@ -304,7 +296,6 @@ function buildIndPanel(){
     h+='<span class="ind-label-sm">W</span><input type="number" class="ind-width" id="'+p+'-w" value="'+e.width+'" min="0.5" max="6" step="0.5" title="Thickness">';
     h+='<div class="ind-color" id="'+p+'-col" style="background:'+e.color+'"></div></div>'}
     h+='</div>';
-
     h+='<div class="ind-section"><div class="ind-section-title">Channels</div>';
     var dc=indSettings.donchian,p='dc';
     h+='<div class="ind-row"><label class="ind-toggle"><input type="checkbox" id="'+p+'-on" '+(dc.enabled?'checked':'')+'><span class="sw"></span>Donchian</label>';
@@ -314,7 +305,6 @@ function buildIndPanel(){
     h+='<div class="ind-color" id="'+p+'-col" style="background:'+dc.color+'"></div></div>';
     h+='<div class="ind-sub"><label class="ind-toggle" style="min-width:auto"><input type="checkbox" id="'+p+'-fill" '+(dc.fill?'checked':'')+'><span class="sw"></span>Fill</label>';
     h+='<label class="ind-toggle" style="min-width:auto"><input type="checkbox" id="'+p+'-mid" '+(dc.showMid?'checked':'')+'><span class="sw"></span>Mid Line</label></div>';
-
     var bb=indSettings.bollinger;p='bb';
     h+='<div class="ind-row" style="margin-top:4px"><label class="ind-toggle"><input type="checkbox" id="'+p+'-on" '+(bb.enabled?'checked':'')+'><span class="sw"></span>Bollinger</label>';
     h+='<input type="number" class="ind-period" id="'+p+'-per" value="'+bb.period+'" min="2" max="500" title="Period">';
@@ -324,7 +314,6 @@ function buildIndPanel(){
     h+='<div class="ind-sub"><span class="ind-label-sm">STD</span><input type="number" class="ind-period" value="'+bb.mult+'" min="0.1" max="5" step="0.1" style="width:46px" id="'+p+'-mult" title="Std Dev">';
     h+='<label class="ind-toggle" style="min-width:auto"><input type="checkbox" id="'+p+'-fill" '+(bb.fill?'checked':'')+'><span class="sw"></span>Fill</label></div>';
     h+='</div>';
-
     h+='<div class="ind-section"><div class="ind-section-title">Oscillators</div>';
     var mc=indSettings.macd,p='macd';
     h+='<div class="ind-row"><label class="ind-toggle"><input type="checkbox" id="'+p+'-on" '+(mc.enabled?'checked':'')+'><span class="sw"></span>MACD</label>';
@@ -337,7 +326,6 @@ function buildIndPanel(){
     h+='<span class="ind-label-sm">Sig</span><div class="ind-color" id="'+p+'-colS" style="background:'+mc.signalColor+'"></div></div>';
     h+='<div class="ind-sub"><span class="ind-label-sm">Hist +</span><div class="ind-color" id="'+p+'-colHP" style="background:'+mc.histP+'"></div>';
     h+='<span class="ind-label-sm">Hist -</span><div class="ind-color" id="'+p+'-colHN" style="background:'+mc.histN+'"></div></div>';
-
     var rs=indSettings.rsi;p='rsi';
     h+='<div class="ind-row" style="margin-top:4px"><label class="ind-toggle"><input type="checkbox" id="'+p+'-on" '+(rs.enabled?'checked':'')+'><span class="sw"></span>RSI</label>';
     h+='<input type="number" class="ind-period" id="'+p+'-per" value="'+rs.period+'" min="2" max="200" title="Period">';
@@ -347,7 +335,6 @@ function buildIndPanel(){
     h+='<div class="ind-sub"><span class="ind-label-sm">OB</span><input type="number" class="ind-period" id="'+p+'-ob" value="'+rs.ob+'" min="50" max="100" title="Overbought">';
     h+='<span class="ind-label-sm">OS</span><input type="number" class="ind-period" id="'+p+'-os" value="'+rs.os+'" min="0" max="50" title="Oversold"></div>';
     h+='</div>';
-
     h+='<div class="ind-section"><div class="ind-section-title">Volume</div>';
     var vm=indSettings.volMA,p='vol';
     h+='<div class="ind-row"><label class="ind-toggle"><input type="checkbox" id="'+p+'-on" '+(vm.enabled?'checked':'')+'><span class="sw"></span>Vol MA</label>';
@@ -356,8 +343,6 @@ function buildIndPanel(){
     h+='<span class="ind-label-sm">W</span><input type="number" class="ind-width" id="'+p+'-w" value="'+vm.width+'" min="0.5" max="6" step="0.5" title="Thickness">';
     h+='<div class="ind-color" id="'+p+'-col" style="background:'+vm.color+'"></div></div>';
     h+='</div>';
-
-    /* Panel Reorder Section */
     h+='<div class="panel-reorder-section"><div class="ind-section-title">Panel Order (drag to reorder)</div><div id="panelReorderList">';
     var panelLabels={'vol':'Volume','macd':'MACD','rsi':'RSI'};
     for(var pi=0;pi<panelOrder.length;pi++){var pk=panelOrder[pi];
@@ -366,13 +351,11 @@ function buildIndPanel(){
     h+='<label class="panel-toggle"><input type="checkbox" id="panel-toggle-'+pk+'" '+(indSettings[pk==='vol'?'volMA':pk].enabled?'checked':'')+'><span class="sw2"></span></label>';
     h+='</div>'}
     h+='</div></div>';
-
     document.getElementById('indPanelBody').innerHTML=h;
     bindIndEvents();
     bindPanelReorder();
 }
 
-/* Bind panel reorder drag-and-drop */
 function bindPanelReorder(){
     var container=document.getElementById('panelReorderList');if(!container)return;
     var items=container.querySelectorAll('.panel-reorder-item');
@@ -391,8 +374,7 @@ function bindPanelReorder(){
             if(fromIdx===-1||toIdx===-1)return;
             panelOrder.splice(fromIdx,1);panelOrder.splice(toIdx,0,dragSrcEl.dataset.panel);
             savePanelOrder();chartDirty=true;
-            var oldHtml=container.innerHTML;buildIndPanel();
-            /* re-bind toggle states since rebuild resets them */
+            buildIndPanel();
             panelOrder.forEach(function(pk){
                 var toggle=document.getElementById('panel-toggle-'+pk);
                 if(toggle)toggle.checked=indSettings[pk==='vol'?'volMA':pk].enabled;
@@ -401,7 +383,6 @@ function bindPanelReorder(){
         });
         item.addEventListener('dragend',function(){this.classList.remove('dragging');dragSrcEl=null});
     });
-    /* Bind panel toggle switches */
     items.forEach(function(item){
         var key=item.dataset.panel;
         var toggle=document.getElementById('panel-toggle-'+key);
@@ -426,7 +407,6 @@ function bindIndEvents(){
     $(p+'-w').onchange=function(){indSettings.ema[idx].width=Math.max(0.5,parseFloat(this.value)||1);refresh()};
     $(p+'-col').onclick=function(){showCP(this,function(c){indSettings.ema[idx].color=c;rebuild()})};
     for(var s=0;s<3;s++)(function(si){$(p+'-s'+si).onclick=function(){indSettings.ema[idx].style=si;rebuild()}})(s)})(i)}
-
     $('dc-on').onchange=function(){indSettings.donchian.enabled=this.checked;refresh()};
     $('dc-per').onchange=function(){indSettings.donchian.period=Math.max(2,parseInt(this.value)||20);refresh()};
     $('dc-w').onchange=function(){indSettings.donchian.width=Math.max(0.5,parseFloat(this.value)||1.5);refresh()};
@@ -434,7 +414,6 @@ function bindIndEvents(){
     $('dc-fill').onchange=function(){indSettings.donchian.fill=this.checked;refresh()};
     $('dc-mid').onchange=function(){indSettings.donchian.showMid=this.checked;refresh()};
     for(var s=0;s<3;s++)(function(si){$('dc-s'+si).onclick=function(){indSettings.donchian.style=si;rebuild()}})(s);
-
     $('bb-on').onchange=function(){indSettings.bollinger.enabled=this.checked;refresh()};
     $('bb-per').onchange=function(){indSettings.bollinger.period=Math.max(2,parseInt(this.value)||20);refresh()};
     $('bb-w').onchange=function(){indSettings.bollinger.width=Math.max(0.5,parseFloat(this.value)||1);refresh()};
@@ -442,7 +421,6 @@ function bindIndEvents(){
     $('bb-col').onclick=function(){showCP(this,function(c){indSettings.bollinger.color=c;rebuild()})};
     $('bb-fill').onchange=function(){indSettings.bollinger.fill=this.checked;refresh()};
     for(var s=0;s<3;s++)(function(si){$('bb-s'+si).onclick=function(){indSettings.bollinger.style=si;rebuild()}})(s);
-
     $('macd-on').onchange=function(){indSettings.macd.enabled=this.checked;refresh()};
     $('macd-fast').onchange=function(){indSettings.macd.fast=Math.max(2,parseInt(this.value)||12);refresh()};
     $('macd-slow').onchange=function(){indSettings.macd.slow=Math.max(2,parseInt(this.value)||26);refresh()};
@@ -453,7 +431,6 @@ function bindIndEvents(){
     $('macd-colHP').onclick=function(){showCP(this,function(c){indSettings.macd.histP=c;rebuild()})};
     $('macd-colHN').onclick=function(){showCP(this,function(c){indSettings.macd.histN=c;rebuild()})};
     for(var s=0;s<3;s++)(function(si){$('macd-s'+si).onclick=function(){indSettings.macd.style=si;rebuild()}})(s);
-
     $('rsi-on').onchange=function(){indSettings.rsi.enabled=this.checked;refresh()};
     $('rsi-per').onchange=function(){indSettings.rsi.period=Math.max(2,parseInt(this.value)||14);refresh()};
     $('rsi-w').onchange=function(){indSettings.rsi.width=Math.max(0.5,parseFloat(this.value)||1.2);refresh()};
@@ -461,7 +438,6 @@ function bindIndEvents(){
     $('rsi-os').onchange=function(){indSettings.rsi.os=Math.max(0,Math.min(50,parseInt(this.value)||30));refresh()};
     $('rsi-col').onclick=function(){showCP(this,function(c){indSettings.rsi.color=c;rebuild()})};
     for(var s=0;s<3;s++)(function(si){$('rsi-s'+si).onclick=function(){indSettings.rsi.style=si;rebuild()}})(s);
-
     $('vol-on').onchange=function(){indSettings.volMA.enabled=this.checked;refresh()};
     $('vol-per').onchange=function(){indSettings.volMA.period=Math.max(2,parseInt(this.value)||20);refresh()};
     $('vol-w').onchange=function(){indSettings.volMA.width=Math.max(0.5,parseFloat(this.value)||1);refresh()};
@@ -500,11 +476,8 @@ function drawChart(){
     var BG='#0b0e11',GRID='#1a1d23',TEXT='#848e9c',GREEN='#0ecb81',RED='#f6465d';
     ctx.fillStyle=BG;ctx.fillRect(0,0,w,h);
     if(!chartCandles.length){ctx.fillStyle=TEXT;ctx.font='13px Inter';ctx.textAlign='center';ctx.fillText('No data',w/2,h/2);return}
-
     var PR=CHART_PR,PB=22,PT=6,GAP=3;
     var chartW=w-PR,totalH=h-PT-PB;
-
-    /* Calculate panel heights independently based on panelOrder */
     var activePanels=[];
     for(var pi=0;pi<panelOrder.length;pi++){
         var pk=panelOrder[pi];
@@ -514,7 +487,6 @@ function drawChart(){
     var subPanelH=activePanels.length>0?totalH*0.18:0;
     var priceH=totalH-(activePanels.length*subPanelH)-(activePanels.length*GAP);
     if(priceH<80){priceH=80;if(activePanels.length>0){subPanelH=(totalH-priceH-(activePanels.length*GAP))/activePanels.length;if(subPanelH<60){subPanelH=60;priceH=totalH-(activePanels.length*subPanelH)-(activePanels.length*GAP)}}}
-
     var volH=subPanelH;
     var panelPositions={};
     var curTop=PT+priceH+GAP;
@@ -527,13 +499,11 @@ function drawChart(){
     var macdH=panelPositions['macd']?panelPositions['macd'].h:0;
     var rsiTop=panelPositions['rsi']?panelPositions['rsi'].top:null;
     var rsiH=panelPositions['rsi']?panelPositions['rsi'].h:0;
-
     var endIdx=chartCandles.length-1-chartOffset,startIdx=endIdx-chartZoom+1;
     startIdx=Math.max(0,startIdx);endIdx=startIdx+chartZoom-1;
     var realEnd=Math.min(endIdx,chartCandles.length-1);
     var sl=chartCandles.slice(startIdx,realEnd+1);
     var cW=chartW/chartZoom,bW=Math.max(1,cW*0.65),wkW=Math.max(1,cW<5?1:1.5);
-
     var mnP=Infinity,mxP=-Infinity,mxV=0;
     for(var i=0;i<sl.length;i++){if(sl[i].l<mnP)mnP=sl[i].l;if(sl[i].h>mxP)mxP=sl[i].h;if(sl[i].v>mxV)mxV=sl[i].v}
     function incl(arr){if(!arr.length)return;for(var c=0;c<sl.length;c++){var gi=startIdx+c,v=arr[gi];if(v!=null){if(v<mnP)mnP=v;if(v>mxP)mxP=v}}}
@@ -544,13 +514,11 @@ function drawChart(){
     if(!gesture.priceAuto){var _ac=(mnP+mxP)/2,_r=pR*gesture.priceZoom;mnP=_ac-_r/2;mxP=_ac+_r/2;pR=mxP-mnP}
     function pY(p){return PT+priceH-((p-mnP)/pR)*priceH}
     function fpa(p){return p<1?p.toFixed(5):p<100?p.toFixed(3):p<10000?p.toFixed(1):p.toLocaleString()}
-
     ctx.strokeStyle=GRID;ctx.lineWidth=0.5;ctx.fillStyle=TEXT;ctx.font='9px JetBrains Mono';ctx.textAlign='left';
     for(var g=0;g<=6;g++){var gp=mnP+(pR/6)*g,gy=pY(gp);ctx.beginPath();ctx.moveTo(0,gy);ctx.lineTo(chartW,gy);ctx.stroke();ctx.fillText(fpa(gp),chartW+4,gy+3)}
     var iv=chartInterval,le=Math.max(1,Math.floor(chartZoom/8));ctx.textAlign='center';
     var botBound=curTop-GAP/2;
     for(var t=0;t<chartZoom;t+=le){var tx=t*cW+cW/2,di=startIdx+t;if(di>=0&&di<chartCandles.length){var d=new Date(chartCandles[di].t),lb;if(iv==='1d')lb=(d.getMonth()+1)+'/'+d.getDate();else if(iv==='1h'||iv==='4h')lb=d.getHours()+':00';else lb=d.getHours()+':'+(d.getMinutes()<10?'0':'')+d.getMinutes();ctx.fillText(lb,tx,h-6);ctx.beginPath();ctx.moveTo(tx,PT);ctx.lineTo(tx,botBound);ctx.stroke()}}
-
     ctx.strokeStyle=GRID;ctx.lineWidth=0.5;
     if(activePanels.length>0){
         for(var pi=0;pi<activePanels.length;pi++){
@@ -559,13 +527,10 @@ function drawChart(){
             ctx.beginPath();ctx.moveTo(0,pTop+panelPositions[activePanels[pi]].h);ctx.lineTo(chartW,pTop+panelPositions[activePanels[pi]].h);ctx.stroke();
         }
     }
-
     function hexToRgba(hex,a){var r=parseInt(hex.slice(1,3),16),g=parseInt(hex.slice(3,5),16),b=parseInt(hex.slice(5,7),16);return'rgba('+r+','+g+','+b+','+a+')'}
     function drawFill(up,lo,col){if(!up.length||!lo.length)return;ctx.fillStyle=hexToRgba(col,0.06);ctx.beginPath();var st=false;for(var c=0;c<sl.length;c++){var gi=startIdx+c,v=up[gi];if(v==null)continue;if(!st){ctx.moveTo(c*cW+cW/2,pY(v));st=true}else ctx.lineTo(c*cW+cW/2,pY(v))}for(var c=sl.length-1;c>=0;c--){var gi=startIdx+c,v=lo[gi];if(v==null)continue;ctx.lineTo(c*cW+cW/2,pY(v))}ctx.closePath();ctx.fill()}
     function drawChLine(arr,col,si,w){if(!arr.length)return;ctx.strokeStyle=col;ctx.lineWidth=w;ctx.setLineDash(LINE_STYLES[si]||[]);ctx.beginPath();var st=false;for(var c=0;c<sl.length;c++){var gi=startIdx+c,v=arr[gi];if(v==null)continue;var x=c*cW+cW/2;if(!st){ctx.moveTo(x,pY(v));st=true}else ctx.lineTo(x,pY(v))}ctx.stroke();ctx.setLineDash([])}
     function drawSubLine(arr,col,si,w,sTop,sH,sMin,sMax){if(!arr.length)return;var rng=sMax-sMin;if(rng===0)rng=1;ctx.strokeStyle=col;ctx.lineWidth=w;ctx.setLineDash(LINE_STYLES[si]||[]);ctx.beginPath();var st=false;for(var c=0;c<sl.length;c++){var gi=startIdx+c,v=arr[gi];if(v==null)continue;var x=c*cW+cW/2,y=sTop+sH-((v-sMin)/rng)*sH;if(!st){ctx.moveTo(x,y);st=true}else ctx.lineTo(x,y)}ctx.stroke();ctx.setLineDash([])}
-
-    /* Donchian */
     if(indSettings.donchian.enabled){
         var dw=indSettings.donchian.width||1.5;
         if(indSettings.donchian.fill)drawFill(chartInd.donchU,chartInd.donchL,indSettings.donchian.color);
@@ -575,7 +540,6 @@ function drawChart(){
             ctx.strokeStyle=indSettings.donchian.color;ctx.lineWidth=dw*0.5;ctx.setLineDash(LINE_STYLES[indSettings.donchian.style]||[2,2]);
             ctx.beginPath();var st=false;for(var c=0;c<sl.length;c++){var gi=startIdx+c,v=chartInd.donchM[gi];if(v==null)continue;var x=c*cW+cW/2;if(!st){ctx.moveTo(x,pY(v));st=true}else ctx.lineTo(x,pY(v))}ctx.stroke();ctx.setLineDash([])}
     }
-    /* Bollinger */
     if(indSettings.bollinger.enabled){
         var bw=indSettings.bollinger.width||1;
         if(indSettings.bollinger.fill)drawFill(chartInd.bbU,chartInd.bbL,indSettings.bollinger.color);
@@ -584,35 +548,24 @@ function drawChart(){
         ctx.strokeStyle=indSettings.bollinger.color;ctx.lineWidth=bw*0.5;ctx.setLineDash(LINE_STYLES[indSettings.bollinger.style]||[2,2]);
         ctx.beginPath();var st=false;for(var c=0;c<sl.length;c++){var gi=startIdx+c,v=chartInd.bbM[gi];if(v==null)continue;if(!st){ctx.moveTo(c*cW+cW/2,pY(v));st=true}else ctx.lineTo(c*cW+cW/2,pY(v))}ctx.stroke();ctx.setLineDash([]);
     }
-
-    /* Volume bars */
     if(volTop!==null||panelPositions['vol']){
         var vT=panelPositions['vol']?panelPositions['vol'].top:volTop;
         var vH=panelPositions['vol']?panelPositions['vol'].h:volH;
-        var volBW=Math.max(bW*1.3, cW*0.88);
+        var volBW=Math.max(bW*1.3,cW*0.88);
         for(var c=0;c<sl.length;c++){var cd=sl[c],cx=c*cW+cW/2,isUp=cd.c>=cd.o;
         var vBH=mxV>0?(cd.v/mxV)*vH:0;
         if(isUp){ctx.fillStyle='rgba(14,203,129,0.4)'}else{ctx.fillStyle='rgba(246,70,93,0.4)'}
         ctx.fillRect(cx-volBW/2,vT+vH-vBH,volBW,vBH)}
-
-        /* Vol MA */
         if(indSettings.volMA.enabled&&chartInd.volMA.length){
             ctx.strokeStyle=indSettings.volMA.color;ctx.lineWidth=indSettings.volMA.width||1;
             ctx.setLineDash(LINE_STYLES[indSettings.volMA.style]||[]);
             ctx.beginPath();var vs=false;for(var c=0;c<sl.length;c++){var gi=startIdx+c,vm=chartInd.volMA[gi];if(vm==null)continue;var vx=c*cW+cW/2,vy=vT+vH-(vm/(mxV||1))*vH;vy=Math.max(vT,Math.min(vT+vH,vy));if(!vs){ctx.moveTo(vx,vy);vs=true}else ctx.lineTo(vx,vy)}ctx.stroke();ctx.setLineDash([]);
         }
     }
-
-    /* EMAs */
     for(var i=0;i<3;i++){if(!indSettings.ema[i].enabled||!chartInd.ema[i].length)continue;var e=indSettings.ema[i];ctx.strokeStyle=e.color;ctx.lineWidth=e.width||1.2;ctx.setLineDash(LINE_STYLES[e.style]||[]);ctx.beginPath();var st=false;for(var c=0;c<sl.length;c++){var gi=startIdx+c,v=chartInd.ema[i][gi];if(v==null)continue;var x=c*cW+cW/2;if(!st){ctx.moveTo(x,pY(v));st=true}else ctx.lineTo(x,pY(v))}ctx.stroke();ctx.setLineDash([])}
-
-    /* Candlesticks */
     for(var c=0;c<sl.length;c++){var cd=sl[c],cx=c*cW+cW/2,isUp=cd.c>=cd.o,col=isUp?GREEN:RED;ctx.strokeStyle=col;ctx.lineWidth=wkW;ctx.beginPath();ctx.moveTo(cx,pY(cd.h));ctx.lineTo(cx,pY(cd.l));ctx.stroke();var yt=pY(Math.max(cd.o,cd.c)),yb=pY(Math.min(cd.o,cd.c)),bh=Math.max(1,yb-yt);ctx.fillStyle=col;ctx.fillRect(cx-bW/2,yt,bW,bh)}
-
     var lastGIdx=chartCandles.length-1;
     if(lastGIdx>=startIdx&&lastGIdx<=startIdx+sl.length-1){var lc=sl[lastGIdx-startIdx],lY=pY(lc.c),lCol=lc.c>=lc.o?GREEN:RED;ctx.strokeStyle=lCol;ctx.lineWidth=1;ctx.setLineDash([4,3]);ctx.beginPath();ctx.moveTo(0,lY);ctx.lineTo(chartW,lY);ctx.stroke();ctx.setLineDash([]);ctx.fillStyle=lCol;ctx.fillRect(chartW,lY-9,PR,18);ctx.fillStyle=lc.c>=lc.o?'#000':'#fff';ctx.font='bold 9px JetBrains Mono';ctx.textAlign='left';ctx.fillText(fpa(lc.c),chartW+4,lY+3)}
-
-    /* MACD */
     if(macdTop!==null&&indSettings.macd.enabled&&chartInd.macdLine.length){
         var mcMn=Infinity,mcMx=-Infinity;
         for(var c=0;c<sl.length;c++){var gi=startIdx+c;var v=chartInd.macdLine[gi];if(v!=null){if(v<mcMn)mcMn=v;if(v>mcMx)mcMx=v}v=chartInd.macdSignal[gi];if(v!=null){if(v<mcMn)mcMn=v;if(v>mcMx)mcMx=v}v=chartInd.macdHist[gi];if(v!=null){if(v<mcMn)mcMn=v;if(v>mcMx)mcMx=v}}
@@ -626,8 +579,6 @@ function drawChart(){
         drawSubLine(chartInd.macdLine,indSettings.macd.macdColor,indSettings.macd.style,indSettings.macd.width||1.2,mTop,mH,mcMn,mcMx);
         ctx.font='8px JetBrains Mono';ctx.textAlign='left';ctx.fillStyle='#848e9c';ctx.fillText('MACD',chartW+4,mTop+10);if(chartInd.macdLine[lastGIdx]!=null)ctx.fillText(chartInd.macdLine[lastGIdx].toFixed(4),chartW+4,mTop+20);
     }
-
-    /* RSI */
     if(rsiTop!==null&&indSettings.rsi.enabled&&chartInd.rsi.length){
         var ob=indSettings.rsi.ob,os=indSettings.rsi.os;
         function rsiY(v){return rsiTop+rsiH-(v/100)*rsiH}
@@ -642,17 +593,14 @@ function drawChart(){
         ctx.fillText(ob+'',chartW+4,rsiY(ob)+3);ctx.fillText(os+'',chartW+4,rsiY(os)+3);ctx.fillText('50',chartW+4,rsiY(50)+3);
         ctx.fillText('RSI',chartW+4,rsiTop+10);if(chartInd.rsi[lastGIdx]!=null)ctx.fillText(chartInd.rsi[lastGIdx].toFixed(1),chartW+4,rsiTop+20);
     }
-
     ctx.font='bold 9px JetBrains Mono';ctx.textAlign='left';var legY=PT+14,legX=6;
     function legLn(col,label,val){ctx.fillStyle=col;ctx.fillRect(legX,legY-5,14,2);ctx.fillStyle=TEXT;ctx.fillText(label+': '+val,legX+18,legY);legY+=13}
     for(var i=0;i<3;i++){if(indSettings.ema[i].enabled&&chartInd.ema[i][lastGIdx]!=null)legLn(indSettings.ema[i].color,'EMA'+indSettings.ema[i].period,fpa(chartInd.ema[i][lastGIdx]))}
     if(indSettings.donchian.enabled&&chartInd.donchU[lastGIdx]!=null)legLn(indSettings.donchian.color,'DC',fpa(chartInd.donchU[lastGIdx])+'/'+fpa(chartInd.donchL[lastGIdx]));
     if(indSettings.bollinger.enabled&&chartInd.bbU[lastGIdx]!=null)legLn(indSettings.bollinger.color,'BB',fpa(chartInd.bbU[lastGIdx])+'/'+fpa(chartInd.bbL[lastGIdx]));
     if(indSettings.macd.enabled&&chartInd.macdLine[lastGIdx]!=null)legLn(indSettings.macd.macdColor,'MACD',chartInd.macdLine[lastGIdx].toFixed(4));
-
     var showCH=(chartMX>=0&&chartMX<chartW&&chartMY>=PT&&chartMY<botBound);
     if(showCH){
-        /* More visible crosshair */
         ctx.strokeStyle='rgba(252,213,53,0.55)';ctx.lineWidth=1.2;ctx.setLineDash([5,3]);
         ctx.beginPath();ctx.moveTo(chartMX,PT);ctx.lineTo(chartMX,botBound);ctx.stroke();
         ctx.beginPath();ctx.moveTo(0,chartMY);ctx.lineTo(chartW,chartMY);ctx.stroke();ctx.setLineDash([]);
@@ -666,7 +614,6 @@ function drawChart(){
         ctx.font='9px JetBrains Mono';var tw=ctx.measureText(tt).width+10,tipX=Math.min(chartMX+10,chartW-tw-4);ctx.fillStyle='rgba(30,32,38,0.92)';ctx.fillRect(tipX,PT+1,tw,16);ctx.fillStyle=hcol;ctx.textAlign='left';ctx.fillText(tt,tipX+5,PT+12)}
         if(cdi>=0&&cdi<chartCandles.length){var td=new Date(chartCandles[cdi].t),tlb;if(iv==='1d')tlb=(td.getMonth()+1)+'/'+td.getDate();else if(iv==='1h'||iv==='4h')tlb=td.getHours()+':00';else tlb=td.getHours()+':'+(td.getMinutes()<10?'0':'')+td.getMinutes();ctx.font='9px JetBrains Mono';var ttw=ctx.measureText(tlb).width+8,tlx=Math.min(chartMX-ttw/2,chartW-ttw-2);tlx=Math.max(2,tlx);ctx.fillStyle='rgba(30,32,38,0.92)';ctx.fillRect(tlx,h-PB,ttw,16);ctx.fillStyle='#eaecef';ctx.textAlign='center';ctx.fillText(tlb,tlx+ttw/2,h-7)}
     }
-
     if(chartOffset!==0){var rbx=chartW-20,rby=h-PB-15,rbr=12;ctx.beginPath();ctx.arc(rbx,rby,rbr,0,Math.PI*2);ctx.fillStyle='rgba(252,213,53,0.9)';ctx.fill();ctx.strokeStyle='rgba(0,0,0,0.4)';ctx.lineWidth=1.2;ctx.stroke();ctx.beginPath();ctx.moveTo(rbx-4,rby-5);ctx.lineTo(rbx+5,rby);ctx.lineTo(rbx-4,rby+5);ctx.closePath();ctx.fillStyle='#000';ctx.fill();gesture.resetBtn={x:rbx,y:rby,r:rbr}}else{gesture.resetBtn=null}
     if(!gesture.priceAuto){ctx.font='bold 8px JetBrains Mono';ctx.textAlign='center';ctx.fillStyle='rgba(252,213,53,0.7)';ctx.fillText('AUTO',chartW+PR/2,h-PB-2)}
 }
