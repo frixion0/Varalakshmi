@@ -712,7 +712,7 @@ function drawChart(){
     var isLowerTF=(iv==='1m'||iv==='5m'||iv==='15m'||iv==='1h'||iv==='4h');
     if(isLowerTF&&chartCandles.length>0){
         var prevDay=-1;
-        ctx.strokeStyle='rgba(255,255,255,0.08)';
+        ctx.strokeStyle='rgba(255,255,255,1)';
         ctx.lineWidth=1;
         ctx.setLineDash([4,4]);
         for(var t=0;t<chartZoom;t++){
