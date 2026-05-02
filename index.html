@@ -72,9 +72,11 @@
         .ctf{padding:4px 8px;font-size:10px;cursor:pointer;border-radius:3px;color:var(--dim);background:transparent;border:1px solid var(--border);font-weight:700;font-family:'JetBrains Mono',monospace;transition:all .15s;white-space:nowrap}
         .ctf.active{color:#000;background:var(--accent);border-color:var(--accent)}
         .ctf:hover:not(.active){color:var(--text);border-color:var(--dim)}
-        .chart-close,.chart-settings-btn{background:none;border:1px solid var(--border);color:var(--dim);cursor:pointer;font-size:18px;width:32px;height:32px;border-radius:4px;transition:all .15s;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+        .chart-close,.chart-settings-btn,.chart-watch-btn{background:none;border:1px solid var(--border);color:var(--dim);cursor:pointer;font-size:18px;width:32px;height:32px;border-radius:4px;transition:all .15s;display:flex;align-items:center;justify-content:center;flex-shrink:0}
         .chart-close:hover{background:var(--red);color:#fff;border-color:var(--red)}
         .chart-settings-btn:hover,.chart-settings-btn.active-btn{background:var(--accent);color:#000;border-color:var(--accent)}
+        .chart-watch-btn:hover{background:var(--accent);color:#000;border-color:var(--accent)}
+        .chart-watch-btn.active{background:var(--accent);color:#000;border-color:var(--accent)}
         .chart-body{flex:1;position:relative;overflow:hidden;cursor:crosshair;touch-action:none;-webkit-touch-callout:none;-webkit-user-select:none;user-select:none}
         .chart-body canvas{display:block;width:100%;height:100%}
         .ind-panel{position:absolute;top:0;right:0;width:282px;max-width:82vw;height:100%;background:#13161c;border-left:1px solid var(--border);z-index:100;transform:translateX(100%);transition:transform .25s cubic-bezier(.4,0,.2,1);display:flex;flex-direction:column;overflow:hidden;touch-action:auto}
@@ -191,6 +193,7 @@
         </div>
         <div class="chart-tb-center">
             <span class="chart-sym-name" id="chartSymName">BTC</span>
+            <button class="chart-watch-btn" id="chartWatchBtn" onclick="toggleChartWatch()" title="Add to Watchlist">&#9734;</button>
             <div class="chart-tf-btns" id="chartTfBtns">
                 <span class="ctf" data-iv="1m" onclick="changeChartTf('1m')">1m</span>
                 <span class="ctf" data-iv="5m" onclick="changeChartTf('5m')">5m</span>
@@ -283,6 +286,33 @@ function saveInd(){try{localStorage.setItem('sq_ind4',JSON.stringify(indSettings
 function resetIndDefaults(){indSettings=JSON.parse(JSON.stringify(DEF_IND));panelOrder=DEFAULT_PANEL_ORDER.slice();saveInd();savePanelOrder();buildIndPanel();recalcInd();chartDirty=true}
 function toggleIndPanel(){indPanelOpen=!indPanelOpen;document.getElementById('indPanel').classList.toggle('open',indPanelOpen);document.getElementById('chartSettingsBtn').classList.toggle('active-btn',indPanelOpen)}
 var indPanelOpen=false;
+
+function toggleChartWatch(){
+    if(!currentChartSym)return;
+    if(watchlist.has(currentChartSym)){
+        watchlist.delete(currentChartSym);
+    }else{
+        watchlist.add(currentChartSym);
+    }
+    saveWatchlist();
+    render();
+    updateChartWatchBtn();
+}
+
+function updateChartWatchBtn(){
+    var btn=document.getElementById('chartWatchBtn');
+    if(btn&&currentChartSym){
+        if(watchlist.has(currentChartSym)){
+            btn.innerHTML='&#9733;';
+            btn.classList.add('active');
+            btn.title='Remove from Watchlist';
+        }else{
+            btn.innerHTML='&#9734;';
+            btn.classList.remove('active');
+            btn.title='Add to Watchlist';
+        }
+    }
+}
 
 var aiPanelOpen=false;
 var aiFetching=false;
@@ -615,7 +645,7 @@ function getCandleCountdown(){if(!chartCandles.length||!chartInterval)return'';v
 
 var gesture={mode:null,startTime:0,startX:0,startY:0,lastX:0,lastY:0,velocityX:0,longPressTimer:null,crosshairActive:false,pinchStartDist:0,pinchStartZoom:0,pinchStartOffset:0,pinchFrac:0.5,lastTapTime:0,lastTapX:0,momentumRAF:null,lastMoveTime:0,moved:false,priceAuto:true,priceZoom:1,resetBtn:null,isTouch:false};
 
-async function openChart(sym){currentChartSym=sym;document.getElementById('chartSymName').innerText=sym;document.getElementById('chartInfo').innerHTML='<span style="color:var(--dim)">Loading...</span>';document.getElementById('chartOverlay').classList.add('open');document.body.classList.add('modal-open');chartMX=-1;chartMY=-1;gesture.crosshairActive=false;chartCandles=[];chartZoom=120;chartOffset=0;gesture.priceAuto=true;gesture.priceZoom=1;chartInterval='1d';updateTfBtns();aiPanelOpen=false;document.getElementById('aiPanel').classList.remove('open');document.getElementById('chartAiBtn').classList.remove('active-btn');await loadChartRest(sym);connectChartWs(sym);startChartLoop()}
+async function openChart(sym){currentChartSym=sym;document.getElementById('chartSymName').innerText=sym;document.getElementById('chartInfo').innerHTML='<span style="color:var(--dim)">Loading...</span>';document.getElementById('chartOverlay').classList.add('open');document.body.classList.add('modal-open');chartMX=-1;chartMY=-1;gesture.crosshairActive=false;chartCandles=[];chartZoom=120;chartOffset=0;gesture.priceAuto=true;gesture.priceZoom=1;chartInterval='1d';updateTfBtns();aiPanelOpen=false;document.getElementById('aiPanel').classList.remove('open');document.getElementById('chartAiBtn').classList.remove('active-btn');updateChartWatchBtn();await loadChartRest(sym);connectChartWs(sym);startChartLoop()}
 async function loadChartRest(sym){try{var res=await safeFetch('/klines?symbol='+sym+'USDT&interval='+chartInterval+'&limit=300',5);if(!res)return;var d=await res.json();if(Array.isArray(d)){chartCandles=d.map(function(k){return{t:parseInt(k[0]),o:parseFloat(k[1]),h:parseFloat(k[2]),l:parseFloat(k[3]),c:parseFloat(k[4]),v:parseFloat(k[5])}});recalcInd()}updateChartInfo();chartDirty=true}catch(e){}}
 function connectChartWs(sym){if(chartWs){try{chartWs.close()}catch(e){}chartWs=null}try{chartWs=new WebSocket(WS_URL+'/'+sym.toLowerCase()+'usdt@kline_'+chartInterval)}catch(e){return}chartWs.onmessage=function(ev){try{var k=JSON.parse(ev.data).k;if(!k)return;var cd={t:parseInt(k.t),o:parseFloat(k.o),h:parseFloat(k.h),l:parseFloat(k.l),c:parseFloat(k.c),v:parseFloat(k.v)};var last=chartCandles.length?chartCandles[chartCandles.length-1]:null;if(last&&last.t===cd.t){last.h=cd.h;last.l=cd.l;last.c=cd.c;last.v=cd.v}else{chartCandles.push(cd);if(chartCandles.length>500)chartCandles.shift()}recalcInd();updateChartInfo()}catch(e){}}}
 function changeChartTf(iv){chartInterval=iv;chartCandles=[];chartZoom=120;chartOffset=0;gesture.priceAuto=true;gesture.priceZoom=1;chartInd={ema:[[],[],[]],volMA:[],rsi:[],donchU:[],donchL:[],donchM:[],donchU2:[],donchL2:[],donchM2:[],bbU:[],bbL:[],bbM:[],macdLine:[],macdSignal:[],macdHist:[]};updateTfBtns();if(currentChartSym){loadChartRest(currentChartSym);connectChartWs(currentChartSym)}}
