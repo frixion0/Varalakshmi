@@ -266,7 +266,7 @@ var PRESET_COLORS=['#fcd535','#00d4aa','#ff78f8','#3d7eff','#f0b90b','#0ecb81','
 var DEF_IND={
     ema:[{enabled:true,period:9,color:'#fcd535',style:0,width:1.2},{enabled:true,period:21,color:'#00d4aa',style:0,width:1.2},{enabled:true,period:50,color:'#ff78f8',style:0,width:1.2}],
     donchian:{enabled:true,period:20,color:'#3d7eff',style:0,fill:true,showMid:true,width:1.5},
-    donchian2:{enabled:false,period:50,color:'#ff78f8',style:0,fill:false,showMid:true,width:1},
+    donchian2:{enabled:false,period:50,color:'#ff6b35',style:0,fill:false,showMid:false,width:1},
     bollinger:{enabled:false,period:20,mult:2.0,color:'#ff6b35',style:0,fill:true,width:1},
     macd:{enabled:true,fast:12,slow:26,signal:9,macdColor:'#3d7eff',signalColor:'#f0b90b',histP:'#0ecb81',histN:'#f6465d',style:0,width:1.2},
     rsi:{enabled:true,period:14,ob:70,os:30,color:'#3d7eff',style:0,width:1.2},
@@ -431,16 +431,16 @@ function buildIndPanel(){
     h+='</div>';
     h+='<div class="ind-section"><div class="ind-section-title">Channels</div>';
     var dc=indSettings.donchian,p='dc';
-    h+='<div class="ind-row"><label class="ind-toggle"><input type="checkbox" id="'+p+'-on" '+(dc.enabled?'checked':'')+'><span class="sw"></span>Donchian 1</label>';
+    h+='<div class="ind-row"><label class="ind-toggle"><input type="checkbox" id="'+p+'-on" '+(dc.enabled?'checked':'')+'><span class="sw"></span>Donchian</label>';
     h+='<input type="number" class="ind-period" id="'+p+'-per" value="'+dc.period+'" min="2" max="500" title="Period">';
     h+=styBtns(p,dc.style);
     h+='<span class="ind-label-sm">W</span><input type="number" class="ind-width" id="'+p+'-w" value="'+dc.width+'" min="0.5" max="6" step="0.5" title="Thickness">';
     h+='<div class="ind-color" id="'+p+'-col" style="background:'+dc.color+'"></div></div>';
     h+='<div class="ind-sub"><label class="ind-toggle" style="min-width:auto"><input type="checkbox" id="'+p+'-fill" '+(dc.fill?'checked':'')+'><span class="sw"></span>Fill</label>';
     h+='<label class="ind-toggle" style="min-width:auto"><input type="checkbox" id="'+p+'-mid" '+(dc.showMid?'checked':'')+'><span class="sw"></span>Mid Line</label></div>';
-    
+
     var dc2=indSettings.donchian2,p2='dc2';
-    h+='<div class="ind-row" style="margin-top:4px"><label class="ind-toggle"><input type="checkbox" id="'+p2+'-on" '+(dc2.enabled?'checked':'')+'><span class="sw"></span>Donchian 2</label>';
+    h+='<div class="ind-row" style="margin-top:6px"><label class="ind-toggle"><input type="checkbox" id="'+p2+'-on" '+(dc2.enabled?'checked':'')+'><span class="sw"></span>Donchian 2</label>';
     h+='<input type="number" class="ind-period" id="'+p2+'-per" value="'+dc2.period+'" min="2" max="500" title="Period">';
     h+=styBtns(p2,dc2.style);
     h+='<span class="ind-label-sm">W</span><input type="number" class="ind-width" id="'+p2+'-w" value="'+dc2.width+'" min="0.5" max="6" step="0.5" title="Thickness">';
@@ -449,7 +449,7 @@ function buildIndPanel(){
     h+='<label class="ind-toggle" style="min-width:auto"><input type="checkbox" id="'+p2+'-mid" '+(dc2.showMid?'checked':'')+'><span class="sw"></span>Mid Line</label></div>';
 
     var bb=indSettings.bollinger,p='bb';
-    h+='<div class="ind-row" style="margin-top:4px"><label class="ind-toggle"><input type="checkbox" id="'+p+'-on" '+(bb.enabled?'checked':'')+'><span class="sw"></span>Bollinger</label>';
+    h+='<div class="ind-row" style="margin-top:6px"><label class="ind-toggle"><input type="checkbox" id="'+p+'-on" '+(bb.enabled?'checked':'')+'><span class="sw"></span>Bollinger</label>';
     h+='<input type="number" class="ind-period" id="'+p+'-per" value="'+bb.period+'" min="2" max="500" title="Period">';
     h+=styBtns(p,bb.style);
     h+='<span class="ind-label-sm">W</span><input type="number" class="ind-width" id="'+p+'-w" value="'+bb.width+'" min="0.5" max="6" step="0.5" title="Thickness">';
@@ -470,7 +470,7 @@ function buildIndPanel(){
     h+='<div class="ind-sub"><span class="ind-label-sm">Hist +</span><div class="ind-color" id="'+p+'-colHP" style="background:'+mc.histP+'"></div>';
     h+='<span class="ind-label-sm">Hist -</span><div class="ind-color" id="'+p+'-colHN" style="background:'+mc.histN+'"></div></div>';
     var rs=indSettings.rsi;p='rsi';
-    h+='<div class="ind-row" style="margin-top:4px"><label class="ind-toggle"><input type="checkbox" id="'+p+'-on" '+(rs.enabled?'checked':'')+'><span class="sw"></span>RSI</label>';
+    h+='<div class="ind-row" style="margin-top:6px"><label class="ind-toggle"><input type="checkbox" id="'+p+'-on" '+(rs.enabled?'checked':'')+'><span class="sw"></span>RSI</label>';
     h+='<input type="number" class="ind-period" id="'+p+'-per" value="'+rs.period+'" min="2" max="200" title="Period">';
     h+=styBtns(p,rs.style);
     h+='<span class="ind-label-sm">W</span><input type="number" class="ind-width" id="'+p+'-w" value="'+rs.width+'" min="0.5" max="6" step="0.5" title="Thickness">';
@@ -550,28 +550,29 @@ function bindIndEvents(){
     $(p+'-w').onchange=function(){indSettings.ema[idx].width=Math.max(0.5,parseFloat(this.value)||1);refresh()};
     $(p+'-col').onclick=function(){showCP(this,function(c){indSettings.ema[idx].color=c;rebuild()})};
     for(var s=0;s<3;s++)(function(si){$(p+'-s'+si).onclick=function(){indSettings.ema[idx].style=si;rebuild()}})(s)})(i)}
-    
-    function bindDonchian(p,s){
-        $(p+'-on').onchange=function(){indSettings[s].enabled=this.checked;refresh()};
-        $(p+'-per').onchange=function(){indSettings[s].period=Math.max(2,parseInt(this.value)||20);refresh()};
-        $(p+'-w').onchange=function(){indSettings[s].width=Math.max(0.5,parseFloat(this.value)||1.5);refresh()};
-        $(p+'-col').onclick=function(){showCP(this,function(c){indSettings[s].color=c;rebuild()})};
-        $(p+'-fill').onchange=function(){indSettings[s].fill=this.checked;refresh()};
-        $(p+'-mid').onchange=function(){indSettings[s].showMid=this.checked;refresh()};
-        for(var i=0;i<3;i++)(function(si){$(p+'-s'+i).onclick=function(){indSettings[s].style=si;rebuild()}})(i);
-    }
-    bindDonchian('dc','donchian');
-    bindDonchian('dc2','donchian2');
+    $('dc-on').onchange=function(){indSettings.donchian.enabled=this.checked;refresh()};
+    $('dc-per').onchange=function(){indSettings.donchian.period=Math.max(2,parseInt(this.value)||20);refresh()};
+    $('dc-w').onchange=function(){indSettings.donchian.width=Math.max(0.5,parseFloat(this.value)||1.5);refresh()};
+    $('dc-col').onclick=function(){showCP(this,function(c){indSettings.donchian.color=c;rebuild()})};
+    $('dc-fill').onchange=function(){indSettings.donchian.fill=this.checked;refresh()};
+    $('dc-mid').onchange=function(){indSettings.donchian.showMid=this.checked;refresh()};
+    for(var s=0;s<3;s++)(function(si){$('dc-s'+si).onclick=function(){indSettings.donchian.style=si;rebuild()}})(s);
 
-    var bb=indSettings.bollinger,p='bb';
+    $('dc2-on').onchange=function(){indSettings.donchian2.enabled=this.checked;refresh()};
+    $('dc2-per').onchange=function(){indSettings.donchian2.period=Math.max(2,parseInt(this.value)||50);refresh()};
+    $('dc2-w').onchange=function(){indSettings.donchian2.width=Math.max(0.5,parseFloat(this.value)||1);refresh()};
+    $('dc2-col').onclick=function(){showCP(this,function(c){indSettings.donchian2.color=c;rebuild()})};
+    $('dc2-fill').onchange=function(){indSettings.donchian2.fill=this.checked;refresh()};
+    $('dc2-mid').onchange=function(){indSettings.donchian2.showMid=this.checked;refresh()};
+    for(var s=0;s<3;s++)(function(si){$('dc2-s'+si).onclick=function(){indSettings.donchian2.style=si;rebuild()}})(s);
+
     $('bb-on').onchange=function(){indSettings.bollinger.enabled=this.checked;refresh()};
     $('bb-per').onchange=function(){indSettings.bollinger.period=Math.max(2,parseInt(this.value)||20);refresh()};
     $('bb-w').onchange=function(){indSettings.bollinger.width=Math.max(0.5,parseFloat(this.value)||1);refresh()};
     $('bb-mult').onchange=function(){indSettings.bollinger.mult=Math.max(0.1,parseFloat(this.value)||2);refresh()};
     $('bb-col').onclick=function(){showCP(this,function(c){indSettings.bollinger.color=c;rebuild()})};
     $('bb-fill').onchange=function(){indSettings.bollinger.fill=this.checked;refresh()};
-    for(var i=0;i<3;i++)(function(si){$('bb-s'+si).onclick=function(){indSettings.bollinger.style=si;rebuild()}})(i);
-    var mc=indSettings.macd,p='macd';
+    for(var s=0;s<3;s++)(function(si){$('bb-s'+si).onclick=function(){indSettings.bollinger.style=si;rebuild()}})(s);
     $('macd-on').onchange=function(){indSettings.macd.enabled=this.checked;refresh()};
     $('macd-fast').onchange=function(){indSettings.macd.fast=Math.max(2,parseInt(this.value)||12);refresh()};
     $('macd-slow').onchange=function(){indSettings.macd.slow=Math.max(2,parseInt(this.value)||26);refresh()};
@@ -581,21 +582,19 @@ function bindIndEvents(){
     $('macd-colS').onclick=function(){showCP(this,function(c){indSettings.macd.signalColor=c;rebuild()})};
     $('macd-colHP').onclick=function(){showCP(this,function(c){indSettings.macd.histP=c;rebuild()})};
     $('macd-colHN').onclick=function(){showCP(this,function(c){indSettings.macd.histN=c;rebuild()})};
-    for(var i=0;i<3;i++)(function(si){$('macd-s'+si).onclick=function(){indSettings.macd.style=si;rebuild()}})(i);
-    var rs=indSettings.rsi;p='rsi';
+    for(var s=0;s<3;s++)(function(si){$('macd-s'+si).onclick=function(){indSettings.macd.style=si;rebuild()}})(s);
     $('rsi-on').onchange=function(){indSettings.rsi.enabled=this.checked;refresh()};
     $('rsi-per').onchange=function(){indSettings.rsi.period=Math.max(2,parseInt(this.value)||14);refresh()};
     $('rsi-w').onchange=function(){indSettings.rsi.width=Math.max(0.5,parseFloat(this.value)||1.2);refresh()};
     $('rsi-ob').onchange=function(){indSettings.rsi.ob=Math.max(50,Math.min(100,parseInt(this.value)||70));refresh()};
     $('rsi-os').onchange=function(){indSettings.rsi.os=Math.max(0,Math.min(50,parseInt(this.value)||30));refresh()};
     $('rsi-col').onclick=function(){showCP(this,function(c){indSettings.rsi.color=c;rebuild()})};
-    for(var i=0;i<3;i++)(function(si){$('rsi-s'+si).onclick=function(){indSettings.rsi.style=si;rebuild()}})(i);
-    var vm=indSettings.volMA,p='vol';
+    for(var s=0;s<3;s++)(function(si){$('rsi-s'+si).onclick=function(){indSettings.rsi.style=si;rebuild()}})(s);
     $('vol-on').onchange=function(){indSettings.volMA.enabled=this.checked;refresh()};
     $('vol-per').onchange=function(){indSettings.volMA.period=Math.max(2,parseInt(this.value)||20);refresh()};
     $('vol-w').onchange=function(){indSettings.volMA.width=Math.max(0.5,parseFloat(this.value)||1);refresh()};
     $('vol-col').onclick=function(){showCP(this,function(c){indSettings.volMA.color=c;rebuild()})};
-    for(var i=0;i<3;i++)(function(si){$('vol-s'+si).onclick=function(){indSettings.volMA.style=si;rebuild()}})(i);
+    for(var s=0;s<3;s++)(function(si){$('vol-s'+si).onclick=function(){indSettings.volMA.style=si;rebuild()}})(s);
 }
 
 document.getElementById('indPanel').addEventListener('touchstart',function(e){e.stopPropagation()},{passive:false});
@@ -621,7 +620,10 @@ async function loadChartRest(sym){try{var res=await safeFetch('/klines?symbol='+
 function connectChartWs(sym){if(chartWs){try{chartWs.close()}catch(e){}chartWs=null}try{chartWs=new WebSocket(WS_URL+'/'+sym.toLowerCase()+'usdt@kline_'+chartInterval)}catch(e){return}chartWs.onmessage=function(ev){try{var k=JSON.parse(ev.data).k;if(!k)return;var cd={t:parseInt(k.t),o:parseFloat(k.o),h:parseFloat(k.h),l:parseFloat(k.l),c:parseFloat(k.c),v:parseFloat(k.v)};var last=chartCandles.length?chartCandles[chartCandles.length-1]:null;if(last&&last.t===cd.t){last.h=cd.h;last.l=cd.l;last.c=cd.c;last.v=cd.v}else{chartCandles.push(cd);if(chartCandles.length>500)chartCandles.shift()}recalcInd();updateChartInfo()}catch(e){}}}
 function changeChartTf(iv){chartInterval=iv;chartCandles=[];chartZoom=120;chartOffset=0;gesture.priceAuto=true;gesture.priceZoom=1;chartInd={ema:[[],[],[]],volMA:[],rsi:[],donchU:[],donchL:[],donchM:[],donchU2:[],donchL2:[],donchM2:[],bbU:[],bbL:[],bbM:[],macdLine:[],macdSignal:[],macdHist:[]};updateTfBtns();if(currentChartSym){loadChartRest(currentChartSym);connectChartWs(currentChartSym)}}
 function updateTfBtns(){var btns=document.querySelectorAll('.ctf');for(var i=0;i<btns.length;i++){if(btns[i].dataset.iv===chartInterval)btns[i].classList.add('active');else btns[i].classList.remove('active')}}
-function updateChartInfo(){if(!chartCandles.length)return;var last=chartCandles[chartCandles.length-1],prev=chartCandles.length>1?chartCandles[chartCandles.length-2]:last;var ch=last.c-prev.c,cp=prev.c?(ch/prev.c*100):0,col=ch>=0?'var(--green)':'var(--red)',ar=ch>=0?'&#9650;':'&#9660;';var fp=function(v){return v<1?v.toFixed(5):v<100?v.toFixed(3):v.toLocaleString()};var fv=last.v>=1e9?(last.v/1e9).toFixed(2)+'B':last.v>=1e6?(last.v/1e6).toFixed(2)+'M':last.v>=1e3?(last.v/1e3).toFixed(1)+'K':Math.round(last.v);var symKey=currentChartSym+'USDT';var avgVol=pairs[symKey]?formatVol(pairs[symKey].avgDVol):'-';document.getElementById('chartInfo').innerHTML='<span>O <span class="ci-val">'+fp(last.o)+'</span></span><span>H <span class="ci-val">'+fp(last.h)+'</span></span><span>L <span class="ci-val">'+fp(last.l)+'</span></span><span>C <span class="ci-val" style="color:'+col+'">'+fp(last.c)+'</span></span><span>V <span class="ci-val">'+fv+'</span></span><span style="color:'+col+'">'+ar+' '+Math.abs(cp).toFixed(2)+'%</span><span>AvgV <span class="ci-val" style="color:var(--blue)">'+avgVol+'</span></span>'}
+function updateChartInfo(){if(!chartCandles.length)return;var last=chartCandles[chartCandles.length-1],prev=chartCandles.length>1?chartCandles[chartCandles.length-2]:last;var ch=last.c-prev.c,cp=prev.c?(ch/prev.c*100):0,col=ch>=0?'var(--green)':'var(--red)',ar=ch>=0?'&#9650;':'&#9660;';var fp=function(v){return v<1?v.toFixed(5):v<100?v.toFixed(3):v.toLocaleString()};var fv=last.v>=1e9?(last.v/1e9).toFixed(2)+'B':last.v>=1e6?(last.v/1e6).toFixed(2)+'M':last.v>=1e3?(last.v/1e3).toFixed(1)+'K':Math.round(last.v);
+    var symKey=currentChartSym+'USDT';
+    var avgVol=pairs[symKey]?formatVol(pairs[symKey].avgDVol):'-';
+    document.getElementById('chartInfo').innerHTML='<span>O <span class="ci-val">'+fp(last.o)+'</span></span><span>H <span class="ci-val">'+fp(last.h)+'</span></span><span>L <span class="ci-val">'+fp(last.l)+'</span></span><span>C <span class="ci-val" style="color:'+col+'">'+fp(last.c)+'</span></span><span>V <span class="ci-val">'+fv+'</span></span><span style="color:'+col+'">'+ar+' '+Math.abs(cp).toFixed(2)+'%</span><span>AvgV <span class="ci-val" style="color:var(--blue)">'+avgVol+'</span></span>'}
 function clampOffset(off,zoom,total){return Math.round(Math.max(1-zoom,Math.min(Math.max(0,total-zoom),off)))}
 
 function drawChart(){
@@ -688,18 +690,24 @@ function drawChart(){
     function drawFill(up,lo,col){if(!up.length||!lo.length)return;ctx.fillStyle=hexToRgba(col,0.06);ctx.beginPath();var st=false;for(var c=0;c<sl.length;c++){var gi=startIdx+c,v=up[gi];if(v==null)continue;if(!st){ctx.moveTo(c*cW+cW/2,pY(v));st=true}else ctx.lineTo(c*cW+cW/2,pY(v))}for(var c=sl.length-1;c>=0;c--){var gi=startIdx+c,v=lo[gi];if(v==null)continue;ctx.lineTo(c*cW+cW/2,pY(v))}ctx.closePath();ctx.fill()}
     function drawChLine(arr,col,si,w){if(!arr.length)return;ctx.strokeStyle=col;ctx.lineWidth=w;ctx.setLineDash(LINE_STYLES[si]||[]);ctx.beginPath();var st=false;for(var c=0;c<sl.length;c++){var gi=startIdx+c,v=arr[gi];if(v==null)continue;var x=c*cW+cW/2;if(!st){ctx.moveTo(x,pY(v));st=true}else ctx.lineTo(x,pY(v))}ctx.stroke();ctx.setLineDash([])}
     function drawSubLine(arr,col,si,w,sTop,sH,sMin,sMax){if(!arr.length)return;var rng=sMax-sMin;if(rng===0)rng=1;ctx.strokeStyle=col;ctx.lineWidth=w;ctx.setLineDash(LINE_STYLES[si]||[]);ctx.beginPath();var st=false;for(var c=0;c<sl.length;c++){var gi=startIdx+c,v=arr[gi];if(v==null)continue;var x=c*cW+cW/2,y=sTop+sH-((v-sMin)/rng)*sH;if(!st){ctx.moveTo(x,y);st=true}else ctx.lineTo(x,y)}ctx.stroke();ctx.setLineDash([])}
-    
-    function drawDonchian(uArr,lArr,mArr,s){
-        if(!uArr.length&&!lArr.length)return;
-        var st=s.style,w=s.width,c=s.color;
-        if(s.fill){var minU=[],maxL=[];for(var i=0;i<uArr.length;i++){var gu=startIdx+i;if(gu>=0&&gu<chartCandles.length){if(uArr[gu]!=null)maxL.push(pY(uArr[gu]));else maxL.push(null);if(lArr[gu]!=null)minU.push(pY(lArr[gu]));else minU.push(null);}}}
-        if(s.fill)drawFill(chartInd.donchU,chartInd.donchL,c);
-        drawChLine(uArr,c,st,w);drawChLine(lArr,c,st,w);
-        if(s.showMid){ctx.strokeStyle=c;ctx.lineWidth=w*0.5;ctx.setLineDash(LINE_STYLES[st]||[2,2]);ctx.beginPath();var ds=false;for(var c2=0;c2<sl.length;c2++){var gi2=startIdx+c2,v=mArr[gi2];if(v==null)continue;var x=c2*cW+cW/2;if(!ds){ctx.moveTo(x,pY(v));ds=true}else ctx.lineTo(x,pY(v))}ctx.stroke();ctx.setLineDash([])}
+    if(indSettings.donchian.enabled){
+        var dw=indSettings.donchian.width||1.5;
+        if(indSettings.donchian.fill)drawFill(chartInd.donchU,chartInd.donchL,indSettings.donchian.color);
+        drawChLine(chartInd.donchU,indSettings.donchian.color,indSettings.donchian.style,dw);
+        drawChLine(chartInd.donchL,indSettings.donchian.color,indSettings.donchian.style,dw);
+        if(indSettings.donchian.showMid){
+            ctx.strokeStyle=indSettings.donchian.color;ctx.lineWidth=dw*0.5;ctx.setLineDash(LINE_STYLES[indSettings.donchian.style]||[2,2]);
+            ctx.beginPath();var st=false;for(var c=0;c<sl.length;c++){var gi=startIdx+c,v=chartInd.donchM[gi];if(v==null)continue;var x=c*cW+cW/2;if(!st){ctx.moveTo(x,pY(v));st=true}else ctx.lineTo(x,pY(v))}ctx.stroke();ctx.setLineDash([])}
     }
-    if(indSettings.donchian.enabled)drawDonchian(chartInd.donchU,chartInd.donchL,chartInd.donchM,indSettings.donchian);
-    if(indSettings.donchian2.enabled)drawDonchian(chartInd.donchU2,chartInd.donchL2,chartInd.donchM2,indSettings.donchian2);
-    
+    if(indSettings.donchian2.enabled){
+        var dw2=indSettings.donchian2.width||1;
+        if(indSettings.donchian2.fill)drawFill(chartInd.donchU2,chartInd.donchL2,indSettings.donchian2.color);
+        drawChLine(chartInd.donchU2,indSettings.donchian2.color,indSettings.donchian2.style,dw2);
+        drawChLine(chartInd.donchL2,indSettings.donchian2.color,indSettings.donchian2.style,dw2);
+        if(indSettings.donchian2.showMid){
+            ctx.strokeStyle=indSettings.donchian2.color;ctx.lineWidth=dw2*0.5;ctx.setLineDash(LINE_STYLES[indSettings.donchian2.style]||[2,2]);
+            ctx.beginPath();var st=false;for(var c=0;c<sl.length;c++){var gi=startIdx+c,v=chartInd.donchM2[gi];if(v==null)continue;var x=c*cW+cW/2;if(!st){ctx.moveTo(x,pY(v));st=true}else ctx.lineTo(x,pY(v))}ctx.stroke();ctx.setLineDash([])}
+    }
     if(indSettings.bollinger.enabled){
         var bw=indSettings.bollinger.width||1;
         if(indSettings.bollinger.fill)drawFill(chartInd.bbU,chartInd.bbL,indSettings.bollinger.color);
@@ -754,37 +762,63 @@ function drawChart(){
         ctx.fillText('RSI',chartW+4,rsiTop+10);if(chartInd.rsi[lastGIdx]!=null)ctx.fillText(chartInd.rsi[lastGIdx].toFixed(1),chartW+4,rsiTop+20);
     }
 
-    /* Draw Price Scale: Countdown + Indicator values */
+    /* Draw Price Scale: Countdown + Colored Labels like Binance */
     ctx.font='bold 8px JetBrains Mono';ctx.textAlign='left';
     var psX=chartW+6;var psY=PT+2;
+    /* Countdown - time until next candle open */
     var cd=getCandleCountdown();
-    if(cd){ctx.fillStyle=TEXT;ctx.fillText('⏱ '+cd,psX,psY+8);psY+=20;}
+    if(cd){
+        ctx.fillStyle=TEXT;ctx.fillText('⏱ '+cd,psX,psY+8);psY+=20;
+    }
+    /* Draw colored price labels like Binance style */
     var lastIdx=chartCandles.length-1;
     if(chartCandles.length>0){
-        function drawIndLabel(label,val,color){
+        function drawPriceLabel(label,val,color){
             if(val!=null&&val!==undefined){
-                ctx.fillStyle=color;ctx.fillRect(psX,psY-4,3,8);
-                ctx.fillStyle=TEXT;ctx.fillText(label+': '+fpa(val),psX+6,psY);psY+=12;
+                var y=pY(val);
+                if(y>PT&&y<PT+priceH){
+                    ctx.fillStyle=color;
+                    ctx.fillRect(chartW,y-8,PR,16);
+                    ctx.fillStyle='#fff';
+                    ctx.font='bold 8px JetBrains Mono';
+                    ctx.textAlign='center';
+                    ctx.fillText(fpa(val),chartW+PR/2,y+3);
+                }
             }
         }
         var lc=chartCandles[lastIdx];
-        ctx.fillStyle=lc.c>=lc.o?GREEN:RED;ctx.fillRect(psX,psY-4,3,8);ctx.fillStyle=TEXT;ctx.fillText('Price: '+fpa(lc.c),psX+6,psY);psY+=14;
-        for(var i=0;i<3;i++){if(indSettings.ema[i].enabled&&chartInd.ema[i][lastIdx]!=null){drawIndLabel('E'+indSettings.ema[i].period,chartInd.ema[i][lastIdx],indSettings.ema[i].color)}}
+        /* Price label */
+        var priceCol=lc.c>=lc.o?GREEN:RED;
+        var priceY=pY(lc.c);
+        if(priceY>PT&&priceY<PT+priceH){
+            ctx.fillStyle=priceCol;
+            ctx.fillRect(chartW,priceY-8,PR,16);
+            ctx.fillStyle='#fff';
+            ctx.font='bold 9px JetBrains Mono';
+            ctx.textAlign='center';
+            ctx.fillText(fpa(lc.c),chartW+PR/2,priceY+3);
+        }
+        /* EMA labels */
+        for(var i=0;i<3;i++){
+            if(indSettings.ema[i].enabled&&chartInd.ema[i][lastIdx]!=null){
+                drawPriceLabel('E'+indSettings.ema[i].period,chartInd.ema[i][lastIdx],indSettings.ema[i].color);
+            }
+        }
+        /* Donchian labels */
         if(indSettings.donchian.enabled){
-            if(chartInd.donchU[lastIdx]!=null)drawIndLabel('DC1 U',chartInd.donchU[lastIdx],indSettings.donchian.color);
-            if(chartInd.donchL[lastIdx]!=null)drawIndLabel('DC1 L',chartInd.donchL[lastIdx],indSettings.donchian.color);
+            if(chartInd.donchU[lastIdx]!=null)drawPriceLabel('DC U',chartInd.donchU[lastIdx],indSettings.donchian.color);
+            if(chartInd.donchL[lastIdx]!=null)drawPriceLabel('DC L',chartInd.donchL[lastIdx],indSettings.donchian.color);
         }
+        /* Donchian 2 labels */
         if(indSettings.donchian2.enabled){
-            if(chartInd.donchU2[lastIdx]!=null)drawIndLabel('DC2 U',chartInd.donchU2[lastIdx],indSettings.donchian2.color);
-            if(chartInd.donchL2[lastIdx]!=null)drawIndLabel('DC2 L',chartInd.donchL2[lastIdx],indSettings.donchian2.color);
+            if(chartInd.donchU2[lastIdx]!=null)drawPriceLabel('DC2 U',chartInd.donchU2[lastIdx],indSettings.donchian2.color);
+            if(chartInd.donchL2[lastIdx]!=null)drawPriceLabel('DC2 L',chartInd.donchL2[lastIdx],indSettings.donchian2.color);
         }
+        /* Bollinger labels */
         if(indSettings.bollinger.enabled){
-            if(chartInd.bbU[lastIdx]!=null)drawIndLabel('BB U',chartInd.bbU[lastIdx],indSettings.bollinger.color);
-            if(chartInd.bbL[lastIdx]!=null)drawIndLabel('BB L',chartInd.bbL[lastIdx],indSettings.bollinger.color);
+            if(chartInd.bbU[lastIdx]!=null)drawPriceLabel('BB U',chartInd.bbU[lastIdx],indSettings.bollinger.color);
+            if(chartInd.bbL[lastIdx]!=null)drawPriceLabel('BB L',chartInd.bbL[lastIdx],indSettings.bollinger.color);
         }
-        if(indSettings.macd.enabled&&chartInd.macdLine[lastIdx]!=null){drawIndLabel('MACD',chartInd.macdLine[lastIdx],indSettings.macd.macdColor)}
-        if(indSettings.rsi.enabled&&chartInd.rsi[lastIdx]!=null){drawIndLabel('RSI',chartInd.rsi[lastIdx],indSettings.rsi.color)}
-        if(indSettings.volMA.enabled&&chartInd.volMA[lastIdx]!=null){drawIndLabel('VolMA',chartInd.volMA[lastIdx],indSettings.volMA.color)}
     }
 
     var showCH=(chartMX>=0&&chartMX<chartW&&chartMY>=PT&&chartMY<botBound);
