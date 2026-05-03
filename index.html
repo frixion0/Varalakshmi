@@ -273,7 +273,8 @@ var DEF_IND={
     bollinger:{enabled:false,period:20,mult:2.0,color:'#ff6b35',style:0,fill:true,width:1},
     macd:{enabled:true,fast:12,slow:26,signal:9,macdColor:'#3d7eff',signalColor:'#f0b90b',histP:'#0ecb81',histN:'#f6465d',style:0,width:1.2},
     rsi:{enabled:true,period:14,ob:70,os:30,color:'#3d7eff',style:0,width:1.2},
-    volMA:{enabled:true,period:20,color:'#f0b90b',style:0,width:1}
+    volMA:{enabled:true,period:20,color:'#f0b90b',style:0,width:1},
+    hvLine:{enabled:true,color:'#ffd700',style:0,width:1.2}
 };
 var indSettings=JSON.parse(JSON.stringify(DEF_IND));
 
@@ -281,7 +282,7 @@ var DEFAULT_PANEL_ORDER=['vol','macd','rsi'];
 var panelOrder=[];
 function loadPanelOrder(){try{var s=localStorage.getItem('sq_panelOrder');if(s){var d=JSON.parse(s);panelOrder=d.filter(function(p){return DEFAULT_PANEL_ORDER.indexOf(p)!==-1});DEFAULT_PANEL_ORDER.forEach(function(p){if(panelOrder.indexOf(p)===-1)panelOrder.push(p)})}else{panelOrder=DEFAULT_PANEL_ORDER.slice()}}catch(e){panelOrder=DEFAULT_PANEL_ORDER.slice()}}
 function savePanelOrder(){try{localStorage.setItem('sq_panelOrder',JSON.stringify(panelOrder))}catch(e){}}
-function loadInd(){try{var s=localStorage.getItem('sq_ind4');if(s){var d=JSON.parse(s);if(d.ema)indSettings.ema=d.ema;if(d.donchian)indSettings.donchian=d.donchian;if(d.donchian2)indSettings.donchian2=d.donchian2;if(d.bollinger)indSettings.bollinger=d.bollinger;if(d.macd)indSettings.macd=d.macd;if(d.rsi)indSettings.rsi=d.rsi;if(d.volMA)indSettings.volMA=d.volMA}}catch(e){}}
+function loadInd(){try{var s=localStorage.getItem('sq_ind4');if(s){var d=JSON.parse(s);if(d.ema)indSettings.ema=d.ema;if(d.donchian)indSettings.donchian=d.donchian;if(d.donchian2)indSettings.donchian2=d.donchian2;if(d.bollinger)indSettings.bollinger=d.bollinger;if(d.macd)indSettings.macd=d.macd;if(d.rsi)indSettings.rsi=d.rsi;if(d.volMA)indSettings.volMA=d.volMA;if(d.hvLine)indSettings.hvLine=d.hvLine}}catch(e){}}
 function saveInd(){try{localStorage.setItem('sq_ind4',JSON.stringify(indSettings))}catch(e){}}
 function resetIndDefaults(){indSettings=JSON.parse(JSON.stringify(DEF_IND));panelOrder=DEFAULT_PANEL_ORDER.slice();saveInd();savePanelOrder();buildIndPanel();recalcInd();chartDirty=true}
 function toggleIndPanel(){indPanelOpen=!indPanelOpen;document.getElementById('indPanel').classList.toggle('open',indPanelOpen);document.getElementById('chartSettingsBtn').classList.toggle('active-btn',indPanelOpen)}
@@ -516,6 +517,13 @@ function buildIndPanel(){
     h+='<span class="ind-label-sm">W</span><input type="number" class="ind-width" id="'+p+'-w" value="'+vm.width+'" min="0.5" max="6" step="0.5" title="Thickness">';
     h+='<div class="ind-color" id="'+p+'-col" style="background:'+vm.color+'"></div></div>';
     h+='</div>';
+    h+='<div class="ind-section"><div class="ind-section-title">High Volume Line</div>';
+    var hv=indSettings.hvLine,p='hv';
+    h+='<div class="ind-row"><label class="ind-toggle"><input type="checkbox" id="'+p+'-on" '+(hv.enabled?'checked':'')+'><span class="sw"></span>HV Line</label>';
+    h+=styBtns(p,hv.style);
+    h+='<span class="ind-label-sm">W</span><input type="number" class="ind-width" id="'+p+'-w" value="'+hv.width+'" min="0.5" max="6" step="0.5" title="Thickness">';
+    h+='<div class="ind-color" id="'+p+'-col" style="background:'+hv.color+'"></div></div>';
+    h+='</div>';
     h+='<div class="panel-reorder-section"><div class="ind-section-title">Panel Order (drag to reorder)</div><div id="panelReorderList">';
     var panelLabels={'vol':'Volume','macd':'MACD','rsi':'RSI'};
     for(var pi=0;pi<panelOrder.length;pi++){var pk=panelOrder[pi];
@@ -625,6 +633,13 @@ function bindIndEvents(){
     $('vol-w').onchange=function(){indSettings.volMA.width=Math.max(0.5,parseFloat(this.value)||1);refresh()};
     $('vol-col').onclick=function(){showCP(this,function(c){indSettings.volMA.color=c;rebuild()})};
     for(var s=0;s<3;s++)(function(si){$('vol-s'+si).onclick=function(){indSettings.volMA.style=si;rebuild()}})(s);
+
+    // High Volume Line settings
+    var hv=indSettings.hvLine;
+    $('hv-on').onchange=function(){indSettings.hvLine.enabled=this.checked;refresh()};
+    $('hv-w').onchange=function(){indSettings.hvLine.width=Math.max(0.5,parseFloat(this.value)||1.2);refresh()};
+    $('hv-col').onclick=function(){showCP(this,function(c){indSettings.hvLine.color=c;rebuild()})};
+    for(var s=0;s<3;s++)(function(si){$('hv-s'+si).onclick=function(){indSettings.hvLine.style=si;rebuild()}})(s);
 }
 
 document.getElementById('indPanel').addEventListener('touchstart',function(e){e.stopPropagation()},{passive:false});
@@ -862,6 +877,39 @@ function drawChart(){
         drawSubPanelPriceScale(0,100,rsiTop,rsiH,PR);
     }
 
+    /* Highest Volume Candle High Line - Only if enabled in settings */
+    if(indSettings.hvLine && indSettings.hvLine.enabled){
+        var maxVolCandle = null;
+        var maxVol = -1;
+        for(var c=0;c<sl.length;c++){
+            if(sl[c].v > maxVol){
+                maxVol = sl[c].v;
+                maxVolCandle = sl[c];
+            }
+        }
+        if(maxVolCandle){
+            var hvY = pY(maxVolCandle.h);
+            if(hvY > PT && hvY < PT + priceH){
+                ctx.strokeStyle = indSettings.hvLine.color || 'rgba(255, 215, 0, 0.6)';
+                ctx.lineWidth = indSettings.hvLine.width || 1.2;
+                ctx.setLineDash(LINE_STYLES[indSettings.hvLine.style] || [6, 6]);
+                ctx.beginPath();
+                ctx.moveTo(0, hvY);
+                ctx.lineTo(chartW, hvY);
+                ctx.stroke();
+                ctx.setLineDash([]);
+                
+                // Label on right side
+                ctx.fillStyle = indSettings.hvLine.color || 'rgba(255, 215, 0, 0.9)';
+                ctx.fillRect(chartW, hvY - 10, PR, 20);
+                ctx.fillStyle = '#000';
+                ctx.font = 'bold 10px JetBrains Mono';
+                ctx.textAlign = 'center';
+                ctx.fillText('HV: ' + fpa(maxVolCandle.h), chartW + PR/2, hvY + 3);
+            }
+        }
+    }
+
     /* Draw Price Scale: Countdown + Colored Labels like Binance */
     ctx.font='bold 10px JetBrains Mono';ctx.textAlign='left';
     var psX=chartW+6;var psY=PT+2;
@@ -977,7 +1025,7 @@ window.addEventListener('mouseup',function(){if(chartIsDrag){chartIsDrag=false;c
 document.addEventListener('keydown',function(e){if(e.key==='Escape'){if(indPanelOpen)toggleIndPanel();else if(aiPanelOpen)toggleAiPanel();else closeChart()}});
 window.addEventListener('resize',function(){if(currentChartSym){chartOffset=clampOffset(chartOffset,chartZoom,chartCandles.length);chartDirty=true}});
 
-// Touch handling - Allow single finger to move chart: drag UP moves chart UP, drag DOWN moves chart DOWN
+// Touch handling
 chartBodyEl.addEventListener('touchstart',function(e){if(!currentChartSym)return;e.preventDefault();gesture.isTouch=true;var rect=chartCanvasEl.getBoundingClientRect(),cw=rect.width;if(gesture.momentumRAF){cancelAnimationFrame(gesture.momentumRAF);gesture.momentumRAF=null}clearTimeout(gesture.longPressTimer);if(gesture.resetBtn&&e.touches.length===1){var t0=e.touches[0],bx=t0.clientX-rect.left,by=t0.clientY-rect.top,rb=gesture.resetBtn;if((bx-rb.x)*(bx-rb.x)+(by-rb.y)*(by-rb.y)<=rb.r*rb.r){chartOffset=0;chartDirty=true;return}}if(e.touches.length===1){var t=e.touches[0],x=t.clientX-rect.left,y=t.clientY-rect.top,now=Date.now();gesture.startTime=now;gesture.startX=x;gesture.startY=y;gesture.lastX=x;gesture.lastY=y;gesture.moved=false;gesture.velocityX=0;gesture.lastMoveTime=0;if(gesture.crosshairActive){gesture.mode='crosshair-pending';gesture.longPressTimer=setTimeout(function(){gesture.mode='crosshair';chartMX=gesture.startX;chartMY=gesture.startY;chartDirty=true},250);return}if(now-gesture.lastTapTime<320&&isInPS(x,cw)&&isInPS(gesture.lastTapX,cw)){gesture.priceAuto=true;gesture.priceZoom=1;gesture.lastTapTime=0;chartDirty=true;return}gesture.lastTapTime=now;gesture.lastTapX=x;if(isInPS(x,cw)){gesture.mode='price-scale';gesture.priceAuto=false}else{gesture.mode=null;gesture.longPressTimer=setTimeout(function(){gesture.mode='crosshair';gesture.crosshairActive=true;chartMX=gesture.startX;chartMY=gesture.startY;chartDirty=true},550)}}else if(e.touches.length===2){if(gesture.crosshairActive){gesture.crosshairActive=false;chartMX=-1;chartMY=-1;chartDirty=true}gesture.mode='pinch';gesture.pinchStartDist=touchDist(e.touches[0],e.touches[1]);gesture.pinchStartZoom=chartZoom;gesture.pinchStartOffset=chartOffset;gesture.pinchFrac=((e.touches[0].clientX+e.touches[1].clientX)/2-rect.left)/cw}},{passive:false});
 
 chartBodyEl.addEventListener('touchmove',function(e){
@@ -985,7 +1033,6 @@ chartBodyEl.addEventListener('touchmove',function(e){
     e.preventDefault();
     var rect=chartCanvasEl.getBoundingClientRect(),cw=rect.width,now=Date.now();
     
-    // Calculate visible price range for price movement
     function getVisiblePriceRange(){
         var _PT=6, _PB=22, _GAP=3;
         var _totalH=rect.height-_PT-_PB;
@@ -1043,7 +1090,7 @@ chartBodyEl.addEventListener('touchmove',function(e){
             _ac+=gesture.priceOffset;
             curMnP=_ac-_r/2;curMxP=_ac+_r/2;curPR=curMxP-curMnP;
         }
-        return {priceH:_priceH, pR:curPR, priceOffset:gesture.priceOffset};
+        return {priceH:_priceH, pR:curPR};
     }
     
     if(e.touches.length===1&&gesture.mode!=='pinch'){
@@ -1076,14 +1123,9 @@ chartBodyEl.addEventListener('touchmove',function(e){
             var visRange = getVisiblePriceRange();
             var pricePerPixel = visRange.pR / visRange.priceH;
             
-            // Single finger drag: vertical moves price, horizontal moves time
-            // Drag UP (dy negative) -> chart moves UP -> show higher prices -> decrease priceOffset
-            // Drag DOWN (dy positive) -> chart moves DOWN -> show lower prices -> increase priceOffset
-            // So: priceOffset change should be proportional to dy (same sign)
             gesture.priceAuto = false;
             gesture.priceOffset += dy * pricePerPixel;
             
-            // Move time with horizontal drag
             chartOffset = clampOffset(chartOffset + dx * chartZoom / (cw - CHART_PR), chartZoom, chartCandles.length);
             
             chartDirty=true;
@@ -1168,3 +1210,4 @@ setInterval(saveCache,15000);setInterval(updateNetStatus,2000);updateNetStatus()
 </script>
 </body>
 </html>
+
