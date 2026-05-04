@@ -278,7 +278,7 @@ function scheduleRender(){if(renderPending)return;renderPending=true;requestAnim
 function updateNetStatus(){var el=document.getElementById('net-status');if(!el)return;var wd,ws;if(wsAlive){wd='on';ws='WS LIVE'}else if(restFallbackTimer){wd='warn';ws='REST FALLBACK'}else{wd='off';ws='WS OFF'}var wc='var(--dim)',wt='W:'+restWeightUsed;if(restPaused){wc='var(--red)';var s=Math.ceil((restPauseUntil-Date.now())/1000);wt='429 PAUSED '+s+'s'}else if(restWeightUsed>1800)wc='var(--orange)';el.innerHTML='<span><span class="ns-dot '+wd+'"></span>'+ws+'</span><span style="color:'+wc+'">'+wt+'</span>'}
 
 var currentChartSym=null,chartRAF=null,chartWs=null,chartDirty=true,chartRAFRunning=false;
-var chartCandles=[],chartInterval='15m',chartZoom=150,chartOffset=0;
+var chartCandles=[],chartInterval='1d',chartZoom=150,chartOffset=0;
 var chartMX=-1,chartMY=-1,CHART_PR=78;
 var LINE_STYLES=[[],[6,3],[2,2]];
 
