@@ -17,9 +17,6 @@
         .search-clear-btn:hover{color:var(--text);background:rgba(255,255,255,0.1)}
         .search-clear-btn.visible{display:block}
         .size-control{display:flex;align-items:center;gap:8px;background:var(--card);padding:5px 12px;border-radius:4px;border:1px solid var(--border);font-size:11px}
-        .size-control input[type=range]{-webkit-appearance:none;appearance:none;width:120px;height:6px;background:#2b3139;border-radius:3px;outline:none;cursor:pointer}
-        .size-control input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;width:16px;height:16px;background:#3d7eff;border-radius:50%;cursor:pointer;border:2px solid #fff}
-        .size-control input[type=range]::-moz-range-thumb{width:16px;height:16px;background:#3d7eff;border-radius:50%;cursor:pointer;border:2px solid #fff}
         .status-bar{flex:2;min-width:300px;background:#1e2026;padding:8px 15px;border-radius:8px;border:1px solid var(--border)}
         #scan-status{font-size:10px;color:var(--accent);text-transform:uppercase;letter-spacing:1px;font-weight:bold}
         #net-status{font-size:9px;color:var(--dim);margin-top:3px;letter-spacing:.5px;display:flex;gap:10px;flex-wrap:wrap}
@@ -28,12 +25,27 @@
         .ns-dot.off{background:var(--red);box-shadow:0 0 4px var(--red);animation:blink 1s infinite}
         .ns-dot.warn{background:var(--orange);box-shadow:0 0 4px var(--orange)}
         @keyframes blink{50%{opacity:.3}}
-        .tabs{display:flex;gap:5px;margin-bottom:10px;overflow-x:auto;flex-wrap:nowrap}
-        .tab{padding:6px 14px;font-size:11px;cursor:pointer;border-radius:4px;color:var(--dim);background:var(--card);border:1px solid var(--border);font-weight:bold;white-space:nowrap;flex-shrink:0}
+        
+        /* Modified Tabs and View Switcher Layout */
+        .tabs-wrapper{display:flex;align-items:center;gap:10px;margin-bottom:10px;flex-wrap:nowrap;overflow-x:auto}
+        .tabs{display:flex;gap:5px;flex-shrink:0}
+        .tab{padding:6px 14px;font-size:11px;cursor:pointer;border-radius:4px;color:var(--dim);background:var(--card);border:1px solid var(--border);font-weight:bold;white-space:nowrap}
         .tab.active{color:#000;background:var(--accent);border-color:var(--accent);box-shadow:0 0 15px rgba(252,213,53,.3)}
+        
+        /* New View Switcher Buttons */
+        .view-switcher{display:flex;gap:5px;margin-left:auto;flex-shrink:0}
+        .view-btn{padding:6px 14px;font-size:11px;cursor:pointer;border-radius:4px;color:var(--dim);background:var(--card);border:1px solid var(--border);font-weight:bold;white-space:nowrap;transition:all 0.2s}
+        .view-btn:hover{color:var(--text);border-color:var(--dim)}
+        .view-btn.active{color:#000;background:var(--accent);border-color:var(--accent);box-shadow:0 0 10px rgba(252,213,53,.2)}
+
         .main-grid{display:flex;gap:10px;width:100%}
-        .table-container{flex:1;background:var(--card);border:1px solid var(--border);border-radius:8px;overflow:hidden;display:flex;flex-direction:column}
+        .table-container{flex:1;background:var(--card);border:1px solid var(--border);border-radius:8px;overflow:hidden;display:flex;flex-direction:column;min-width:0}
         .table-container.watchlist-panel{flex:0 0 420px;min-width:340px}
+        /* Class to hide elements */
+        .view-hidden{display:none !important}
+        /* Class to make active container full width */
+        .view-full{flex:1 !important}
+
         .table-title{padding:8px 12px;font-weight:900;font-size:13px;background:#1e2026;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center}
         .table-title .wl-count{font-size:10px;color:var(--dim);font-weight:600}
         .scroll-area{max-height:82vh;overflow-y:auto;width:100%;flex:1}
@@ -161,16 +173,26 @@
     <div class="size-control"><span>A-</span><input type="range" min="8" max="18" value="13" id="sizeSlider" oninput="updateSize(this.value)"><span>A+</span></div>
     <div class="status-bar"><div id="scan-status">Initializing...</div><div id="net-status"></div></div>
 </div>
-<div class="tabs">
-    <div class="tab" id="tab-5m" onclick="setRank('5m')">5M</div>
-    <div class="tab active" id="tab-15m" onclick="setRank('15m')">15M</div>
-    <div class="tab" id="tab-1h" onclick="setRank('1h')">1H</div>
-    <div class="tab" id="tab-1w" onclick="setRank('1w')">1W</div>
-    <div class="tab" id="tab-1mo" onclick="setRank('1mo')">1MO</div>
-    <div class="tab" id="tab-24h" onclick="setRank('24h')">24H</div>
+
+<!-- Modified Tabs Area with View Switcher Buttons -->
+<div class="tabs-wrapper">
+    <div class="tabs">
+        <div class="tab" id="tab-5m" onclick="setRank('5m')">5M</div>
+        <div class="tab active" id="tab-15m" onclick="setRank('15m')">15M</div>
+        <div class="tab" id="tab-1h" onclick="setRank('1h')">1H</div>
+        <div class="tab" id="tab-1w" onclick="setRank('1w')">1W</div>
+        <div class="tab" id="tab-1mo" onclick="setRank('1mo')">1MO</div>
+        <div class="tab" id="tab-24h" onclick="setRank('24h')">24H</div>
+    </div>
+    <div class="view-switcher">
+        <button id="btn-view-screener" class="view-btn active" onclick="switchView('screener')">SCREENER</button>
+        <button id="btn-view-watchlist" class="view-btn" onclick="switchView('watchlist')">WATCHLIST</button>
+    </div>
 </div>
+
 <div class="main-grid">
-    <div class="table-container">
+    <!-- Added ID for toggling -->
+    <div class="table-container" id="screener-container">
         <div class="table-title" style="color:var(--green)">LIVE SCREENER <span style="font-size:9px;color:var(--dim);font-weight:500;margin-left:8px">Click symbol for chart · + to watch</span></div>
         <div class="scroll-area"><table><thead><tr>
             <th class="col-rank">#</th><th class="col-sym">Symbol</th><th class="col-price">Price</th>
@@ -178,7 +200,8 @@
             <th class="col-vol">TF Vol</th><th class="col-vol">24H Vol</th><th class="col-avol">AvgD Vol</th><th class="col-action"></th>
         </tr></thead><tbody id="gainers-body"></tbody></table></div>
     </div>
-    <div class="table-container watchlist-panel">
+    <!-- Added ID for toggling -->
+    <div class="table-container watchlist-panel" id="watchlist-container">
         <div class="table-title" style="color:var(--accent)"><span>&#9733; WATCHLIST</span><span class="wl-count" id="wl-count">0 assets</span></div>
         <div class="scroll-area"><table><thead><tr>
             <th class="col-rank">#</th><th class="wl-sym">Symbol</th><th class="wl-price">Price</th>
@@ -290,6 +313,32 @@ function saveInd(){try{localStorage.setItem('sq_ind4',JSON.stringify(indSettings
 function resetIndDefaults(){indSettings=JSON.parse(JSON.stringify(DEF_IND));panelOrder=DEFAULT_PANEL_ORDER.slice();saveInd();savePanelOrder();buildIndPanel();recalcInd();chartDirty=true}
 function toggleIndPanel(){indPanelOpen=!indPanelOpen;document.getElementById('indPanel').classList.toggle('open',indPanelOpen);document.getElementById('chartSettingsBtn').classList.toggle('active-btn',indPanelOpen)}
 var indPanelOpen=false;
+
+// View Switcher Logic
+function switchView(view){
+    var screener = document.getElementById('screener-container');
+    var watchlist = document.getElementById('watchlist-container');
+    var btnScreener = document.getElementById('btn-view-screener');
+    var btnWatchlist = document.getElementById('btn-view-watchlist');
+
+    if(view === 'screener'){
+        screener.classList.remove('view-hidden');
+        screener.classList.add('view-full');
+        watchlist.classList.add('view-hidden');
+        watchlist.classList.remove('view-full');
+        
+        btnScreener.classList.add('active');
+        btnWatchlist.classList.remove('active');
+    } else {
+        screener.classList.add('view-hidden');
+        screener.classList.remove('view-full');
+        watchlist.classList.remove('view-hidden');
+        watchlist.classList.add('view-full');
+        
+        btnWatchlist.classList.add('active');
+        btnScreener.classList.remove('active');
+    }
+}
 
 function toggleChartWatch(){
     if(!currentChartSym)return;
@@ -730,7 +779,6 @@ function drawChart(){
     var iv=chartInterval,le=Math.max(1,Math.floor(chartZoom/8));ctx.textAlign='center';
     var botBound=curTop-GAP/2;
 
-    /* Day separators for lower timeframes */
     var isLowerTF=(iv==='1m'||iv==='5m'||iv==='15m'||iv==='1h'||iv==='4h');
     if(isLowerTF&&chartCandles.length>0){
         var prevDay=-1;
@@ -829,7 +877,6 @@ function drawChart(){
     var lastGIdx=chartCandles.length-1;
     if(lastGIdx>=startIdx&&lastGIdx<=startIdx+sl.length-1){var lc=sl[lastGIdx-startIdx],lY=pY(lc.c),lCol=lc.c>=lc.o?GREEN:RED;ctx.strokeStyle=lCol;ctx.lineWidth=1;ctx.setLineDash([4,3]);ctx.beginPath();ctx.moveTo(0,lY);ctx.lineTo(chartW,lY);ctx.stroke();ctx.setLineDash([]);ctx.fillStyle=lCol;ctx.fillRect(chartW,lY-9,PR,18);ctx.fillStyle=lc.c>=lc.o?'#000':'#fff';ctx.font='bold 10px JetBrains Mono';ctx.textAlign='center';ctx.fillText(fpa(lc.c),chartW+PR/2,lY+3)}
 
-    /* MACD Panel with Price Scale */
     if(macdTop!==null&&indSettings.macd.enabled&&chartInd.macdLine.length){
         var mcMn=Infinity,mcMx=-Infinity;
         for(var c=0;c<sl.length;c++){var gi=startIdx+c;var v=chartInd.macdLine[gi];if(v!=null){if(v<mcMn)mcMn=v;if(v>mcMx)mcMx=v}v=chartInd.macdSignal[gi];if(v!=null){if(v<mcMn)mcMn=v;if(v>mcMx)mcMx=v}v=chartInd.macdHist[gi];if(v!=null){if(v<mcMn)mcMn=v;if(v>mcMx)mcMx=v}}
@@ -854,7 +901,6 @@ function drawChart(){
         drawSubPanelPriceScale(mcMn,mcMx,mTop,mH,PR);
     }
 
-    /* RSI Panel with Price Scale */
     if(rsiTop!==null&&indSettings.rsi.enabled&&chartInd.rsi.length){
         var ob=indSettings.rsi.ob,os=indSettings.rsi.os;
         function rsiY(v){return rsiTop+rsiH-(v/100)*rsiH}
@@ -879,7 +925,6 @@ function drawChart(){
         drawSubPanelPriceScale(0,100,rsiTop,rsiH,PR);
     }
 
-    /* Highest Volume Candle High Line - Only if enabled in settings */
     if(indSettings.hvLine && indSettings.hvLine.enabled){
         var maxVolCandle = null;
         var maxVol = -1;
@@ -901,7 +946,6 @@ function drawChart(){
                 ctx.stroke();
                 ctx.setLineDash([]);
                 
-                // Label on right side
                 ctx.fillStyle = indSettings.hvLine.color || 'rgba(255, 215, 0, 0.9)';
                 ctx.fillRect(chartW, hvY - 10, PR, 20);
                 ctx.fillStyle = '#000';
@@ -912,7 +956,6 @@ function drawChart(){
         }
     }
 
-    /* Draw Price Scale: Countdown + Colored Labels like Binance */
     ctx.font='bold 10px JetBrains Mono';ctx.textAlign='left';
     var psX=chartW+6;var psY=PT+2;
     var lastIdx=chartCandles.length-1;
@@ -928,7 +971,6 @@ function drawChart(){
             ctx.textAlign='center';
             ctx.fillText(fpa(lc.c),chartW+PR/2,priceY+4);
         }
-        /* Countdown label below price */
         var cd=getCandleCountdown();
         if(cd){
             ctx.fillStyle=priceCol;
@@ -1027,7 +1069,6 @@ window.addEventListener('mouseup',function(){if(chartIsDrag){chartIsDrag=false;c
 document.addEventListener('keydown',function(e){if(e.key==='Escape'){if(indPanelOpen)toggleIndPanel();else if(aiPanelOpen)toggleAiPanel();else closeChart()}});
 window.addEventListener('resize',function(){if(currentChartSym){chartOffset=clampOffset(chartOffset,chartZoom,chartCandles.length);chartDirty=true}});
 
-// Touch handling
 chartBodyEl.addEventListener('touchstart',function(e){if(!currentChartSym)return;e.preventDefault();gesture.isTouch=true;var rect=chartCanvasEl.getBoundingClientRect(),cw=rect.width;if(gesture.momentumRAF){cancelAnimationFrame(gesture.momentumRAF);gesture.momentumRAF=null}clearTimeout(gesture.longPressTimer);if(gesture.resetBtn&&e.touches.length===1){var t0=e.touches[0],bx=t0.clientX-rect.left,by=t0.clientY-rect.top,rb=gesture.resetBtn;if((bx-rb.x)*(bx-rb.x)+(by-rb.y)*(by-rb.y)<=rb.r*rb.r){chartOffset=0;chartDirty=true;return}}if(e.touches.length===1){var t=e.touches[0],x=t.clientX-rect.left,y=t.clientY-rect.top,now=Date.now();gesture.startTime=now;gesture.startX=x;gesture.startY=y;gesture.lastX=x;gesture.lastY=y;gesture.moved=false;gesture.velocityX=0;gesture.lastMoveTime=0;if(gesture.crosshairActive){gesture.mode='crosshair-pending';gesture.longPressTimer=setTimeout(function(){gesture.mode='crosshair';chartMX=gesture.startX;chartMY=gesture.startY;chartDirty=true},250);return}if(now-gesture.lastTapTime<320&&isInPS(x,cw)&&isInPS(gesture.lastTapX,cw)){gesture.priceAuto=true;gesture.priceZoom=1;gesture.lastTapTime=0;chartDirty=true;return}gesture.lastTapTime=now;gesture.lastTapX=x;if(isInPS(x,cw)){gesture.mode='price-scale';gesture.priceAuto=false}else{gesture.mode=null;gesture.longPressTimer=setTimeout(function(){gesture.mode='crosshair';gesture.crosshairActive=true;chartMX=gesture.startX;chartMY=gesture.startY;chartDirty=true},550)}}else if(e.touches.length===2){if(gesture.crosshairActive){gesture.crosshairActive=false;chartMX=-1;chartMY=-1;chartDirty=true}gesture.mode='pinch';gesture.pinchStartDist=touchDist(e.touches[0],e.touches[1]);gesture.pinchStartZoom=chartZoom;gesture.pinchStartOffset=chartOffset;gesture.pinchFrac=((e.touches[0].clientX+e.touches[1].clientX)/2-rect.left)/cw}},{passive:false});
 
 chartBodyEl.addEventListener('touchmove',function(e){
@@ -1209,6 +1250,9 @@ setInterval(function(){refreshOpens('5m')},300000);setInterval(function(){refres
 setInterval(function(){if(isSyncing||watchlist.size===0)return;var wl=Array.from(watchlist).map(function(s){return s+'USDT'}).filter(function(s){return pairs[s]});wl.forEach(function(s){if(pairs[s])pairs[s]._scanned=false});syncMissingOpens(wl)},300000);
 setInterval(function(){refreshOpens('1w')},600000);setInterval(function(){refreshOpens('1M')},1800000);
 setInterval(saveCache,15000);setInterval(updateNetStatus,2000);updateNetStatus();
+
+// Initialize default view to Screener
+switchView('screener');
 </script>
 </body>
 </html>
