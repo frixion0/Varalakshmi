@@ -1,4 +1,4 @@
-!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -170,6 +170,10 @@
     <div class="status-bar"><div id="scan-status">Initializing...</div><div id="net-status"></div></div>
 </div>
 <div class="tabs-wrapper">
+    <div class="view-switcher">
+        <button id="btn-view-screener" class="view-btn active" onclick="switchView('screener')">SCREENER</button>
+        <button id="btn-view-watchlist" class="view-btn" onclick="switchView('watchlist')">WATCHLIST</button>
+    </div>
     <div class="tabs">
         <div class="tab" id="tab-5m" onclick="setRank('5m')">5M</div>
         <div class="tab active" id="tab-15m" onclick="setRank('15m')">15M</div>
@@ -177,10 +181,6 @@
         <div class="tab" id="tab-1w" onclick="setRank('1w')">1W</div>
         <div class="tab" id="tab-1mo" onclick="setRank('1mo')">1MO</div>
         <div class="tab" id="tab-24h" onclick="setRank('24h')">24H</div>
-    </div>
-    <div class="view-switcher">
-        <button id="btn-view-screener" class="view-btn active" onclick="switchView('screener')">SCREENER</button>
-        <button id="btn-view-watchlist" class="view-btn" onclick="switchView('watchlist')">WATCHLIST</button>
     </div>
 </div>
 <div class="main-grid">
@@ -1029,5 +1029,4 @@ setInterval(saveCache,15000);setInterval(updateNetStatus,2000);updateNetStatus()
 switchView('screener');
 </script>
 </body>
-</html>
-
+    </html>
