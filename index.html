@@ -293,7 +293,9 @@ var DEF_IND={
     volMA:{enabled:true,period:20,color:'#f0b90b',style:0,width:1},
     hvLine:{enabled:true,color:'#ffd700',style:0,width:1.2},
     lvLine:{enabled:true,color:'#ff6b35',style:0,width:1.2},
-    whale:{enabled:true,volLength:20,volMultiplier:2.5,bodyMultiplier:1.5,atrLength:14,useATR:true,buyColor:'#0ecb81',sellColor:'#f6465d',bgColor:true}
+    whale:{enabled:true,volLength:20,volMultiplier:2.5,bodyMultiplier:1.5,atrLength:14,useATR:true,buyColor:'#0ecb81',sellColor:'#f6465d',bgColor:true},
+    // === NEW: Top 3 Volume Swing Highs ===
+    volSwingHighs:{enabled:false,leftBars:2,rightBars:2,top1Color:'#00ff00',top2Color:'#ff8c00',top3Color:'#f6465d',width:3}
 };
 var indSettings=JSON.parse(JSON.stringify(DEF_IND));
 
@@ -301,7 +303,7 @@ var DEFAULT_PANEL_ORDER=['vol','macd','rsi'];
 var panelOrder=[];
 function loadPanelOrder(){try{var s=localStorage.getItem('sq_panelOrder');if(s){var d=JSON.parse(s);panelOrder=d.filter(function(p){return DEFAULT_PANEL_ORDER.indexOf(p)!==-1});DEFAULT_PANEL_ORDER.forEach(function(p){if(panelOrder.indexOf(p)===-1)panelOrder.push(p)})}else{panelOrder=DEFAULT_PANEL_ORDER.slice()}}catch(e){panelOrder=DEFAULT_PANEL_ORDER.slice()}}
 function savePanelOrder(){try{localStorage.setItem('sq_panelOrder',JSON.stringify(panelOrder))}catch(e){}}
-function loadInd(){try{var s=localStorage.getItem('sq_ind4');if(s){var d=JSON.parse(s);if(d.ema)indSettings.ema=d.ema;if(d.donchian)indSettings.donchian=d.donchian;if(d.donchian2)indSettings.donchian2=d.donchian2;if(d.bollinger)indSettings.bollinger=d.bollinger;if(d.macd)indSettings.macd=d.macd;if(d.rsi)indSettings.rsi=d.rsi;if(d.volMA)indSettings.volMA=d.volMA;if(d.hvLine)indSettings.hvLine=d.hvLine;if(d.lvLine)indSettings.lvLine=d.lvLine;if(d.whale)indSettings.whale=d.whale}}catch(e){}}
+function loadInd(){try{var s=localStorage.getItem('sq_ind4');if(s){var d=JSON.parse(s);if(d.ema)indSettings.ema=d.ema;if(d.donchian)indSettings.donchian=d.donchian;if(d.donchian2)indSettings.donchian2=d.donchian2;if(d.bollinger)indSettings.bollinger=d.bollinger;if(d.macd)indSettings.macd=d.macd;if(d.rsi)indSettings.rsi=d.rsi;if(d.volMA)indSettings.volMA=d.volMA;if(d.hvLine)indSettings.hvLine=d.hvLine;if(d.lvLine)indSettings.lvLine=d.lvLine;if(d.whale)indSettings.whale=d.whale;if(d.volSwingHighs)indSettings.volSwingHighs=d.volSwingHighs}}catch(e){}}
 function saveInd(){try{localStorage.setItem('sq_ind4',JSON.stringify(indSettings))}catch(e){}}
 function resetIndDefaults(){indSettings=JSON.parse(JSON.stringify(DEF_IND));panelOrder=DEFAULT_PANEL_ORDER.slice();saveInd();savePanelOrder();buildIndPanel();recalcInd();chartDirty=true}
 function toggleIndPanel(){indPanelOpen=!indPanelOpen;document.getElementById('indPanel').classList.toggle('open',indPanelOpen);document.getElementById('chartSettingsBtn').classList.toggle('active-btn',indPanelOpen)}
@@ -512,6 +514,18 @@ function buildIndPanel(){
     h+='</div>';
     h+='</div>';
 
+    /* === Volume Swing Highs Section === */
+    h+='<div class="ind-section"><div class="ind-section-title">Volume Swing Highs</div>';
+    var vsh=indSettings.volSwingHighs,p='vsh';
+    h+='<div class="ind-row"><label class="ind-toggle"><input type="checkbox" id="'+p+'-on" '+(vsh.enabled?'checked':'')+'><span class="sw"></span>Top 3 Vol Swings</label></div>';
+    h+='<div class="ind-sub"><span class="ind-label-sm">Left</span><input type="number" class="ind-period" id="'+p+'-l" value="'+vsh.leftBars+'" min="1" max="20">';
+    h+='<span class="ind-label-sm">Right</span><input type="number" class="ind-period" id="'+p+'-r" value="'+vsh.rightBars+'" min="1" max="20"></div>';
+    h+='<div class="ind-sub"><span class="ind-label-sm">#1</span><div class="ind-color" id="'+p+'-c1" style="background:'+vsh.top1Color+'"></div>';
+    h+='<span class="ind-label-sm">#2</span><div class="ind-color" id="'+p+'-c2" style="background:'+vsh.top2Color+'"></div>';
+    h+='<span class="ind-label-sm">#3</span><div class="ind-color" id="'+p+'-c3" style="background:'+vsh.top3Color+'"></div></div>';
+    h+='<div class="ind-sub"><span class="ind-label-sm">Width</span><input type="number" class="ind-width" id="'+p+'-w" value="'+vsh.width+'" min="1" max="6"></div>';
+    h+='</div>';
+
     h+='<div class="panel-reorder-section"><div class="ind-section-title">Panel Order (drag to reorder)</div><div id="panelReorderList">';
     var panelLabels={'vol':'Volume','macd':'MACD','rsi':'RSI'};
     for(var pi=0;pi<panelOrder.length;pi++){var pk=panelOrder[pi];
@@ -624,13 +638,22 @@ function bindIndEvents(){
     $('wh-bc').onclick=function(){showCP(this,function(c){indSettings.whale.buyColor=c;rebuild()})};
     $('wh-sc').onclick=function(){showCP(this,function(c){indSettings.whale.sellColor=c;rebuild()})};
     $('wh-bg').onchange=function(){indSettings.whale.bgColor=this.checked;refresh()};
+
+    // Volume Swing Highs bindings
+    $('vsh-on').onchange=function(){indSettings.volSwingHighs.enabled=this.checked;refresh()};
+    $('vsh-l').onchange=function(){indSettings.volSwingHighs.leftBars=Math.max(1,parseInt(this.value)||2);refresh()};
+    $('vsh-r').onchange=function(){indSettings.volSwingHighs.rightBars=Math.max(1,parseInt(this.value)||2);refresh()};
+    $('vsh-w').onchange=function(){indSettings.volSwingHighs.width=Math.max(1,parseInt(this.value)||3);refresh()};
+    $('vsh-c1').onclick=function(){showCP(this,function(c){indSettings.volSwingHighs.top1Color=c;rebuild()})};
+    $('vsh-c2').onclick=function(){showCP(this,function(c){indSettings.volSwingHighs.top2Color=c;rebuild()})};
+    $('vsh-c3').onclick=function(){showCP(this,function(c){indSettings.volSwingHighs.top3Color=c;rebuild()})};
 }
 
 document.getElementById('indPanel').addEventListener('touchstart',function(e){e.stopPropagation();},{passive:false});
 document.getElementById('indPanel').addEventListener('touchmove',function(e){e.stopPropagation();},{passive:false});
 document.getElementById('indPanel').addEventListener('touchend',function(e){e.stopPropagation();},{passive:false});
 
-var chartInd={ema:[[],[],[]],volMA:[],rsi:[],donchU:[],donchL:[],donchM:[],donchU2:[],donchL2:[],donchM2:[],bbU:[],bbL:[],bbM:[],macdLine:[],macdSignal:[],macdHist:[],whaleBuy:[],whaleSell:[]};
+var chartInd={ema:[[],[],[]],volMA:[],rsi:[],donchU:[],donchL:[],donchM:[],donchU2:[],donchL2:[],donchM2:[],bbU:[],bbL:[],bbM:[],macdLine:[],macdSignal:[],macdHist:[],whaleBuy:[],whaleSell:[],volSwingHighs:{h1:null,h2:null,h3:null,b1:null,b2:null,b3:null,v1:null,v2:null,v3:null}};
 
 function calcEMA(d,p){var e=[],k=2/(p+1);if(!d.length)return e;e[0]=d[0];for(var i=1;i<d.length;i++)e[i]=d[i]*k+e[i-1]*(1-k);return e}
 function calcSMA(d,p){var s=[];for(var i=0;i<d.length;i++){if(i<p-1){s.push(null);continue}var sum=0;for(var j=i-p+1;j<=i;j++)sum+=d[j];s.push(sum/p)}return s}
@@ -676,6 +699,53 @@ function calcWhale(cl,op,hi,lo,vol,settings){
     return{buy:buy,sell:sell};
 }
 
+function calcVolSwingHighs(candles, leftBars, rightBars){
+    if(!candles || candles.length < leftBars + rightBars + 1){
+        return {h1:null,h2:null,h3:null,b1:null,b2:null,b3:null,v1:null,v2:null,v3:null};
+    }
+    
+    // Find all volume swing highs (peaks)
+    var swings = [];
+    for(var i = leftBars; i < candles.length - rightBars; i++){
+        var isPeak = true;
+        // Check left bars
+        for(var j = 1; j <= leftBars; j++){
+            if(candles[i].v >= candles[i-j].v){ isPeak = false; break; }
+        }
+        // Check right bars
+        if(isPeak){
+            for(var j = 1; j <= rightBars; j++){
+                if(candles[i].v >= candles[i+j].v){ isPeak = false; break; }
+            }
+        }
+        if(isPeak){
+            swings.push({vol:candles[i].v, high:candles[i].h, barIndex:i});
+        }
+    }
+    
+    // Get last 3 swings (most recent first)
+    var last3 = [];
+    for(var k = swings.length - 1; k >= Math.max(0, swings.length - 3) && last3.length < 3; k--){
+        last3.push(swings[k]);
+    }
+    while(last3.length < 3) last3.push(null);
+    
+    // Extract values
+    var v = [last3[0]?last3[0].vol:-1, last3[1]?last3[1].vol:-1, last3[2]?last3[2].vol:-1];
+    var h = [last3[0]?last3[0].high:null, last3[1]?last3[1].high:null, last3[2]?last3[2].high:null];
+    var b = [last3[0]?last3[0].barIndex:null, last3[1]?last3[1].barIndex:null, last3[2]?last3[2].barIndex:null];
+    
+    // Sort by volume descending using ternary swap logic (matching Pine Script)
+    // Step 1: ensure v[0] >= v[1]
+    if(v[1] > v[0]){ var tv=v[0],th=h[0],tb=b[0]; v[0]=v[1];h[0]=h[1];b[0]=b[1]; v[1]=tv;h[1]=th;b[1]=tb; }
+    // Step 2: ensure v[0] >= v[2]
+    if(v[2] > v[0]){ var tv=v[0],th=h[0],tb=b[0]; v[0]=v[2];h[0]=h[2];b[0]=b[2]; v[2]=tv;h[2]=th;b[2]=tb; }
+    // Step 3: ensure v[1] >= v[2]
+    if(v[2] > v[1]){ var tv=v[1],th=h[1],tb=b[1]; v[1]=v[2];h[1]=h[2];b[1]=b[2]; v[2]=tv;h[2]=th;b[2]=tb; }
+    
+    return {h1:h[0],h2:h[1],h3:h[2], b1:b[0],b2:b[1],b3:b[2], v1:v[0],v2:v[1],v3:v[2]};
+}
+
 function recalcInd(){
     if(chartCandles.length<2)return;
     var cl=[],hi=[],lo=[],vl=[],op=[];
@@ -688,6 +758,11 @@ function recalcInd(){
     if(indSettings.bollinger.enabled){var bb=calcBoll(cl,indSettings.bollinger.period,indSettings.bollinger.mult);chartInd.bbU=bb.u;chartInd.bbL=bb.l;chartInd.bbM=bb.m}else{chartInd.bbU=[];chartInd.bbL=[];chartInd.bbM=[]}
     if(indSettings.macd.enabled){var mc=calcMACD(cl,indSettings.macd.fast,indSettings.macd.slow,indSettings.macd.signal);chartInd.macdLine=mc.line;chartInd.macdSignal=mc.signal;chartInd.macdHist=mc.hist}else{chartInd.macdLine=[];chartInd.macdSignal=[];chartInd.macdHist=[]}
     if(indSettings.whale.enabled){var wh=calcWhale(cl,op,hi,lo,vl,indSettings.whale);chartInd.whaleBuy=wh.buy;chartInd.whaleSell=wh.sell;}else{chartInd.whaleBuy=[];chartInd.whaleSell=[];}
+    // Volume Swing Highs calculation
+    if(indSettings.volSwingHighs.enabled){
+        var vsh = calcVolSwingHighs(chartCandles, indSettings.volSwingHighs.leftBars, indSettings.volSwingHighs.rightBars);
+        chartInd.volSwingHighs = vsh;
+    }
     chartDirty=true;
 }
 
@@ -699,7 +774,7 @@ var gesture={mode:null,startTime:0,startX:0,startY:0,lastX:0,lastY:0,velocityX:0
 async function openChart(sym){currentChartSym=sym;changeChartTf('1d');document.getElementById('chartSymName').innerText=sym;document.getElementById('chartInfo').innerHTML='<span style="color:var(--dim)">Loading...</span>';document.getElementById('chartOverlay').classList.add('open');document.body.classList.add('modal-open');chartMX=-1;chartMY=-1;gesture.crosshairActive=false;chartCandles=[];chartZoom=150;chartOffset=0;gesture.priceAuto=true;gesture.priceZoom=1;gesture.priceOffset=0;chartInterval='1d';updateTfBtns();aiPanelOpen=false;document.getElementById('aiPanel').classList.remove('open');document.getElementById('chartAiBtn').classList.remove('active-btn');updateChartWatchBtn();await loadChartRest(sym);connectChartWs(sym);startChartLoop()}
 async function loadChartRest(sym){try{var res=await safeFetch('/klines?symbol='+sym+'USDT&interval='+chartInterval+'&limit=300',5);if(!res)return;var d=await res.json();if(Array.isArray(d)){chartCandles=d.map(function(k){return{t:parseInt(k[0]),o:parseFloat(k[1]),h:parseFloat(k[2]),l:parseFloat(k[3]),c:parseFloat(k[4]),v:parseFloat(k[5])}});recalcInd()}updateChartInfo();chartDirty=true}catch(e){}}
 function connectChartWs(sym){if(chartWs){try{chartWs.close()}catch(e){}chartWs=null}try{chartWs=new WebSocket(WS_URL+'/'+sym.toLowerCase()+'usdt@kline_'+chartInterval)}catch(e){return}chartWs.onmessage=function(ev){try{var k=JSON.parse(ev.data).k;if(!k)return;var cd={t:parseInt(k.t),o:parseFloat(k.o),h:parseFloat(k.h),l:parseFloat(k.l),c:parseFloat(k.c),v:parseFloat(k.v)};var last=chartCandles.length?chartCandles[chartCandles.length-1]:null;if(last&&last.t===cd.t){last.h=cd.h;last.l=cd.l;last.c=cd.c;last.v=cd.v}else{chartCandles.push(cd);if(chartCandles.length>500)chartCandles.shift()}recalcInd();updateChartInfo();chartDirty=true}catch(e){}}}
-function changeChartTf(iv){chartInterval=iv;chartCandles=[];chartZoom=150;chartOffset=0;gesture.priceAuto=true;gesture.priceZoom=1;gesture.priceOffset=0;chartInd={ema:[[],[],[]],volMA:[],rsi:[],donchU:[],donchL:[],donchM:[],donchU2:[],donchL2:[],donchM2:[],bbU:[],bbL:[],bbM:[],macdLine:[],macdSignal:[],macdHist:[],whaleBuy:[],whaleSell:[]};updateTfBtns();if(currentChartSym){loadChartRest(currentChartSym);connectChartWs(currentChartSym)}}
+function changeChartTf(iv){chartInterval=iv;chartCandles=[];chartZoom=150;chartOffset=0;gesture.priceAuto=true;gesture.priceZoom=1;gesture.priceOffset=0;chartInd={ema:[[],[],[]],volMA:[],rsi:[],donchU:[],donchL:[],donchM:[],donchU2:[],donchL2:[],donchM2:[],bbU:[],bbL:[],bbM:[],macdLine:[],macdSignal:[],macdHist:[],whaleBuy:[],whaleSell:[],volSwingHighs:{h1:null,h2:null,h3:null,b1:null,b2:null,b3:null,v1:null,v2:null,v3:null}};updateTfBtns();if(currentChartSym){loadChartRest(currentChartSym);connectChartWs(currentChartSym)}}
 function updateTfBtns(){var btns=document.querySelectorAll('.ctf');for(var i=0;i<btns.length;i++){if(btns[i].dataset.iv===chartInterval)btns[i].classList.add('active');else btns[i].classList.remove('active')}}
 function updateChartInfo(){if(!chartCandles.length)return;var last=chartCandles[chartCandles.length-1],prev=chartCandles.length>1?chartCandles[chartCandles.length-2]:last;var ch=last.c-prev.c,cp=prev.c?(ch/prev.c*100):0,col=ch>=0?'var(--green)':'var(--red)',ar=ch>=0?'&#9650;':'&#9660;';var fp=function(v){return v<1?v.toFixed(5):v<100?v.toFixed(3):v.toLocaleString()};var fv=last.v>=1e9?(last.v/1e9).toFixed(2)+'B':last.v>=1e6?(last.v/1e6).toFixed(2)+'M':last.v>=1e3?(last.v/1e3).toFixed(1)+'K':Math.round(last.v);
     var symKey=currentChartSym+'USDT';var avgVol=pairs[symKey]?formatVol(pairs[symKey].avgDVol):'-';
@@ -791,6 +866,38 @@ function drawChart(){
                 ctx.fillStyle=indSettings.whale.sellColor||RED;
                 ctx.beginPath();ctx.moveTo(bx,by+8);ctx.lineTo(bx-5,by);ctx.lineTo(bx+5,by);ctx.closePath();ctx.fill();
                 ctx.font='bold 6px JetBrains Mono';ctx.textAlign='center';ctx.fillText('WS',bx,by-3);
+            }
+        }
+    }
+
+    /* === Top 3 Volume Swing Highs Lines === */
+    if(indSettings.volSwingHighs.enabled && chartInd.volSwingHighs.h1 !== null){
+        var vsh = chartInd.volSwingHighs;
+        var s = indSettings.volSwingHighs;
+        var colors = [s.top1Color, s.top2Color, s.top3Color];
+        var highs = [vsh.h1, vsh.h2, vsh.h3];
+        var bars = [vsh.b1, vsh.b2, vsh.b3];
+        
+        for(var idx = 0; idx < 3; idx++){
+            if(highs[idx] !== null && bars[idx] !== null){
+                var xStart = (bars[idx] - startIdx) * cW + cW/2;
+                var yLevel = pY(highs[idx]);
+                if(xStart >= -cW && xStart <= chartW + cW && yLevel > PT && yLevel < PT + priceH){
+                    ctx.strokeStyle = colors[idx];
+                    ctx.lineWidth = s.width || 3;
+                    ctx.setLineDash([]);
+                    ctx.beginPath();
+                    ctx.moveTo(xStart, yLevel);
+                    ctx.lineTo(chartW, yLevel); // extend to right edge
+                    ctx.stroke();
+                    ctx.setLineDash([]);
+                    
+                    // Optional: small marker at swing point
+                    ctx.fillStyle = colors[idx];
+                    ctx.beginPath();
+                    ctx.arc(xStart, yLevel, 4, 0, Math.PI*2);
+                    ctx.fill();
+                }
             }
         }
     }
@@ -906,6 +1013,15 @@ function drawChart(){
         if(indSettings.donchian.enabled){if(chartInd.donchU[lastIdx]!=null)drawPriceLabel('DC U',chartInd.donchU[lastIdx],indSettings.donchian.color);if(chartInd.donchL[lastIdx]!=null)drawPriceLabel('DC L',chartInd.donchL[lastIdx],indSettings.donchian.color);}
         if(indSettings.donchian2.enabled){if(chartInd.donchU2[lastIdx]!=null)drawPriceLabel('DC2 U',chartInd.donchU2[lastIdx],indSettings.donchian2.color);if(chartInd.donchL2[lastIdx]!=null)drawPriceLabel('DC2 L',chartInd.donchL2[lastIdx],indSettings.donchian2.color);}
         if(indSettings.bollinger.enabled){if(chartInd.bbU[lastIdx]!=null)drawPriceLabel('BB U',chartInd.bbU[lastIdx],indSettings.bollinger.color);if(chartInd.bbL[lastIdx]!=null)drawPriceLabel('BB L',chartInd.bbL[lastIdx],indSettings.bollinger.color);}
+        // Add Volume Swing Highs price labels
+        if(indSettings.volSwingHighs.enabled){
+            var vsh = chartInd.volSwingHighs;
+            var s = indSettings.volSwingHighs;
+            var labels = [['VSH#1', vsh.h1, s.top1Color], ['VSH#2', vsh.h2, s.top2Color], ['VSH#3', vsh.h3, s.top3Color]];
+            for(var li = 0; li < labels.length; li++){
+                if(labels[li][1] !== null) drawPriceLabel(labels[li][0], labels[li][1], labels[li][2]);
+            }
+        }
     }
 
     var showCH=(chartMX>=0&&chartMX<chartW&&chartMY>=PT&&chartMY<botBound);
@@ -936,7 +1052,7 @@ function closeChart(){
     if(chartRAF){cancelAnimationFrame(chartRAF);chartRAF=null;}
     if(chartWs){try{chartWs.close()}catch(e){}chartWs=null}
     clearTimeout(gesture.longPressTimer);if(gesture.momentumRAF){cancelAnimationFrame(gesture.momentumRAF);gesture.momentumRAF=null}
-    currentChartSym=null;chartCandles=[];chartInd={ema:[[],[],[]],volMA:[],rsi:[],donchU:[],donchL:[],donchM:[],donchU2:[],donchL2:[],donchM2:[],bbU:[],bbL:[],bbM:[],macdLine:[],macdSignal:[],macdHist:[],whaleBuy:[],whaleSell:[]};
+    currentChartSym=null;chartCandles=[];chartInd={ema:[[],[],[]],volMA:[],rsi:[],donchU:[],donchL:[],donchM:[],donchU2:[],donchL2:[],donchM2:[],bbU:[],bbL:[],bbM:[],macdLine:[],macdSignal:[],macdHist:[],whaleBuy:[],whaleSell:[],volSwingHighs:{h1:null,h2:null,h3:null,b1:null,b2:null,b3:null,v1:null,v2:null,v3:null}};
     gesture.crosshairActive=false;gesture.mode=null;gesture.isTouch=false;
     indPanelOpen=false;document.getElementById('indPanel').classList.remove('open');document.getElementById('chartSettingsBtn').classList.remove('active-btn');
     aiPanelOpen=false;aiChatHistory=[];aiLoadingBubble=null;document.getElementById('aiPanel').classList.remove('open');document.getElementById('chartAiBtn').classList.remove('active-btn');
@@ -1025,4 +1141,4 @@ setInterval(saveCache,15000);setInterval(updateNetStatus,2000);updateNetStatus()
 switchView('screener');
 </script>
 </body>
-            </html>
+    </html>
