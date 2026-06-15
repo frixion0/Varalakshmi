@@ -1710,6 +1710,9 @@ function drawChart(){ var canvas=document.getElementById('chartCanvas'), contain
         if(obY>=bT&&obY<=bT+bH){ ctx.strokeStyle='rgba(255,82,82,0.4)'; ctx.lineWidth=1; ctx.setLineDash([4,3]); ctx.beginPath(); ctx.moveTo(0,obY); ctx.lineTo(chartW,obY); ctx.stroke(); ctx.setLineDash([]); }
         if(osY>=bT&&osY<=bT+bH){ ctx.strokeStyle='rgba(0,230,118,0.4)'; ctx.lineWidth=1; ctx.setLineDash([4,3]); ctx.beginPath(); ctx.moveTo(0,osY); ctx.lineTo(chartW,osY); ctx.stroke(); ctx.setLineDash([]); }
         if(midY>=bT&&midY<=bT+bH){ ctx.strokeStyle='rgba(132,142,156,0.2)'; ctx.lineWidth=1; ctx.setLineDash([2,2]); ctx.beginPath(); ctx.moveTo(0,midY); ctx.lineTo(chartW,midY); ctx.stroke(); ctx.setLineDash([]); }
+        // Draw zero baseline (histogram base)
+        var zeroY=bffY(0);
+        if(zeroY>=bT&&zeroY<=bT+bH){ ctx.strokeStyle='rgba(132,142,156,0.35)'; ctx.lineWidth=1; ctx.setLineDash([]); ctx.beginPath(); ctx.moveTo(0,zeroY); ctx.lineTo(chartW,zeroY); ctx.stroke(); }
         // Fill between OB and OS zones
         if(obY<bT+bH&&osY>bT){ ctx.fillStyle='rgba(126,87,194,0.04)'; ctx.fillRect(0,Math.max(bT,obY),chartW,Math.min(bT+bH,osY)-Math.max(bT,obY)); }
         // Draw histogram bars with dynamic colors
@@ -1721,7 +1724,7 @@ function drawChart(){ var canvas=document.getElementById('chartCanvas'), contain
             if(ft==null||!col) continue;
             var cx=c*cW+cW/2;
             var ftY=bffY(ft);
-            var baseY=bffY(50);
+            var baseY=bffY(0);
             var bTop=Math.min(ftY,baseY);
             var bHeight=Math.abs(baseY-ftY);
             if(bHeight<1) bHeight=1;
